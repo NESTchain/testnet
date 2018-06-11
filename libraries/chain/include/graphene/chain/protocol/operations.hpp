@@ -92,6 +92,10 @@ namespace graphene { namespace chain {
             asset_settle_cancel_operation,  // VIRTUAL
             asset_claim_fees_operation,
             fba_distribute_operation,       // VIRTUAL
+            smart_contract_upload_operation,//Victor Sun
+            smart_contract_activate_operation,//Victor Sun
+            smart_contract_call_operation, //Victor Sun
+            data_digest_upload_operation, //by Victor Sun
             bid_collateral_operation,
             execute_bid_operation,          // VIRTUAL
             asset_claim_pool_operation,

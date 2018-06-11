@@ -221,6 +221,12 @@ struct get_impacted_account_visitor
    {
       _impacted.insert( op.fee_payer() ); // deposit_to_account
    }
+
+   void operator()(const smart_contract_upload_operation& op) {}//smart_contract_upload, added by Victor Sun
+   void operator()(const smart_contract_activate_operation& op) {}//smart_contract_upload, added by Victor Sun
+   void operator()(const smart_contract_call_operation& op) {}//smart contract run, added by Victor Sun
+   void operator()(const data_digest_upload_operation& op) {}//data_digest_upload, added by Victor Sun
+
    void operator()( const override_transfer_operation& op )
    {
       _impacted.insert( op.to );
