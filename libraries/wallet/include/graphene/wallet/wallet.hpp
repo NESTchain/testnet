@@ -333,6 +333,7 @@ class wallet_api
        * we possess.
        * @returns a list of account objects
        */
+      contract_object list_contract_addrs(const string &addr);
       vector<account_object>            list_my_accounts();
       /** Lists all accounts registered in the blockchain.
        * This returns a list of all account names and their account ids, sorted by account name.
@@ -1780,6 +1781,7 @@ FC_API( graphene::wallet::wallet_api,
         (is_locked)
         (lock)(unlock)(set_password)
         (dump_private_keys)
+        (list_contract_addrs)
         (list_my_accounts)
         (list_accounts)
         (list_account_balances)
@@ -1794,6 +1796,11 @@ FC_API( graphene::wallet::wallet_api,
         (register_account)
         (upgrade_account)
         (create_account_with_brain_key)
+        (upload_smart_contract)//added by victor sun
+        (upload_smart_contract_from_file)//added by victor sun
+        (activate_smart_contract)//added by victor sun
+        (call_smart_contract)//added by victor sun
+        (upload_data_digest)//added by victor sun
         (sell_asset)
         (borrow_asset)
         (borrow_asset_ext)
