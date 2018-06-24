@@ -82,7 +82,7 @@ namespace graphene { namespace chain {
       struct fee_parameters_type
       {
          uint64_t basic_fee      = 5*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the cheapest non-free account
-         uint64_t premium_fee    = 2000*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the cheapest non-free account
+         uint64_t premium_fee    = 2000*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the premium non-free account
          uint32_t price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
       };
 
@@ -270,9 +270,7 @@ namespace graphene { namespace chain {
    /* define smart contract upload operation structure. by Victor Sun */
    struct smart_contract_upload_operation : public base_operation
    {
-      
       struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
-      
 
       asset           fee;
       account_id_type uploader;
@@ -288,10 +286,8 @@ namespace graphene { namespace chain {
 
    struct smart_contract_activate_operation : public base_operation
    {
-      
       struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
       
-
       asset           fee;
       account_id_type activator;
 //      account_id_type new_owner;
@@ -303,8 +299,6 @@ namespace graphene { namespace chain {
       void        validate()const;
 //      share_type      calculate_fee(const fee_parameters_type& k)const;
    };
-
-
 
 
    /* define smart contract run operation structure. by Victor Sun */
@@ -330,7 +324,6 @@ namespace graphene { namespace chain {
    {
       
       struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
-      
 
       asset                   fee;
       account_id_type         uploader;
