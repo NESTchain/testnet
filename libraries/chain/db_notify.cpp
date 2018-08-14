@@ -287,6 +287,7 @@ struct get_impacted_account_visitor
    {
       _impacted.insert( op.fee_payer() ); // account_id
    }
+   void operator()( const pio_operation& op ) {}
 };
 
 void graphene::chain::operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

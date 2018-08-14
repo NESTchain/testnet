@@ -35,6 +35,7 @@
 #include <graphene/chain/protocol/market.hpp>
 #include <graphene/chain/protocol/proposal.hpp>
 #include <graphene/chain/protocol/transfer.hpp>
+#include <graphene/chain/protocol/pio.hpp>
 #include <graphene/chain/protocol/vesting.hpp>
 #include <graphene/chain/protocol/withdraw_permission.hpp>
 #include <graphene/chain/protocol/witness.hpp>
@@ -101,7 +102,8 @@ namespace graphene { namespace chain {
 	        bid_collateral_operation,
             execute_bid_operation,          // VIRTUAL
             asset_claim_pool_operation,
-            asset_update_issuer_operation
+            asset_update_issuer_operation,
+            pio_operation
          > operation;
 
    /// @} // operations group
