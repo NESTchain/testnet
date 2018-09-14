@@ -8,8 +8,6 @@
     url = https://github.com/miuNEST/bitshares-fc.git
     branch = master
     ignore = dirty
-[submodule "libraries/wasm-jit"]
-	path = libraries/wasm-jit
-	url = https://github.com/NESTchain/wasm-jit.git
-    branch = master
-    ignore = dirty
+[submodule "libraries/wasm/wasm-jit"]
+	path = libraries/wasm/wasm-jit
+	url = https://github.com/WAVM/WAVM

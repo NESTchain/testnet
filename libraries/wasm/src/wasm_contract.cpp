@@ -1,4 +1,4 @@
-#inlude "wasm_contract.hpp"
+#include "wasm_contract.hpp"
 
 int hello_world()
 {
