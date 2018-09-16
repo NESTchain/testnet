@@ -6,6 +6,10 @@
 #include "Runtime/Linker.h"
 #include "Runtime/Runtime.h"
 
+using std::string;
+using std::unique_ptr;
+using namespace Runtime;
+
 //TODO:
 class apply_context {
 

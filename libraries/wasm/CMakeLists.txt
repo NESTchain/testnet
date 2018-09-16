@@ -1,3 +1,12 @@
+#if(NOT ENABLE_STATIC_LINKING AND MSVC)
+if (MSVC)
+        add_definitions("-DDLL_EXPORT=__declspec(dllexport)")
+        add_definitions("-DDLL_IMPORT=__declspec(dllimport)")
+else()
+        add_definitions(-DDLL_EXPORT=)
+        add_definitions(-DDLL_IMPORT=)
+endif()
+
 set(WASM_CONTRACT_SRC
 	src/wasm_contract.cpp
 	src/wasm_interface.cpp
