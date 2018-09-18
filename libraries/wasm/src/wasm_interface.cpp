@@ -7,7 +7,7 @@
 //#include <boost/core/ignore_unused.hpp>
 //#include <eosio/chain/authorization_manager.hpp>
 //#include <eosio/chain/resource_limits.hpp>
-//#include <eosio/chain/wasm_interface_private.hpp>
+#include   "wasm_interface_private.hpp"
 //#include <eosio/chain/wasm_eosio_validation.hpp>
 //#include <eosio/chain/wasm_eosio_injection.hpp>
 //#include <eosio/chain/global_property_object.hpp>
@@ -42,8 +42,8 @@ namespace eosio { namespace chain {
          EOS_ASSERT(false, wasm_serialization_error, e.message.c_str());
       }
 
-      wasm_validations::wasm_binary_validation validator(control, module);
-      validator.validate();
+//      wasm_validations::wasm_binary_validation validator(control, module);
+//      validator.validate();
 
       root_resolver resolver(true);
       LinkResult link_result = linkModule(module, resolver);

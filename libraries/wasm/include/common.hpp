@@ -1,16 +1,15 @@
 #pragma once
 
-#include <eosio/chain/wasm_interface.hpp>
-#include <eosio/chain/wasm_eosio_constraints.hpp>
+#include "wasm_interface.hpp"
+#include "wasm_eosio_constraints.hpp"
 
 #define EOSIO_INJECTED_MODULE_NAME "eosio_injection"
 
 using namespace fc;
+using eosio::chain::apply_context;
+using eosio::chain::transaction_context;
 
 namespace eosio { namespace chain { 
-
-   class apply_context;
-   class transaction_context;
 
    template<typename T>
    struct class_from_wasm {

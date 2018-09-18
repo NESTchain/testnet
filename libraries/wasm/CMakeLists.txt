@@ -14,11 +14,20 @@ set(WASM_CONTRACT_SRC
 )
 
 set(WASM_CONTRACT_INCLUDE
-	include/wasm_contract.hpp
+	include/action.hpp
+	include/apply_context.hpp
 	include/common.hpp
+	include/controller.hpp
+	include/exceptions.hpp
+	include/name.hpp
 	include/runtime_interface.hpp
+	include/transaction_context.hpp
+	include/wasm_contract.hpp
+	include/wasm_eosio_constraints.hpp
 	include/wasm_interface.hpp
+	include/wasm_interface_private.hpp
 	include/wavm.hpp
+
 )
 
 add_library( wasm_contract
@@ -34,6 +43,7 @@ target_include_directories( wasm_contract
 	PUBLIC "${CMAKE_SOURCE_DIR}/libraries/chain/include"
 	PUBLIC "${CMAKE_SOURCE_DIR}/libraries/fc/include"
 	PUBLIC "${CMAKE_SOURCE_DIR}/libraries/db/include"
+	PUBLIC "${CMAKE_SOURCE_DIR}/libraries/softfloat/source/include"
 )
 
 

@@ -2,24 +2,29 @@
 
 #include <stdint.h>
 #include <graphene/chain/protocol/types.hpp>
-#include <graphene/chain/exceptions.hpp>
+//#include <graphene/chain/exceptions.hpp>
+#include "exceptions.hpp"
 #include "Runtime/Linker.h"
 #include "Runtime/Runtime.h"
+#include <fc/exception/exception.hpp>
+#include <boost/container/string.hpp>
+#include "apply_context.hpp"
+#include "controller.hpp"
+#include "transaction_context.hpp"
 
 using std::string;
+using std::map;
 using std::unique_ptr;
 using namespace Runtime;
+using graphene::chain::digest_type;
+using IR::Module;
+using shared_string = boost::container::basic_string<char, std::char_traits<char>, std::allocator<char>>;
+using bytes         = std::vector<char>;
 
-//TODO:
-class apply_context {
-
-};
 
 namespace eosio { namespace chain {
 
-   //class apply_context;
    class wasm_runtime_interface;
-   //class controller;
 
    struct wasm_exit {
       int32_t code = 0;

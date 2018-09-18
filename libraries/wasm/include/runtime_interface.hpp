@@ -2,9 +2,9 @@
 #include <vector>
 #include <memory>
 
-namespace eosio { namespace chain {
+#include "apply_context.hpp"
 
-class apply_context;
+namespace eosio { namespace chain {
 
 class wasm_instantiated_module_interface {
    public:

@@ -8,3 +8,6 @@
     url = https://github.com/miuNEST/bitshares-fc.git
     branch = master
     ignore = dirty
+[submodule "libraries/softfloat"]
+	path = libraries/softfloat
+	url = https://github.com/eosio/berkeley-softfloat-3

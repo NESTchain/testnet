@@ -6,7 +6,7 @@
 #include <softfloat.hpp>
 #include "Runtime/Runtime.h"
 #include "IR/Types.h"
-
+#include "name.hpp"
 
 namespace eosio { namespace chain { namespace webassembly { namespace wavm {
 
