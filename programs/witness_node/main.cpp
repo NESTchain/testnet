@@ -178,7 +178,7 @@ static void create_new_config_file( const fc::path& config_ini_path, const fc::p
       fc::configure_logging(*logging_config);
 }
 
-extern "C" char * rootDirectory;
+//extern "C" char * rootDirectory;
 
 int main(int argc, char** argv) {
    app::application* node = new app::application();
@@ -244,12 +244,12 @@ int main(int argc, char** argv) {
          fc::path contract_dir = data_dir;         
          std::string s = contract_dir.string();
          s += "/../contract/";
-         rootDirectory = (char *)malloc(s.length() + 1);
-         if (rootDirectory)
-         {
-             memset(rootDirectory, 0, s.length() + 1);
-             memcpy(rootDirectory, s.c_str(), s.length());
-         }
+//         rootDirectory = (char *)malloc(s.length() + 1);
+//         if (rootDirectory)
+//         {
+//             memset(rootDirectory, 0, s.length() + 1);
+//             memcpy(rootDirectory, s.c_str(), s.length());
+//         }
       }
 
       fc::path config_ini_path = data_dir / "config.ini";
@@ -290,8 +290,8 @@ int main(int argc, char** argv) {
       unhandled_exception = e;
    }
 
-   if (rootDirectory)
-       free(rootDirectory);
+//   if (rootDirectory)
+//       free(rootDirectory);
 
    if (unhandled_exception)
    {

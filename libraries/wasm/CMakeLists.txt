@@ -46,6 +46,8 @@ target_include_directories( wasm_contract
 	PUBLIC "${CMAKE_SOURCE_DIR}/libraries/softfloat/source/include"
 )
 
+target_link_libraries(wasm_contract
+	Emscripten IR Logging Platform Runtime WASM WAST)
 
 add_subdirectory(${WASM_JIT_DIR})
 
