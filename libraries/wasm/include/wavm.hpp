@@ -13,7 +13,7 @@ namespace eosio { namespace chain { namespace webassembly { namespace wavm {
 using namespace IR;
 using namespace Runtime;
 using namespace fc;
-using namespace eosio::chain::webassembly::common;
+//using namespace eosio::chain::webassembly::common;
 
 class wavm_runtime : public eosio::chain::wasm_runtime_interface {
    public:

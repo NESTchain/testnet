@@ -19,6 +19,7 @@ using namespace fc;
 using namespace eosio::chain::webassembly;
 using namespace IR;
 using namespace Runtime;
+using eosio::chain::wasm_interface;
 
 namespace eosio { namespace chain {
 

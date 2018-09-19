@@ -21,10 +21,9 @@ using IR::Module;
 using shared_string = boost::container::basic_string<char, std::char_traits<char>, std::allocator<char>>;
 using bytes         = std::vector<char>;
 
-
 namespace eosio { namespace chain {
 
-   class wasm_runtime_interface;
+    struct wasm_interface_impl;
 
    struct wasm_exit {
       int32_t code = 0;
@@ -82,7 +81,7 @@ namespace eosio { namespace chain {
          void apply(const digest_type& code_id, const shared_string& code, apply_context& context);
 
       private:
-         unique_ptr<struct wasm_interface_impl> my;
+         unique_ptr<wasm_interface_impl> my;
          friend class eosio::chain::webassembly::common::intrinsics_accessor;
    };
 
