@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
+ * Copyright (c) 2018- ¦ÌNEST Foundation, and contributors.
  *
  * The MIT License
  *
@@ -64,6 +65,17 @@ namespace graphene { namespace db {
             } ));
          }
 
+		 template<typename T, typename F>
+		 std::unique_ptr<object> create_db(F&& constructor)
+		 {
+			 auto& idx = get_mutable_index<T>();
+			 return idx.create_db([&](object& o)
+			 {
+				 assert(dynamic_cast<T*>(&o));
+				 constructor(static_cast<T&>(o));
+			 });
+		 }
+
          ///These methods are used to retrieve indexes on the object_database. All public index accessors are const-access only.
          /// @{
          template<typename IndexType>
@@ -78,7 +90,12 @@ namespace graphene { namespace db {
          /// @}
 
          const object& get_object( object_id_type id )const;
+         unique_ptr<object> get_object_copy(object_id_type id)const;
          const object* find_object( object_id_type id )const;
+         unique_ptr<object> find_object_db(object_id_type id)const;
+         fc::variant find_object_as_variant(object_id_type id)const;
+
+         bool is_from_external_db(object_id_type id)const { return get_index(id).is_external_db(); }
 
          /// These methods are mutators of the object_database. You must use these methods to make changes to the object_database,
          /// in order to maintain proper undo history.
@@ -86,11 +103,30 @@ namespace graphene { namespace db {
 
          const object& insert( object&& obj ) { return get_mutable_index(obj.id).insert( std::move(obj) ); }
          void          remove( const object& obj ) { get_mutable_index(obj.id).remove( obj ); }
+         void          remove(object_id_type id) { get_mutable_index(id).remove(id); }
          template<typename T, typename Lambda>
          void modify( const T& obj, const Lambda& m ) {
             get_mutable_index(obj.id).modify(obj,m);
          }
 
+         template<typename Lambda>
+         void modify(object_id_type id, const Lambda& m) {
+             auto& index = get_mutable_index(id);
+             bool is_external_db = index.is_external_db();
+             if (is_external_db)
+             {
+                 auto ptr = get_object_copy(id);
+                 FC_ASSERT(ptr, "Unable to find Object ${id}", ("id", id));
+
+                 const object& obj = *ptr;
+                 get_mutable_index(obj.id).modify(obj, m);
+             }
+             else
+             {
+                 auto& obj = get_object(id);
+                 get_mutable_index(obj.id).modify(obj, m);
+             }
+         }
          ///@}
 
          template<typename T>
@@ -121,8 +157,21 @@ namespace graphene { namespace db {
             return static_cast<const T*>(obj);
          }
 
+         template<typename T>
+         unique_ptr<T> find_db(object_id_type id)const
+         {
+             auto objptr = find_object_db(id);
+             assert(!objptr || nullptr != dynamic_cast<const T*>(objptr.get()));
+             auto p = dynamic_cast<T*>(objptr.release());
+             unique_ptr<T> ret( p );
+             return ret;
+         }
+
          template<uint8_t SpaceID, uint8_t TypeID, typename T>
          const T* find( object_id<SpaceID,TypeID,T> id )const { return find<T>(id); }
+
+         template<uint8_t SpaceID, uint8_t TypeID, typename T>
+         unique_ptr<T> find_db(object_id<SpaceID, TypeID, T> id)const { return find_db<T>(id); }
 
          template<uint8_t SpaceID, uint8_t TypeID, typename T>
          const T& get( object_id<SpaceID,TypeID,T> id )const { return get<T>(id); }

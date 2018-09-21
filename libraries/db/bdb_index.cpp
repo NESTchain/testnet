@@ -114,6 +114,7 @@ void graphene::db::bdb_env::init(const char* home, const char* data_dir)
 	// but everything else is the default.
 	//
 	_dbenv->set_cachesize(0, 512 * 1024 * 1024, 0);
+    _dbenv->set_tmp_dir(home);
 
 	// Databases are in a subdirectory.
 	_dbenv->set_data_dir(data_dir);
@@ -121,7 +122,7 @@ void graphene::db::bdb_env::init(const char* home, const char* data_dir)
 	// Open the environment with full transactional support.
 	try {
 		int ret = _dbenv->open(home,
-			DB_CREATE  | DB_INIT_CDB | DB_INIT_MPOOL, 0); // | DB_INIT_TXN | DB_INIT_LOCK | DB_INIT_LOG
+			DB_CREATE | DB_PRIVATE | DB_INIT_CDB | DB_INIT_MPOOL, 0); // | DB_INIT_TXN | DB_INIT_LOCK | DB_INIT_LOG
 
 		if(ret)
 			std::cerr << "failed to init BerkeleyDB environment: ret=" << ret << "\n";
@@ -132,3 +133,11 @@ void graphene::db::bdb_env::init(const char* home, const char* data_dir)
 	}
 }
 
+int object_id_comp(Db* db, const Dbt* key1, const Dbt* key2, size_t* size)
+{
+    graphene::db::object_id_type* k1 = (graphene::db::object_id_type*)key1->get_data();
+    graphene::db::object_id_type* k2 = (graphene::db::object_id_type*)key2->get_data();
+
+    int64_t ii = k1->number - k2->number;
+    return ii > 0 ? 1 : ii == 0 ? 0 : -1;
+}

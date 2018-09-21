@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
+ * Copyright (c) 2018- ¦ÌNEST Foundation, and contributors.
  *
  * The MIT License
  *
@@ -46,9 +47,37 @@ const object* object_database::find_object( object_id_type id )const
 {
    return get_index(id.space(),id.type()).find( id );
 }
+
+unique_ptr<object> object_database::find_object_db(object_id_type id)const
+{
+    return get_index(id.space(), id.type()).find_db(id);
+}
+
 const object& object_database::get_object( object_id_type id )const
 {
    return get_index(id.space(),id.type()).get( id );
+}
+
+unique_ptr<object> object_database::get_object_copy(object_id_type id)const
+{
+    return get_index(id.space(), id.type()).find_copy(id);
+}
+
+fc::variant object_database::find_object_as_variant( object_id_type id )const
+{
+   auto& index = get_index(id.space(), id.type());
+   if(index.is_external_db())
+   {
+      unique_ptr<object> obj = index.find_db(id);
+      if (obj)
+         return obj->to_variant();
+   }
+   else
+   {
+      if (auto obj = index.find(id))
+         return obj->to_variant();
+   }
+   return{};
 }
 
 const index& object_database::get_index(uint8_t space_id, uint8_t type_id)const

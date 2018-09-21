@@ -90,7 +90,7 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
    auto skip_oho_id = [&is_first,&db,this]() {
       if( is_first && db._undo_db.enabled() ) // this ensures that the current id is rolled back on undo
       {
-		 _oho_index->remove( *_oho_index->create_db( []( object& obj) {} ) );
+		 db.remove( *db.create_db<operation_history_object>( []( object& obj) {} ) );
          is_first = false;
       }
       else
@@ -105,7 +105,7 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
       auto create_oho = [&]() {
          is_first = false;
 
-		 std::unique_ptr<object> tmp = _oho_index->create_db([&](object& o)
+		 std::unique_ptr<object> tmp = db.create_db<operation_history_object>([&](object& o)
 		 {
 			 if (o_op.valid())
 			 {
@@ -208,7 +208,7 @@ void account_history_plugin_impl::add_account_history( const account_id_type acc
    const auto& stats_obj = account_id(db).statistics(db);
 
    // add new entry
-   auto ath_ptr = _atho_index->create_db( [&]( object& o ){
+   auto ath_ptr = db.create_db<account_transaction_history_object>( [&]( object& o ){
 
 	   account_transaction_history_object& obj = static_cast<account_transaction_history_object&>(o);
        obj.operation_id = op_id;
@@ -303,8 +303,8 @@ void account_history_plugin::plugin_set_program_options(
 
 int get_account_seq(Db* sdb, const Dbt* pkey, const Dbt* pdata, Dbt* skey)
 {
-	const char* ck = (const char*)pkey->get_data();
-	if (*ck == '_')
+	const int64_t* ck = (const int64_t*)pkey->get_data();
+	if (_BDB_SDB_DONOTINDEX(*ck))
 		return DB_DONOTINDEX;
 
 	account_transaction_history_object obj ;
@@ -320,14 +320,14 @@ int get_account_seq(Db* sdb, const Dbt* pkey, const Dbt* pdata, Dbt* skey)
 	skey->set_flags(DB_DBT_APPMALLOC); // let bdb to free it
 	skey->set_data( k );
 	skey->set_size(sizeof(atho_by_seq));
-	return (0);
+	return 0;
 }
 
 int get_account_op(Db* sdb, const Dbt* pkey, const Dbt* pdata, Dbt* skey)
 {
-	const char* ck = (const char*)pkey->get_data();
-	if (*ck == '_')
-		return DB_DONOTINDEX;
+    const int64_t* ck = (const int64_t*)pkey->get_data();
+    if (_BDB_SDB_DONOTINDEX(*ck))
+        return DB_DONOTINDEX;
 
 	account_transaction_history_object obj;
 	fc::raw::unpack<account_transaction_history_object>((const char*)pdata->get_data(), pdata->get_size(), obj);
@@ -342,14 +342,14 @@ int get_account_op(Db* sdb, const Dbt* pkey, const Dbt* pdata, Dbt* skey)
 	skey->set_flags(DB_DBT_APPMALLOC); // let bdb to free it
 	skey->set_data(k);
 	skey->set_size(sizeof(atho_by_op));
-	return (0);
+	return 0;
 }
 
 int get_account_opid(Db* sdb, const Dbt* pkey, const Dbt* pdata, Dbt* skey)
 {
-	const char* k = (const char*)pkey->get_data();
-	if (*k == '_')
-		return DB_DONOTINDEX;
+    const int64_t* ck = (const int64_t*)pkey->get_data();
+    if (_BDB_SDB_DONOTINDEX(*ck))
+        return DB_DONOTINDEX;
 
 	account_transaction_history_object obj;
 	fc::raw::unpack<account_transaction_history_object>((const char*)pdata->get_data(), pdata->get_size(), obj);
@@ -357,9 +357,13 @@ int get_account_opid(Db* sdb, const Dbt* pkey, const Dbt* pdata, Dbt* skey)
 
 	// account_transaction_history_object* atho = (account_transaction_history_object*)pdata->get_data();
 	
-	skey->set_data(&atho->operation_id);
-	skey->set_size(sizeof(atho->operation_id));
-	return (0);
+	atho_by_opid* k = (atho_by_opid*)malloc(sizeof(atho_by_opid)); 
+	k->operation_id = atho->operation_id;
+
+	skey->set_flags(DB_DBT_APPMALLOC); // let bdb to free it
+	skey->set_data(k);
+	skey->set_size(sizeof(atho_by_opid));
+	return 0;
 }
 
 
@@ -377,7 +381,7 @@ void account_history_plugin::plugin_initialize(const boost::program_options::var
 
 	my->_atho_index->add_bdb_secondary_index(new bdb_secondary_index<account_transaction_history_object>("by_seq", false), get_account_seq);
 	my->_atho_index->add_bdb_secondary_index(new bdb_secondary_index<account_transaction_history_object>("by_op", false), get_account_op);
-	my->_atho_index->add_bdb_secondary_index(new bdb_secondary_index<account_transaction_history_object>("by_opid", true), get_account_opid);
+	// my->_atho_index->add_bdb_secondary_index(new bdb_secondary_index<account_transaction_history_object>("by_opid", true), get_account_opid);
 
 	LOAD_VALUE_SET(options, "track-account", my->_tracked_accounts, graphene::chain::account_id_type);
 	if (options.count("partial-operations")) {
