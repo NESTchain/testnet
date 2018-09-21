@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
+ * Copyright (c) 2018- ¦ÌNEST Foundation, and contributors.
  *
  * The MIT License
  *
@@ -74,6 +75,10 @@
    {                                                                          \
       elog( "Caught plugin exception: ${e}", ("e", e.to_detail_string() ) );  \
       throw;                                                                  \
+   }                                                                          \
+   catch (fc::exception& e)                                                   \
+   {                                                                          \
+      wlog("Caught exception in plugin: ${e}", ("e", e.to_detail_string()));  \
    }                                                                          \
    catch( ... )                                                               \
    {                                                                          \

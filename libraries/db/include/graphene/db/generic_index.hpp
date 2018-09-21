@@ -78,6 +78,13 @@ namespace graphene { namespace chain {
             _indices.erase( _indices.iterator_to( static_cast<const ObjectType&>(obj) ) );
          }
 
+         virtual void remove(object_id_type id)override
+         {
+             auto itr = _indices.find(id);
+             FC_ASSERT(itr != _indices.end(), "Unable to find Object ${id}", ("id", id));
+             _indices.erase(itr);
+         }
+
          virtual const object* find( object_id_type id )const override
          {
             static_assert(std::is_same<typename MultiIndexType::key_type, object_id_type>::value,

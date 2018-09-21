@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
+ * Copyright (c) 2018- ¦ÌNEST Foundation, and contributors.
  *
  * The MIT License
  *
@@ -77,6 +78,13 @@ namespace graphene { namespace db {
             while( (_objects.size() > 0) && (_objects.back() == nullptr) )
                _objects.pop_back();
          }
+
+		 virtual void remove(object_id_type id) override
+		 {
+			 const object* obj = find(id);
+             FC_ASSERT(nullptr != obj, "Unable to find Object ${id}", ("id", id));
+			 remove(*obj);
+		 }
 
          virtual const object* find( object_id_type id )const override
          {

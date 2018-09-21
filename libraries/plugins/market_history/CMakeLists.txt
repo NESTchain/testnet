@@ -1,10 +1,19 @@
 file(GLOB HEADERS "include/graphene/market_history/*.hpp")
 
+if(WIN32)
+	INCLUDE_DIRECTORIES($ENV{BDB_INCLUDE_DIR})
+endif(WIN32)
+
 add_library( graphene_market_history 
              market_history_plugin.cpp
            )
 
-target_link_libraries( graphene_market_history graphene_chain graphene_app )
+if(WIN32)
+	target_link_libraries( graphene_market_history graphene_chain graphene_app )
+else(WIN32)
+	target_link_libraries( graphene_market_history graphene_chain graphene_app db_cxx)
+endif(WIN32)
+
 target_include_directories( graphene_market_history
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
