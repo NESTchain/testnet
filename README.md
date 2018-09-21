@@ -9,10 +9,33 @@ Author:μNEST dev team, http://iotee.io
 Install Dependencies:
 
 ```
+# install berkeley-db 18.1
+wget http://download.oracle.com/otn/berkeley-db/db-18.1.25.tar.gz  # need register and login
+tar -xzvf db-18.1.25.tar.gz
+cd db-18.1.25/build_unix
+../dist/configure --prefix=/usr --enable-cxx
+make
+sudo make install
+ls -l /usr/lib/libdb*
+-rw-r--r-- 1 root root 3551756 Sep 21 05:38 /usr/lib/libdb-18.1.a
+-rw-r--r-- 1 root root     945 Sep 21 05:35 /usr/lib/libdb-18.1.la
+-rwxr-xr-x 1 root root 2279600 Sep 21 05:35 /usr/lib/libdb-18.1.so
+lrwxrwxrwx 1 root root      13 Sep 21 05:38 /usr/lib/libdb-18.so -> libdb-18.1.so
+-rw-r--r-- 1 root root 3551756 Sep 21 05:38 /usr/lib/libdb.a
+-rw-r--r-- 1 root root 3919422 Sep 21 05:38 /usr/lib/libdb_cxx-18.1.a
+-rw-r--r-- 1 root root     973 Sep 21 05:35 /usr/lib/libdb_cxx-18.1.la
+-rwxr-xr-x 1 root root 2505816 Sep 21 05:35 /usr/lib/libdb_cxx-18.1.so
+lrwxrwxrwx 1 root root      17 Sep 21 05:38 /usr/lib/libdb_cxx-18.so -> libdb_cxx-18.1.so
+-rw-r--r-- 1 root root 3919422 Sep 21 05:38 /usr/lib/libdb_cxx.a
+lrwxrwxrwx 1 root root      17 Sep 21 05:38 /usr/lib/libdb_cxx.so -> libdb_cxx-18.1.so
+lrwxrwxrwx 1 root root      13 Sep 21 05:38 /usr/lib/libdb.so -> libdb-18.1.so
+```
+
+```
 sudo apt-get install libboost-all-dev libdb++-dev
 ```
 
-The Boost which ships with 了Ubuntu 16.04 LTS (64-bit) is version 1.58, so it is not necessary to build Boost by yourself and not necessary to set Boost environment variable.
+The Boost which ships with Ubuntu 16.04 LTS (64-bit) is version 1.58, so it is not necessary to build Boost by yourself and not necessary to set Boost environment variable.
 
 Same steps as those on Ubuntu 14.04 LTS (64-bit):
 
