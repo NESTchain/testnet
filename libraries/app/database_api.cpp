@@ -341,9 +341,8 @@ fc::variants database_api_impl::get_objects(const vector<object_id_type>& ids)co
 
    std::transform(ids.begin(), ids.end(), std::back_inserter(result),
                   [this](object_id_type id) -> fc::variant {
-      if(auto obj = _db.find_object(id))
-         return obj->to_variant();
-      return {};
+      
+      return _db.find_object_as_variant(id);
    });
 
    return result;

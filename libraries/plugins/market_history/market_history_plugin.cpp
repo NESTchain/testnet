@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
+ * Copyright (c) 2018- ¦ÌNEST Foundation, and contributors.
  *
  * The MIT License
  *
@@ -35,6 +36,7 @@
 
 #include <fc/thread/thread.hpp>
 #include <fc/smart_ref_impl.hpp>
+#include <graphene/db/bdb_index.hpp>
 
 namespace graphene { namespace market_history {
 
@@ -85,9 +87,13 @@ struct operation_process_fill_order
    {
       //ilog( "processing ${o}", ("o",o) );
       auto& db         = _plugin.database();
-      const auto& order_his_idx = db.get_index_type<history_index>().indices();
-      const auto& history_idx = order_his_idx.get<by_key>();
-      const auto& his_time_idx = order_his_idx.get<by_market_time>();
+      //const auto& order_his_idx = db.get_index_type<history_index>().indices();
+      //const auto& history_idx = order_his_idx.get<by_key>();
+      //const auto& his_time_idx = order_his_idx.get<by_market_time>();
+
+      const auto& order_his_idx = dynamic_cast<const bdb_index<order_history_object>&>(db.get_index(order_history_object::space_id, order_history_object::type_id));
+      const auto& history_idx = order_his_idx.get_bdb_secondary_index(0);
+      const auto& his_time_idx = order_his_idx.get_bdb_secondary_index(1);
 
       // To save new filled order data
       history_key hkey;
@@ -97,14 +103,15 @@ struct operation_process_fill_order
          std::swap( hkey.base, hkey.quote );
       hkey.sequence = std::numeric_limits<int64_t>::min();
 
-      auto itr = history_idx.lower_bound( hkey );
+      order_history_object oho;
+      auto itr = history_idx.lower_bound( &hkey, sizeof(hkey), oho );
 
-      if( itr != history_idx.end() && itr->key.base == hkey.base && itr->key.quote == hkey.quote )
-         hkey.sequence = itr->key.sequence - 1;
+      if( itr != nullptr && oho.key.base == hkey.base && oho.key.quote == hkey.quote )
+         hkey.sequence = oho.key.sequence - 1;
       else
          hkey.sequence = 0;
 
-      const auto& new_order_his_obj = db.create<order_history_object>( [&]( order_history_object& ho ) {
+      const auto& new_order_his_obj = db.create_db<order_history_object>( [&]( order_history_object& ho ) {
          ho.key = hkey;
          ho.time = _now;
          ho.op = o;
@@ -116,45 +123,74 @@ struct operation_process_fill_order
          const auto& meta_idx = db.get_index_type<simple_index<market_ticker_meta_object>>();
          if( meta_idx.size() == 0 )
             _meta = &db.create<market_ticker_meta_object>( [&]( market_ticker_meta_object& mtm ) {
-               mtm.rolling_min_order_his_id = new_order_his_obj.id;
+               mtm.rolling_min_order_his_id = new_order_his_obj->id;
                mtm.skip_min_order_his_id = false;
             });
          else
             _meta = &( *meta_idx.begin() );
       }
+      if (itr != nullptr)
+          history_idx.close_cursor(itr);
 
       // To remove old filled order data
+      vector<order_history_object> objects_to_remove;
       const auto max_records = _plugin.max_order_his_records_per_market();
       hkey.sequence += max_records;
-      itr = history_idx.lower_bound( hkey );
-      if( itr != history_idx.end() && itr->key.base == hkey.base && itr->key.quote == hkey.quote )
+      itr = history_idx.lower_bound( &hkey, sizeof(hkey), oho );
+      if( itr != nullptr && oho.key.base == hkey.base && oho.key.quote == hkey.quote )
       {
          const auto max_seconds = _plugin.max_order_his_seconds_per_market();
          fc::time_point_sec min_time;
          if( min_time + max_seconds < _now )
             min_time = _now - max_seconds;
-         auto time_itr = his_time_idx.lower_bound( std::make_tuple( hkey.base, hkey.quote, min_time ) );
-         if( time_itr != his_time_idx.end() && time_itr->key.base == hkey.base && time_itr->key.quote == hkey.quote )
+         order_history_market_time_key market_time_key;
+         market_time_key.base = hkey.base;
+         market_time_key.quote = hkey.quote;
+         market_time_key.time = min_time;
+         market_time_key.sequence = 0;
+
+         order_history_object oho_market_time;
+         // auto time_itr = his_time_idx.lower_bound( std::make_tuple( hkey.base, hkey.quote, min_time ) );
+         auto time_itr = his_time_idx.lower_bound(&market_time_key, sizeof(market_time_key), oho_market_time);
+         if( time_itr != nullptr && oho_market_time.key.base == hkey.base && oho_market_time.key.quote == hkey.quote )
          {
-            if( itr->key.sequence >= time_itr->key.sequence )
+            if( oho.key.sequence >= oho_market_time.key.sequence )
             {
-               while( itr != history_idx.end() && itr->key.base == hkey.base && itr->key.quote == hkey.quote )
+               while( itr != nullptr && oho.key.base == hkey.base && oho.key.quote == hkey.quote )
                {
-                  auto old_itr = itr;
-                  ++itr;
-                  db.remove( *old_itr );
+                  objects_to_remove.push_back(oho); 
+                  bool hasNext = history_idx.get_next(itr, oho);
+                  if (!hasNext)
+                      break;
                }
             }
             else
             {
-               while( time_itr != his_time_idx.end() && time_itr->key.base == hkey.base && time_itr->key.quote == hkey.quote )
+               while( time_itr != nullptr && oho_market_time.key.base == hkey.base && oho_market_time.key.quote == hkey.quote )
                {
-                  auto old_itr = time_itr;
-                  ++time_itr;
-                  db.remove( *old_itr );
+                  objects_to_remove.push_back(oho_market_time);
+                  bool hasNext = his_time_idx.get_next(time_itr, oho_market_time);
+                  if (!hasNext)
+                      break; 
                }
             }
          }
+         if(time_itr!=nullptr)
+            his_time_idx.close_cursor(time_itr);
+      }
+      if(itr!=nullptr)
+          history_idx.close_cursor(itr);
+
+      static u_int64_t consume = 0, total_removed = 0;
+      fc::time_point start_point = fc::time_point::now();
+      for (auto& obj : objects_to_remove)
+          db.remove(obj);
+      if (objects_to_remove.size() > 0)
+      {
+          total_removed += objects_to_remove.size();
+          consume += (fc::time_point::now() - start_point).count();
+          if (consume % 1000000 < 100)
+              ilog("remove order_history_object ${total} takes: ${consume}", ("total", total_removed) ("consume", consume));
       }
 
       // To update ticker data and buckets data, only update for maker orders
@@ -210,7 +246,8 @@ struct operation_process_fill_order
       const auto& buckets = _plugin.tracked_buckets();
       if( buckets.size() == 0 ) return;
 
-      const auto& bucket_idx = db.get_index_type<bucket_index>();
+      // const auto& bucket_idx = db.get_index_type<bucket_index>();
+      const auto& bucket_idx = dynamic_cast<const bdb_index<bucket_object>&>(db.get_index(bucket_object::space_id, bucket_object::type_id));
       for( auto bucket : buckets )
       {
           auto bucket_num = _now.sec_since_epoch() / bucket;
@@ -221,12 +258,15 @@ struct operation_process_fill_order
           key.seconds = bucket;
           key.open    = fc::time_point_sec() + ( bucket_num * bucket );
 
-          const auto& by_key_idx = bucket_idx.indices().get<by_key>();
-          auto bucket_itr = by_key_idx.find( key );
-          if( bucket_itr == by_key_idx.end() )
+          // const auto& by_key_idx = bucket_idx.indices().get<by_key>();
+          // auto bucket_itr = by_key_idx.find( key );
+          // if( bucket_itr == by_key_idx.end() )
+
+          const auto& by_key_idx = bucket_idx.get_bdb_secondary_index(0); 
+          if(!by_key_idx.exists(&key, sizeof(key)))
           { // create new bucket
             /* const auto& obj = */
-            db.create<bucket_object>( [&]( bucket_object& b ){
+            db.create_db<bucket_object>( [&]( bucket_object& b ){
                  b.key = key;
                  b.base_volume = trade_price.base.amount;
                  b.quote_volume = trade_price.quote.amount;
@@ -243,8 +283,9 @@ struct operation_process_fill_order
           }
           else
           { // update existing bucket
-             //wlog( "    before updating bucket ${b}", ("b",*bucket_itr) );
-             db.modify( *bucket_itr, [&]( bucket_object& b ){
+             //wlog( "    before updating bucket ${b}", ("b",*bucket_itr) ); 
+             auto bo = by_key_idx.find_db(&key, sizeof(key));
+             db.modify( *bo, [&]( bucket_object& b ){
                   try {
                      b.base_volume += trade_price.base.amount;
                   } catch( fc::overflow_exception ) {
@@ -273,18 +314,26 @@ struct operation_process_fill_order
 
           {
              key.open = fc::time_point_sec();
-             bucket_itr = by_key_idx.lower_bound( key );
-
-             while( bucket_itr != by_key_idx.end() &&
-                    bucket_itr->key.base == key.base &&
-                    bucket_itr->key.quote == key.quote &&
-                    bucket_itr->key.seconds == bucket &&
-                    bucket_itr->key.open < cutoff )
+             bucket_object old_bo;
+             void* bucket_itr = by_key_idx.lower_bound( &key, sizeof(key), old_bo); //TODO
+             bool hasNext = true;
+             vector<bucket_object> vect;
+             while( bucket_itr != nullptr && hasNext &&
+                 old_bo.key.base == key.base &&
+                 old_bo.key.quote == key.quote &&
+                 old_bo.key.seconds == bucket &&
+                 old_bo.key.open < cutoff )
              {
               //  elog( "    removing old bucket ${b}", ("b", *bucket_itr) );
-                auto old_bucket_itr = bucket_itr;
-                ++bucket_itr;
-                db.remove( *old_bucket_itr );
+                vect.push_back(old_bo);
+                hasNext = by_key_idx.get_next( bucket_itr, old_bo);
+             }
+             if(bucket_itr!=nullptr)
+                by_key_idx.close_cursor(bucket_itr);
+
+             for ( auto xbo : vect)
+             {
+                 db.remove(xbo);
              }
           }
       }
@@ -320,8 +369,11 @@ void market_history_plugin_impl::update_market_histories( const signed_block& b 
       bool skip = _meta->skip_min_order_his_id;
 
       const auto& ticker_idx = db.get_index_type<market_ticker_index>().indices().get<by_market>();
-      const auto& history_idx = db.get_index_type<history_index>().indices().get<by_id>();
+      // const auto& history_idx = db.get_index_type<history_index>().indices().get<by_id>();
+      // auto history_itr = history_idx.lower_bound( _meta->rolling_min_order_his_id );
+      const auto& history_idx = dynamic_cast<const bdb_index<order_history_object>&>(db.get_index(order_history_object::space_id, order_history_object::type_id));
       auto history_itr = history_idx.lower_bound( _meta->rolling_min_order_his_id );
+
       while( history_itr != history_idx.end() && history_itr->time < last_day )
       {
          const fill_order_operation& o = history_itr->op;
@@ -422,11 +474,152 @@ void market_history_plugin::plugin_set_program_options(
    cfg.add(cli);
 }
 
+int get_bucket_key(Db* sdb, const Dbt* pkey, const Dbt* pdata, Dbt* skey)
+{
+    const int64_t* ck = (const int64_t*)pkey->get_data();
+    if (_BDB_SDB_DONOTINDEX(*ck))
+        return DB_DONOTINDEX;
+
+    bucket_object obj;
+    fc::raw::unpack<bucket_object>((const char*)pdata->get_data(), pdata->get_size(), obj);
+
+    // bucket_object* atho = (bucket_object*)pdata->get_data();
+
+    bucket_key* k = (bucket_key*)malloc(sizeof(bucket_key));
+    *k = obj.key;
+
+    skey->set_flags(DB_DBT_APPMALLOC); // let bdb to free it
+    skey->set_data(k);
+    skey->set_size(sizeof(bucket_key));
+    return 0;
+
+}
+
+int bucket_key_comp(Db* db, const Dbt* key1, const Dbt* key2, size_t* size)
+{
+    bucket_key* k1 = (bucket_key*)key1->get_data();
+    bucket_key* k2 = (bucket_key*)key2->get_data();
+
+    // int ii = *k1 == *k2 ? 0 : *k1 < *k2 ? -1 : 1;
+    
+    if (k1->base.instance.value != k2->base.instance.value)
+        return k1->base.instance.value > k2->base.instance.value ? 1 : -1;
+
+    if (k1->quote.instance.value != k2->quote.instance.value)
+        return k1->quote.instance.value > k2->quote.instance.value ? 1 : -1;
+
+    if (k1->seconds != k2->seconds)
+        return k1->seconds > k2->seconds ? 1 : -1;
+
+    if (k1->open != k2->open)
+        return k1->open > k2->open ? 1 : -1;
+    return 0;
+}
+
+
+int get_order_history_key(Db* sdb, const Dbt* pkey, const Dbt* pdata, Dbt* skey)
+{
+    const int64_t* ck = (const int64_t*)pkey->get_data();
+    if (_BDB_SDB_DONOTINDEX(*ck))
+        return DB_DONOTINDEX;
+
+    order_history_object obj;
+    fc::raw::unpack<order_history_object>((const char*)pdata->get_data(), pdata->get_size(), obj);
+
+    // order_history_object* atho = (order_history_object*)pdata->get_data();
+
+    history_key* k = (history_key*)malloc(sizeof(history_key));
+    *k = obj.key; //  memcpy(k, &obj.key, sizeof(history_key));
+
+    skey->set_flags(DB_DBT_APPMALLOC); // let bdb to free it
+    skey->set_data(k);
+    skey->set_size(sizeof(history_key));
+    return 0;
+
+}
+
+int order_history_key_comp(Db* db, const Dbt* key1, const Dbt* key2, size_t* size)
+{
+    history_key* k1 = (history_key*)key1->get_data();
+    history_key* k2 = (history_key*)key2->get_data();
+
+    if (k1->base.instance.value != k2->base.instance.value)
+        return k1->base.instance.value > k2->base.instance.value ? 1 : -1;
+
+    if (k1->quote.instance.value != k2->quote.instance.value)
+        return k1->quote.instance.value > k2->quote.instance.value ? 1 : -1;
+
+    if (k1->sequence != k2->sequence)
+        return k1->sequence > k2->sequence ? 1 : -1;
+
+    return 0;
+}
+
+int get_order_history_market_time(Db* sdb, const Dbt* pkey, const Dbt* pdata, Dbt* skey)
+{
+    const int64_t* ck = (const int64_t*)pkey->get_data();
+    if (_BDB_SDB_DONOTINDEX(*ck))
+        return DB_DONOTINDEX;
+
+    order_history_object obj;
+    fc::raw::unpack<order_history_object>((const char*)pdata->get_data(), pdata->get_size(), obj);
+
+    // order_history_object* atho = (order_history_object*)pdata->get_data();
+
+    order_history_market_time_key* k = (order_history_market_time_key*)malloc(sizeof(history_key));
+    k->base = obj.key.base;
+    k->quote = obj.key.quote;
+    k->time = obj.time;
+    k->sequence = obj.key.sequence;
+
+    skey->set_flags(DB_DBT_APPMALLOC); // let bdb to free it
+    skey->set_data(k);
+    skey->set_size(sizeof(order_history_market_time_key));
+    return 0;
+
+}
+
+int order_history_market_time_comp(Db* db, const Dbt* key1, const Dbt* key2, size_t* size)
+{
+    order_history_market_time_key* k1 = (order_history_market_time_key*)key1->get_data();
+    order_history_market_time_key* k2 = (order_history_market_time_key*)key2->get_data();
+
+    // int ii = *k1 == *k2 ? 0 : *k1 < *k2 ? -1 : 1;
+    composite_key_compare<
+        std::less< asset_id_type >,
+        std::less< asset_id_type >,
+        std::greater< time_point_sec >,
+        std::less< int64_t >
+    > comp;
+    
+    if (k1->base.instance.value != k2->base.instance.value)
+        return k1->base.instance.value > k2->base.instance.value ? 1 : -1;
+
+    if (k1->quote.instance.value != k2->quote.instance.value)
+        return k1->quote.instance.value > k2->quote.instance.value ? 1 : -1;
+
+    if (k1->time != k2->time)
+        return k1->time < k2->time ? 1 : -1;
+
+    if (k1->sequence != k2->sequence)
+        return k1->sequence > k2->sequence ? 1 : -1;
+    return 0;
+}
+
+
+
 void market_history_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 { try {
    database().applied_block.connect( [this]( const signed_block& b){ my->update_market_histories(b); } );
-   database().add_index< primary_index< bucket_index  > >();
-   database().add_index< primary_index< history_index  > >();
+   // database().add_index< primary_index< bucket_index  > >();
+   auto bucket_idx = database().add_index< primary_index< bdb_index<bucket_object> > >();
+   bucket_idx->add_bdb_secondary_index(new bdb_secondary_index<bucket_object>("by_key", false, bucket_key_comp), get_bucket_key);
+
+   // database().add_index< primary_index< history_index  > >();
+   auto history_idx = database().add_index< primary_index< bdb_index<order_history_object> > >();
+   history_idx->add_bdb_secondary_index(new bdb_secondary_index<order_history_object>("by_key", false, order_history_key_comp), get_order_history_key);
+   history_idx->add_bdb_secondary_index(new bdb_secondary_index<order_history_object>("by_market_time", false, order_history_market_time_comp), get_order_history_market_time);
+
    database().add_index< primary_index< market_ticker_index  > >();
    database().add_index< primary_index< simple_index< market_ticker_meta_object > > >();
 

@@ -57,27 +57,35 @@ void database::reindex( fc::path data_dir )
       edump((last_block));
       return;
    }
-   if( last_block->block_num() <= head_block_num()) return;
+   uint32_t head_block = head_block_num();
+   if( last_block->block_num() <= head_block) return;
 
    ilog( "reindexing blockchain" );
    auto start = fc::time_point::now();
    const auto last_block_num = last_block->block_num();
    uint32_t flush_point = last_block_num < 10000 ? 0 : last_block_num - 10000;
    uint32_t undo_point = last_block_num < 50 ? 0 : last_block_num - 50;
-
-   ilog( "Replaying blocks, starting at ${next}...", ("next",head_block_num() + 1) );
-   if( head_block_num() >= undo_point )
+   ilog( "Replaying blocks, starting at ${next}...", ("next", head_block + 1) );
+   if(head_block >= undo_point )
    {
-      if( head_block_num() > 0 )
-         _fork_db.start_block( *fetch_block_by_number( head_block_num() ) );
+      if(head_block > 0 )
+         _fork_db.start_block( *fetch_block_by_number(head_block) );
    }
    else
       _undo_db.disable();
-   for( uint32_t i = head_block_num() + 1; i <= last_block_num; ++i )
+
+   uint64_t last_flush = 0;
+   for( uint32_t i = head_block + 1; i <= last_block_num; ++i )
    {
-      if( i % 10000 == 0 ) std::cerr << "   " << double(i*100)/last_block_num << "%   "<<i << " of " <<last_block_num<<"   \n";
-      if( i == flush_point )
+      fc::time_point now = fc::time_point::now();
+      uint64_t elapse = (now - start).to_seconds();
+      if (i % 10000 == 0) 
       {
+         std::cerr << "   " << fc::string(now) << ":  " << "  elapsed:(" << elapse << "s)   " << double(i * 100) / last_block_num << "%   " << i << " of " << last_block_num << "   \n";
+      }
+      if( ((i%200000==0 || (elapse-last_flush>=600)) && i < flush_point ) || i == flush_point )
+      {
+         last_flush = elapse;
          ilog( "Writing database to disk at block ${i}", ("i",i) );
          flush();
          ilog( "Done" );

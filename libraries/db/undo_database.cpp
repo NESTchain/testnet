@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
+ * Copyright (c) 2018- ¦ÌNEST Foundation, and contributors.
  *
  * The MIT License
  *
@@ -101,12 +102,28 @@ void undo_database::undo()
    auto& state = _stack.back();
    for( auto& item : state.old_values )
    {
-      _db.modify( _db.get_object( item.second->id ), [&]( object& obj ){ obj.move_from( *item.second ); } );
+       // _db.modify( _db.get_object( item.second->id ), [&]( object& obj ){ obj.move_from( *item.second ); } );
+       try {
+           // ilog("undo(): modify object, ${id}", ("id", item.second->id));
+           _db.modify(item.second->id, [&](object& obj) { obj.move_from(*item.second); });
+       }
+       catch (const fc::exception& e)
+       {
+           elog("!!!undo(): error modify object, ${id}", ("id", item.second->id));
+       }
    }
 
-   for( auto ritr = state.new_ids.begin(); ritr != state.new_ids.end(); ++ritr  )
+   for (auto ritr = state.new_ids.begin(); ritr != state.new_ids.end(); ++ritr)
    {
-      _db.remove( _db.get_object(*ritr) );
+       // _db.remove( _db.get_object(*ritr) );
+       try {
+           // ilog("undo(): remove object, ${id}", ("id", *ritr));
+           _db.remove(*ritr);
+       }
+       catch (const fc::exception& e)
+       {
+           elog("undo(): error remove object, ${id}", ("id", *ritr));
+       }
    }
 
    for( auto& item : state.old_index_next_ids )
@@ -258,13 +275,28 @@ void undo_database::pop_commit()
       auto& state = _stack.back();
 
       for( auto& item : state.old_values )
-      {
-         _db.modify( _db.get_object( item.second->id ), [&]( object& obj ){ obj.move_from( *item.second ); } );
+      { 
+         try {
+             ilog("pop_commit(): modify object, ${id}", ("id", item.second->id));
+             _db.modify(item.second->id, [&](object& obj) { obj.move_from(*item.second); });
+         }
+         catch (const fc::exception& e)
+         {
+             elog("!!!pop_commit(): error modify object, ${id}", ("id", item.second->id));
+         }
       }
 
       for( auto ritr = state.new_ids.begin(); ritr != state.new_ids.end(); ++ritr  )
       {
-         _db.remove( _db.get_object(*ritr) );
+         // _db.remove( _db.get_object(*ritr) );
+         try {
+            ilog("pop_commit(): remove object, ${id}", ("id", *ritr));
+            _db.remove(*ritr);
+         }
+         catch(const fc::exception& e)
+         {
+            elog("pop_commit(): error remove object, ${id}", ("id", *ritr));
+         }
       }
 
       for( auto& item : state.old_index_next_ids )

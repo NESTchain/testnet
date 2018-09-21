@@ -77,6 +77,7 @@ namespace graphene { namespace db {
          virtual object_id_type get_next_id()const = 0;
          virtual void           use_next_id() = 0;
          virtual void           set_next_id( object_id_type id ) = 0;
+         virtual bool           is_external_db() const { return false; }
 
          virtual const object&  load( const std::vector<char>& data ) = 0;
          /**
@@ -112,8 +113,19 @@ namespace graphene { namespace db {
          /** @return the object with id or nullptr if not found */
          virtual const object*      find( object_id_type id )const = 0;
 
+         /** @return the object with id or nullptr if not found */
+         virtual std::unique_ptr<object> find_copy(object_id_type id)const
+         {
+             auto maybe_found = find(id);
+             if( maybe_found != nullptr )
+             {
+                 return maybe_found->clone();
+             }
+             return std::unique_ptr<object>(nullptr);
+         }
+
 		 // find the object from a 3rd-party db
-		 virtual std::unique_ptr<object> find_db(object_id_type id) { return std::unique_ptr<object>(nullptr); }
+		 virtual std::unique_ptr<object> find_db(object_id_type id) const { return std::unique_ptr<object>(nullptr); }
 
          /**
           * This version will automatically check for nullptr and throw an exception if the
@@ -128,6 +140,7 @@ namespace graphene { namespace db {
 
          virtual void               modify( const object& obj, const std::function<void(object&)>& ) = 0;
          virtual void               remove( const object& obj ) = 0;
+         virtual void               remove( object_id_type id ) = 0;
          virtual void               remove_db( object_id_type id) { }
 
          /**
@@ -213,7 +226,7 @@ namespace graphene { namespace db {
     *
     *  @see http://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
     */
-   template<typename DerivedIndex, typename use3rdPartyDB = fc::false_type>
+   template<typename DerivedIndex>
    class primary_index  : public DerivedIndex, public base_primary_index
    {
       public:
@@ -230,7 +243,7 @@ namespace graphene { namespace db {
 
          virtual object_id_type get_next_id()const override              { return _next_id;    }
          virtual void           use_next_id()override                    { ++_next_id.number;  }
-         virtual void           set_next_id( object_id_type id )override { _next_id = id;      }
+         virtual void           set_next_id( object_id_type id )override { _next_id = id; ilog("index: set_next_id(): ${id}", ("id", std::string(id))); }
 
          fc::sha256 get_object_version()const
          {
@@ -248,6 +261,7 @@ namespace graphene { namespace db {
 
             fc::raw::unpack(ds, _next_id);
             fc::raw::unpack(ds, open_ver);
+            ilog("index: _next_id: ${id}", ("id", std::string(_next_id)));
             FC_ASSERT( open_ver == get_object_version(), "Incompatible Version, the serialization of objects in this index has changed" );
             try {
                vector<char> tmp;
@@ -308,6 +322,12 @@ namespace graphene { namespace db {
             on_remove(obj);
             DerivedIndex::remove(obj);
          }
+
+		 virtual void  remove( object_id_type id) override
+		 {
+			 const object& obj = DerivedIndex::get(id);
+			 remove(obj);
+		 }
 
          virtual void modify( const object& obj, const std::function<void(object&)>& m )override
          {

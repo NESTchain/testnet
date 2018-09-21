@@ -40,6 +40,7 @@
 #include <fc/crypto/hex.hpp>
 #include <fc/smart_ref_impl.hpp>
 #include <fc/thread/future.hpp>
+#include <graphene/db/bdb_index.hpp>
 
 namespace graphene { namespace app {
 
@@ -289,22 +290,27 @@ namespace graphene { namespace app {
        FC_ASSERT(_app.chain_database());
        const auto& db = *_app.chain_database();
        if( a > b ) std::swap(a,b);
-       const auto& history_idx = db.get_index_type<graphene::market_history::history_index>().indices().get<by_key>();
+       // const auto& history_idx = db.get_index_type<graphene::market_history::history_index>().indices().get<by_key>();
+       const auto& order_his_idx = dynamic_cast<const bdb_index<order_history_object>&>(db.get_index(order_history_object::space_id, order_history_object::type_id));
+       const auto& history_idx = order_his_idx.get_bdb_secondary_index(0);
+
        history_key hkey;
        hkey.base = a;
        hkey.quote = b;
        hkey.sequence = std::numeric_limits<int64_t>::min();
 
        uint32_t count = 0;
-       auto itr = history_idx.lower_bound( hkey );
+       order_history_object oho;
+       auto itr = history_idx.lower_bound( &hkey, sizeof(hkey), oho );
        vector<order_history_object> result;
-       while( itr != history_idx.end() && count < limit)
+       while( itr != nullptr && count < limit)
        {
-          if( itr->key.base != a || itr->key.quote != b ) break;
-          result.push_back( *itr );
-          ++itr;
+          if( oho.key.base != a || oho.key.quote != b ) break;
+          result.push_back( oho );
           ++count;
+          if (!history_idx.get_next(itr, oho)) break;
        }
+       history_idx.close_cursor(itr);
 
        return result;
     }
@@ -326,20 +332,33 @@ namespace graphene { namespace app {
              start = node.operation_id;
        } catch(...) { return result; }
 
-       const auto& hist_idx = db.get_index_type<account_transaction_history_index>();
-       const auto& by_op_idx = hist_idx.indices().get<by_op>();
-       auto index_start = by_op_idx.begin();
-       auto itr = by_op_idx.lower_bound(boost::make_tuple(account, start));
+       // const auto& hist_idx = db.get_index_type<account_transaction_history_index>();
+       // const auto& by_op_idx = hist_idx.indices().get<by_op>();
+       const auto& hist_idx = dynamic_cast<const bdb_index<account_transaction_history_object>&>(db.get_index(account_transaction_history_object::space_id, account_transaction_history_object::type_id));
+       const auto& by_op_idx = hist_idx.get_bdb_secondary_index(1);
 
-       while(itr != index_start && itr->account == account && itr->operation_id.instance.value > stop.instance.value && result.size() < limit)
+       account_transaction_history_object obj;
+       atho_by_op key;
+       key.account = account;
+       key.operation_id = start;
+       auto itr = by_op_idx.lower_bound(&key, sizeof(key), obj);
+
+       while(itr != nullptr && obj.account == account && obj.operation_id.instance.value > stop.instance.value && result.size() < limit)
        {
-          if(itr->operation_id.instance.value <= start.instance.value)
-             result.push_back(itr->operation_id(db));
-          --itr;
+           if (obj.operation_id.instance.value <= start.instance.value)
+           {
+               auto oho = db.find_db(obj.operation_id);
+               result.push_back(*oho);
+           }
+          
+           if(!by_op_idx.get_previous(itr, obj))
+               break;
        }
-       if(stop.instance.value == 0 && result.size() < limit && itr->account == account) {
-         result.push_back(itr->operation_id(db));
+       if(stop.instance.value == 0 && result.size() < limit && obj.account == account) {
+           auto oho = db.find_db(obj.operation_id);
+           result.push_back(*oho);
        }
+       by_op_idx.close_cursor(itr);
 
        return result;
     }
@@ -364,21 +383,33 @@ namespace graphene { namespace app {
        if( start == operation_history_id_type() )
           start = node->operation_id;
 
+       std::unique_ptr<account_transaction_history_object> atho_ptr;
        while(node && node->operation_id.instance.value > stop.instance.value && result.size() < limit)
        {
           if( node->operation_id.instance.value <= start.instance.value ) {
+             auto oho = db.find_db(node->operation_id);
+             
+             if(oho->op.which() == operation_id)
+               result.push_back( *oho );
+          }
 
-             if(node->operation_id(db).op.which() == operation_id)
-               result.push_back( node->operation_id(db) );
-             }
           if( node->next == account_transaction_history_id_type() )
              node = nullptr;
-          else node = &node->next(db);
+          else 
+          { 
+              atho_ptr = db.find_db(node->next);
+              node = atho_ptr.get(); // &node->next(db);
+          }
        }
-       if( stop.instance.value == 0 && result.size() < limit ) {
-          const account_transaction_history_object head = account_transaction_history_id_type()(db);
-          if( head.account == account && head.operation_id(db).op.which() == operation_id )
-             result.push_back(head.operation_id(db));
+       if( stop.instance.value == 0 && result.size() < limit ) 
+       {
+          const account_transaction_history_object head = *(db.find_db(account_transaction_history_id_type()));
+          if (head.account == account)
+          {
+              auto oh = db.find_db(head.operation_id);
+              if(oh && oh->op.which() == operation_id )
+                result.push_back(*oh);
+          }
        }
        return result;
     }
@@ -405,18 +436,29 @@ namespace graphene { namespace app {
 
        if( start >= stop && start > stats.removed_ops && limit > 0 )
        {
-          const auto& hist_idx = db.get_index_type<account_transaction_history_index>();
-          const auto& by_seq_idx = hist_idx.indices().get<by_seq>();
+          //const auto& hist_idx = db.get_index_type<account_transaction_history_index>();
+          //const auto& by_seq_idx = hist_idx.indices().get<by_seq>();
+          const auto& hist_idx = dynamic_cast<const bdb_index<account_transaction_history_object>&>(db.get_index(account_transaction_history_object::space_id, account_transaction_history_object::type_id));
+          const auto& by_seq_idx = hist_idx.get_bdb_secondary_index(0);
 
-          auto itr = by_seq_idx.upper_bound( boost::make_tuple( account, start ) );
-          auto itr_stop = by_seq_idx.lower_bound( boost::make_tuple( account, stop ) );
+          // auto itr = by_seq_idx.upper_bound(boost::make_tuple(account, start));
+          // auto itr_stop = by_seq_idx.lower_bound(boost::make_tuple(account, stop));
+
+          account_transaction_history_object obj;
+          atho_by_seq key;
+          key.account = account;
+          key.sequence = start;
+          auto itr = by_seq_idx.upper_bound(&key, sizeof(key), obj);
 
           do
           {
-             --itr;
-             result.push_back( itr->operation_id(db) );
+             if (!by_seq_idx.get_previous(itr, obj))
+                  break;
+
+             auto oho = db.find_db(obj.operation_id);
+             result.push_back( *oho ); 
           }
-          while ( itr != itr_stop && result.size() < limit );
+          while ( obj.sequence != stop && result.size() < limit );
        }
        return result;
     }

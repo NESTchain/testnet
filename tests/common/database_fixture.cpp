@@ -38,6 +38,7 @@
 #include <graphene/chain/worker_object.hpp>
 
 #include <graphene/utilities/tempdir.hpp>
+#include <graphene/db/bdb_index.hpp>
 
 #include <fc/crypto/digest.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -1211,31 +1212,42 @@ vector< operation_history_object > database_fixture::get_operation_history( acco
       return result;
 
    const account_transaction_history_object* node = &stats.most_recent_op(db);
+   std::unique_ptr<account_transaction_history_object> atho_ptr;
    while( true )
    {
-      result.push_back( node->operation_id(db) );
+      auto op = db.find_db(node->operation_id);
+      result.push_back( *op );
       if(node->next == account_transaction_history_id_type())
          break;
-      node = db.find(node->next);
+
+      atho_ptr = db.find_db(node->next);
+      node = atho_ptr.get();
    }
    return result;
 }
 
 vector< graphene::market_history::order_history_object > database_fixture::get_market_order_history( asset_id_type a, asset_id_type b )const
 {
-   const auto& history_idx = db.get_index_type<graphene::market_history::history_index>().indices().get<graphene::market_history::by_key>();
+   // const auto& history_idx = db.get_index_type<graphene::market_history::history_index>().indices().get<graphene::market_history::by_key>();
+   const auto& order_his_idx = dynamic_cast<const bdb_index<graphene::market_history::order_history_object>&>
+       (db.get_index(graphene::market_history::order_history_object::space_id, graphene::market_history::order_history_object::type_id));
+   const auto& history_idx = order_his_idx.get_bdb_secondary_index(0);
+
    graphene::market_history::history_key hkey;
    if( a > b ) std::swap(a,b);
    hkey.base = a;
    hkey.quote = b;
    hkey.sequence = std::numeric_limits<int64_t>::min();
-   auto itr = history_idx.lower_bound( hkey );
+   graphene::market_history::order_history_object oho;
+   auto itr = history_idx.lower_bound( &hkey, sizeof(hkey), oho );
    vector<graphene::market_history::order_history_object> result;
-   while( itr != history_idx.end())
+   while( itr != nullptr )
    {
-       result.push_back( *itr );
-       ++itr;
+       result.push_back( oho );
+       if (!history_idx.get_next(itr, oho)) break;
    }
+   history_idx.close_cursor(itr);
+
    return result;
 }
 

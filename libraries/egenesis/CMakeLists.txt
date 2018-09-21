@@ -12,7 +12,13 @@ add_executable( embed_genesis
    embed_genesis.cpp
    )
 
-target_link_libraries( embed_genesis graphene_chain graphene_app graphene_egenesis_none fc graphene_wren)
+if(WIN32) 
+	target_link_libraries( embed_genesis graphene_chain graphene_app graphene_egenesis_none fc graphene_wren $ENV{BDB_LIB_DIR}/libdb181.lib)
+else(WIN32)
+	target_link_libraries( embed_genesis graphene_chain graphene_app graphene_egenesis_none fc graphene_wren db_cxx )
+endif(WIN32)
+
+
 
 set( embed_genesis_args
    -t "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_brief.cpp.tmpl---${CMAKE_CURRENT_BINARY_DIR}/egenesis_brief.cpp"

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
+ * Copyright (c) 2018- ¦ÌNEST Foundation, and contributors.
  *
  * The MIT License
  *
@@ -192,6 +193,14 @@ typedef multi_index_container<
       >
    >
 > order_history_multi_index_type;
+
+struct order_history_market_time_key
+{
+    asset_id_type        base;
+    asset_id_type        quote;
+    fc::time_point_sec   time;
+    int64_t              sequence = 0;
+};
 
 struct by_market;
 struct by_volume;
