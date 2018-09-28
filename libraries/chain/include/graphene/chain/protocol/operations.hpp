@@ -103,7 +103,8 @@ namespace graphene { namespace chain {
             execute_bid_operation,          // VIRTUAL
             asset_claim_pool_operation,
             asset_update_issuer_operation,
-            pio_operation
+            pio_operation,
+            send_message_operation
          > operation;
 
    /// @} // operations group
