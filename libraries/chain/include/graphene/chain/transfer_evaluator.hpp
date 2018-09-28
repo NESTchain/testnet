@@ -46,4 +46,13 @@ namespace graphene { namespace chain {
          void_result do_apply( const override_transfer_operation& o );
    };
 
+   class send_message_evaluator : public evaluator<send_message_evaluator>
+   {
+   public:
+      typedef send_message_operation operation_type;
+
+      void_result do_evaluate(const send_message_operation& o);
+      void_result do_apply(const send_message_operation& o);
+   };
+
 } } // graphene::chain

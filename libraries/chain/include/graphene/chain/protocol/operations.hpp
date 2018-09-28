@@ -94,14 +94,15 @@ namespace graphene { namespace chain {
             asset_settle_cancel_operation,  // VIRTUAL
             asset_claim_fees_operation,
             fba_distribute_operation,       // VIRTUAL
-	        smart_contract_deploy_operation,
-	        smart_contract_activate_operation,
+	         smart_contract_deploy_operation,
+	         smart_contract_activate_operation,
             smart_contract_deactivate_operation,
             smart_contract_kill_operation,
             smart_contract_call_operation,
-	        bid_collateral_operation,
+	         bid_collateral_operation,
             execute_bid_operation,           // VIRTUAL
-            pio_operation
+            pio_operation,
+            send_message_operation
          > operation;
 
    /// @} // operations group

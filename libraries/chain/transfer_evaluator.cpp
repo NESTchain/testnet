@@ -121,4 +121,26 @@ void_result override_transfer_evaluator::do_apply( const override_transfer_opera
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
+
+
+void_result send_message_evaluator::do_evaluate( const send_message_operation& op )
+{ try {
+   
+   const database& d = db();
+
+   const account_object& from_account    = op.from(d);
+   const account_object& to_account      = op.to(d);
+
+   try {
+      return void_result();
+   } FC_RETHROW_EXCEPTIONS( error, "Unable to send_message from ${f} to ${t}", ("f",op.from(d).name)("t",op.to(d).name) );
+
+}  FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void_result send_message_evaluator::do_apply( const send_message_operation& o )
+{ try {
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (o) ) }
+
+
 } } // graphene::chain
