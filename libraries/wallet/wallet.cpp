@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017 Cryptonomex, Inc., and contributors.
- * Copyright (c) 2018- Î¼NEST Foundation, and contributors.
+ * Copyright (c) 2018- ¦ÌNEST Foundation, and contributors.
  *
  * The MIT License
  *
@@ -124,6 +124,7 @@ public:
    std::string operator()(const account_create_operation& op)const;
    std::string operator()(const account_update_operation& op)const;
    std::string operator()(const asset_create_operation& op)const;
+   std::string operator()(const send_message_operation& op)const;
 };
 
 template<class T>
@@ -2211,6 +2212,39 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (from)(to)(amount)(asset_symbol)(memo)(broadcast) ) }
 
+
+   signed_transaction send_message(string from, string to, string memo, bool broadcast = false)
+   {
+      try {
+         FC_ASSERT(!self.is_locked());
+
+         account_object from_account = get_account(from);
+         account_object to_account = get_account(to);
+         account_id_type from_id = from_account.id;
+         account_id_type to_id = get_account_id(to);
+
+         send_message_operation msg_op;
+
+         msg_op.from = from_id;
+         msg_op.to = to_id;
+
+         if (memo.size())
+         {
+            msg_op.memo.from = from_account.options.memo_key;
+            msg_op.memo.to = to_account.options.memo_key;
+            msg_op.memo.set_message(get_private_key(from_account.options.memo_key),
+               to_account.options.memo_key, memo);
+         }
+
+         signed_transaction tx;
+         tx.operations.push_back(msg_op);
+         set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+
+         return sign_transaction(tx, broadcast);
+      } FC_CAPTURE_AND_RETHROW((from)(to)(memo)(broadcast))
+   }
+
    signed_transaction issue_asset(string to_account, string amount, string symbol,
                                   string memo, bool broadcast = false)
    {
@@ -2901,6 +2935,41 @@ string operation_printer::operator()(const transfer_operation& op) const
    return memo;
 }
 
+string operation_printer::operator()(const send_message_operation& op) const
+{
+   out << "Send Message "  << " from " << wallet.get_account(op.from).name << " to " << wallet.get_account(op.to).name;
+   std::string memo;
+   if (op.memo.message.size()>0)
+   {
+      if (wallet.is_locked())
+      {
+         out << " -- Unlock wallet to see message.";
+      }
+      else {
+         try {
+            FC_ASSERT(wallet._keys.count(op.memo.to) || wallet._keys.count(op.memo.from), "Memo is encrypted to a key ${to} or ${from} not in this wallet.", ("to", op.memo.to)("from", op.memo.from));
+            if (wallet._keys.count(op.memo.to)) {
+               auto my_key = wif_to_key(wallet._keys.at(op.memo.to));
+               FC_ASSERT(my_key, "Unable to recover private key to decrypt memo. Wallet may be corrupted.");
+               memo = op.memo.get_message(*my_key, op.memo.from);
+               out << " -- Memo: " << memo;
+            }
+            else {
+               auto my_key = wif_to_key(wallet._keys.at(op.memo.from));
+               FC_ASSERT(my_key, "Unable to recover private key to decrypt memo. Wallet may be corrupted.");
+               memo = op.memo.get_message(*my_key, op.memo.to);
+               out << " -- Memo: " << memo;
+            }
+         }
+         catch (const fc::exception& e) {
+            out << " -- could not decrypt memo";
+         }
+      }
+   }
+   fee(op.fee);
+   return memo;
+}
+
 std::string operation_printer::operator()(const account_create_operation& op) const
 {
    out << "Create Account '" << op.name << "'";
@@ -3512,6 +3581,12 @@ signed_transaction wallet_api::transfer(string from, string to, string amount,
 {
    return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
 }
+
+signed_transaction wallet_api::send_message(string from, string to, string memo, bool broadcast /* = false */)
+{
+   return my->send_message(from, to, memo, broadcast);
+}
+
 signed_transaction wallet_api::create_asset(string issuer,
                                             string symbol,
                                             uint8_t precision,

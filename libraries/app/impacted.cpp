@@ -220,6 +220,8 @@ struct get_impacted_account_visitor
    }
 
    void operator()( const pio_operation& op ) {}
+
+   void operator()( const send_message_operation& op ) {}
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

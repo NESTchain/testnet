@@ -823,6 +823,11 @@ class wallet_api
                                   string memo,
                                   bool broadcast = false);
 
+      signed_transaction send_message(string from,
+         string to, 
+         string memo,
+         bool broadcast = false);
+
       /**
        *  This method works just like transfer, except it always broadcasts and
        *  returns the transaction ID along with the signed transaction.
@@ -1774,4 +1779,5 @@ FC_API( graphene::wallet::wallet_api,
         (blind_history)
         (receive_blind_transfer)
         (get_order_book)
+        (send_message)
       )

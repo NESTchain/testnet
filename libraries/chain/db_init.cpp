@@ -180,6 +180,7 @@ void database::initialize_evaluators()
    register_evaluator<smart_contract_kill_evaluator>();
    register_evaluator<smart_contract_call_evaluator>();
    register_evaluator<pio_evaluator>();
+   register_evaluator<send_message_evaluator>();
 }
 
 void database::initialize_indexes()
