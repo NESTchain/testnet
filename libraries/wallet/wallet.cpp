@@ -969,7 +969,7 @@ public:
    }
 
 
-   signed_transaction register_account(string name,//这个重点要看一下。
+   signed_transaction register_account(string name,
                                        public_key_type owner,
                                        public_key_type active,
                                        string  registrar_account,

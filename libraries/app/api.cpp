@@ -326,7 +326,9 @@ namespace graphene { namespace app {
        FC_ASSERT( limit <= 100 );
        vector<operation_history_object> result;
        try {
-          const account_transaction_history_object& node = account(db).statistics(db).most_recent_op(db);
+          const auto& recent = account(db).statistics(db).most_recent_op;
+          unique_ptr<object> ptr = db.get_object_copy(recent);
+          const account_transaction_history_object& node = (const account_transaction_history_object&)*ptr;
           if(start == operation_history_id_type() || start.instance.value > node.operation_id.instance.value)
              start = node.operation_id;
        } catch(...) { return result; }
@@ -442,15 +444,13 @@ namespace graphene { namespace app {
           key.sequence = start;
           auto itr = by_seq_idx.upper_bound(&key, sizeof(key), obj);
 
+          if( itr )
           do
           {
-             if (!by_seq_idx.get_previous(itr, obj))
-                  break;
-
              auto oho = db.find_db(obj.operation_id);
-             result.push_back( *oho ); 
+             result.push_back( *oho );  
           }
-          while ( obj.sequence != stop && result.size() < limit );
+          while( obj.sequence > stop && result.size() < limit && by_seq_idx.get_previous(itr, obj) );
        }
        return result;
     }
