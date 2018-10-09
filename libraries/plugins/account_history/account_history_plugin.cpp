@@ -366,6 +366,33 @@ int get_account_opid(Db* sdb, const Dbt* pkey, const Dbt* pdata, Dbt* skey)
 	return 0;
 }
 
+int account_seq_key_comp(Db* db, const Dbt* key1, const Dbt* key2, size_t* size)
+{
+   atho_by_seq* k1 = (atho_by_seq*)key1->get_data();
+   atho_by_seq* k2 = (atho_by_seq*)key2->get_data();
+
+   if (k1->account.instance.value != k2->account.instance.value)
+      return k1->account.instance.value > k2->account.instance.value ? 1 : -1;
+
+   if (k1->sequence != k2->sequence)
+      return k1->sequence > k2->sequence ? 1 : -1;
+
+   return 0;
+}
+
+int account_op_key_comp(Db* db, const Dbt* key1, const Dbt* key2, size_t* size)
+{
+   atho_by_op* k1 = (atho_by_op*)key1->get_data();
+   atho_by_op* k2 = (atho_by_op*)key2->get_data();
+
+   if (k1->account.instance.value != k2->account.instance.value)
+      return k1->account.instance.value > k2->account.instance.value ? 1 : -1;
+
+   if (k1->operation_id.instance.value != k2->operation_id.instance.value)
+      return k1->operation_id.instance.value > k2->operation_id.instance.value ? 1 : -1;
+
+   return 0;
+}
 
 void account_history_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
@@ -379,8 +406,8 @@ void account_history_plugin::plugin_initialize(const boost::program_options::var
 	my->_oho_index = database().add_index< primary_index< bdb_index<operation_history_object> > >();
 	my->_atho_index = database().add_index< primary_index< bdb_index<account_transaction_history_object > > >();
 
-	my->_atho_index->add_bdb_secondary_index(new bdb_secondary_index<account_transaction_history_object>("by_seq", false), get_account_seq);
-	my->_atho_index->add_bdb_secondary_index(new bdb_secondary_index<account_transaction_history_object>("by_op", false), get_account_op);
+	my->_atho_index->add_bdb_secondary_index(new bdb_secondary_index<account_transaction_history_object>("by_seq", false, account_seq_key_comp), get_account_seq);
+	my->_atho_index->add_bdb_secondary_index(new bdb_secondary_index<account_transaction_history_object>("by_op", false, account_op_key_comp), get_account_op);
 	// my->_atho_index->add_bdb_secondary_index(new bdb_secondary_index<account_transaction_history_object>("by_opid", true), get_account_opid);
 
 	LOAD_VALUE_SET(options, "track-account", my->_tracked_accounts, graphene::chain::account_id_type);

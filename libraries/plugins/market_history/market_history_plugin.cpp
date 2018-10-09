@@ -103,11 +103,10 @@ struct operation_process_fill_order
          std::swap( hkey.base, hkey.quote );
       hkey.sequence = std::numeric_limits<int64_t>::min();
 
-      order_history_object oho;
-      auto itr = history_idx.lower_bound( &hkey, sizeof(hkey), oho );
+      auto itr = history_idx.lower_bound( &hkey, sizeof(hkey));
 
-      if( itr != nullptr && oho.key.base == hkey.base && oho.key.quote == hkey.quote )
-         hkey.sequence = oho.key.sequence - 1;
+      if( itr != history_idx.end() && itr->key.base == hkey.base && itr->key.quote == hkey.quote )
+         hkey.sequence = itr->key.sequence - 1;
       else
          hkey.sequence = 0;
 
@@ -129,15 +128,13 @@ struct operation_process_fill_order
          else
             _meta = &( *meta_idx.begin() );
       }
-      if (itr != nullptr)
-          history_idx.close_cursor(itr);
 
       // To remove old filled order data
       vector<order_history_object> objects_to_remove;
       const auto max_records = _plugin.max_order_his_records_per_market();
       hkey.sequence += max_records;
-      itr = history_idx.lower_bound( &hkey, sizeof(hkey), oho );
-      if( itr != nullptr && oho.key.base == hkey.base && oho.key.quote == hkey.quote )
+      itr = history_idx.lower_bound( &hkey, sizeof(hkey) );
+      if( itr != history_idx.end() && itr->key.base == hkey.base && itr->key.quote == hkey.quote )
       {
          const auto max_seconds = _plugin.max_order_his_seconds_per_market();
          fc::time_point_sec min_time;
@@ -149,37 +146,28 @@ struct operation_process_fill_order
          market_time_key.time = min_time;
          market_time_key.sequence = 0;
 
-         order_history_object oho_market_time;
          // auto time_itr = his_time_idx.lower_bound( std::make_tuple( hkey.base, hkey.quote, min_time ) );
-         auto time_itr = his_time_idx.lower_bound(&market_time_key, sizeof(market_time_key), oho_market_time);
-         if( time_itr != nullptr && oho_market_time.key.base == hkey.base && oho_market_time.key.quote == hkey.quote )
+         auto time_itr = his_time_idx.lower_bound(&market_time_key, sizeof(market_time_key));
+         if( time_itr != his_time_idx.end() && time_itr->key.base == hkey.base && time_itr->key.quote == hkey.quote )
          {
-            if( oho.key.sequence >= oho_market_time.key.sequence )
+            if(itr->key.sequence >= time_itr->key.sequence )
             {
-               while( itr != nullptr && oho.key.base == hkey.base && oho.key.quote == hkey.quote )
+               while( itr != history_idx.end() && itr->key.base == hkey.base && itr->key.quote == hkey.quote )
                {
-                  objects_to_remove.push_back(oho); 
-                  bool hasNext = history_idx.get_next(itr, oho);
-                  if (!hasNext)
-                      break;
+                  objects_to_remove.push_back(*itr); 
+                  ++itr;
                }
             }
             else
             {
-               while( time_itr != nullptr && oho_market_time.key.base == hkey.base && oho_market_time.key.quote == hkey.quote )
+               while( time_itr != his_time_idx.end() && time_itr->key.base == hkey.base && time_itr->key.quote == hkey.quote )
                {
-                  objects_to_remove.push_back(oho_market_time);
-                  bool hasNext = his_time_idx.get_next(time_itr, oho_market_time);
-                  if (!hasNext)
-                      break; 
+                  objects_to_remove.push_back(*time_itr);
+                  ++time_itr; 
                }
             }
          }
-         if(time_itr!=nullptr)
-            his_time_idx.close_cursor(time_itr);
       }
-      if(itr!=nullptr)
-          history_idx.close_cursor(itr);
 
       static u_int64_t consume = 0, total_removed = 0;
       fc::time_point start_point = fc::time_point::now();
@@ -314,22 +302,18 @@ struct operation_process_fill_order
 
           {
              key.open = fc::time_point_sec();
-             bucket_object old_bo;
-             void* bucket_itr = by_key_idx.lower_bound( &key, sizeof(key), old_bo); //TODO
-             bool hasNext = true;
+             auto bucket_itr = by_key_idx.lower_bound( &key, sizeof(key));
              vector<bucket_object> vect;
-             while( bucket_itr != nullptr && hasNext &&
-                 old_bo.key.base == key.base &&
-                 old_bo.key.quote == key.quote &&
-                 old_bo.key.seconds == bucket &&
-                 old_bo.key.open < cutoff )
+             while( bucket_itr != by_key_idx.end() &&
+                bucket_itr->key.base == key.base &&
+                bucket_itr->key.quote == key.quote &&
+                bucket_itr->key.seconds == bucket &&
+                bucket_itr->key.open < cutoff )
              {
               //  elog( "    removing old bucket ${b}", ("b", *bucket_itr) );
-                vect.push_back(old_bo);
-                hasNext = by_key_idx.get_next( bucket_itr, old_bo);
+                vect.push_back(*bucket_itr);
+                ++bucket_itr;
              }
-             if(bucket_itr!=nullptr)
-                by_key_idx.close_cursor(bucket_itr);
 
              for ( auto xbo : vect)
              {

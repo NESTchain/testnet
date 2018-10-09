@@ -177,6 +177,13 @@ namespace graphene { namespace app {
                                                                         unsigned limit = 100,
                                                                         uint32_t start = 0) const;
 
+         vector<operation_history_object> get_relative_account_history_by_ops(account_id_type account,
+                                                                        vector<uint16_t> operation_types,
+                                                                        uint32_t start,
+                                                                        unsigned limit,
+                                                                        size_t& total_count) const;
+
+
          vector<order_history_object> get_fill_order_history( asset_id_type a, asset_id_type b, uint32_t limit )const;
          vector<bucket_object> get_market_history( asset_id_type a, asset_id_type b, uint32_t bucket_seconds,
                                                    fc::time_point_sec start, fc::time_point_sec end )const;
