@@ -654,34 +654,19 @@ public:
         _bdb->set_bt_compare(bt_k_comp);
     }
 
-    void* locate(void* key, u_int32_t size, ObjectType& obj) const
+    bdb_iterator<object_type> locate(void* key, u_int32_t size) const
     {
-        return open_cursor(key, size, obj, DB_SET);
+        return open_cursor(key, size, DB_SET);
     }
 
-    void* lower_bound(void* key, u_int32_t size, ObjectType& obj) const
+    bdb_iterator<object_type> lower_bound(void* key, u_int32_t size) const
     {
-        return open_cursor(key, size, obj);
+        return open_cursor(key, size);
     }
 
-    void* upper_bound(void* key, u_int32_t size, ObjectType& obj) const
+    bdb_iterator<object_type> upper_bound(void* key, u_int32_t size) const
     {
-        return open_cursor(key, size, obj);
-    }
-
-    bool get_next(void* cursorp, ObjectType& obj) const
-    {
-        return move_cursor(cursorp, obj, DB_NEXT);
-    }
-    bool get_previous(void* cursorp, ObjectType& obj) const
-    {
-        return move_cursor(cursorp, obj, DB_PREV);
-    }
-
-    void close_cursor(void* cursorp) const
-    {
-        if (cursorp != nullptr)
-            ((Dbc*)cursorp)->close();
+        return open_cursor(key, size);
     }
 
     bool exists(void* k, u_int32_t size) const
@@ -691,6 +676,11 @@ public:
         auto ret = bdb_->exists(nullptr, &key, 0);
 
         return !ret; //  == DB_NOTFOUND  
+    }
+
+    bdb_iterator<object_type> end() const
+    {
+        return bdb_iterator<object_type>::end();
     }
 
     std::unique_ptr<ObjectType> find_db(void* k, u_int32_t size) const
@@ -710,14 +700,15 @@ public:
     }
 
 
+
 private:
-    Dbc* open_cursor(void* key, u_int32_t size, ObjectType& obj, u_int32_t flags = DB_SET_RANGE) const
+    bdb_iterator<object_type> open_cursor(void* key, u_int32_t size, u_int32_t flags = DB_SET_RANGE) const
     {
         Dbc* cursorp;
         bdb& bdb_ = const_cast<bdb&>(_bdb);
         int ret = bdb_->cursor(nullptr, &cursorp, 0);
         if (ret)
-            return nullptr;
+            return end();
 
         Dbt skey(key, size);
         Dbt data;
@@ -726,33 +717,12 @@ private:
         {
             // FC_ASSERT(ret, "Berkeley DB: lower_bound() Could not find key");
             cursorp->close();
-            return nullptr;
+            return end();
         }
-
+        object_type obj;
         fc::raw::unpack<ObjectType>((const char*)data.get_data(), data.get_size(), obj);
 
-        return cursorp;
-    }
-
-    bool move_cursor(void* cursorp, ObjectType& obj, u_int32_t flags) const
-    {
-        Dbt skey, data;
-        int ret = ((Dbc*)cursorp)->get(&skey, &data, flags);
-        if (ret && ret != DB_NOTFOUND)
-        {
-            FC_ASSERT(ret, "Berkeley DB: cursor move error: ret=${ret}", ("ret", ret));
-        }
-        else if (!ret)
-        {
-            fc::raw::unpack<ObjectType>((const char*)data.get_data(), data.get_size(), obj);
-            return true;
-        }
-        return false;
-    }
-
-    bdb_iterator<object_type> end() const
-    {
-        return bdb_iterator<object_type>::end();
+        return bdb_iterator<object_type>(cursorp, obj);
     }
 
 private:
@@ -788,7 +758,7 @@ public:
 
     explicit bdb_iterator(bool is_end) : _cursorp(nullptr), _is_end(is_end) {}
 
-    object_type& operator* () const
+    object_type& operator* ()
     {
         return _obj;
     }

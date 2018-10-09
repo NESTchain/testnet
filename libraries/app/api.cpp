@@ -300,17 +300,15 @@ namespace graphene { namespace app {
        hkey.sequence = std::numeric_limits<int64_t>::min();
 
        uint32_t count = 0;
-       order_history_object oho;
-       auto itr = history_idx.lower_bound( &hkey, sizeof(hkey), oho );
+       auto itr = history_idx.lower_bound( &hkey, sizeof(hkey));
        vector<order_history_object> result;
-       while( itr != nullptr && count < limit)
+       while( itr != history_idx.end() && count < limit)
        {
-          if( oho.key.base != a || oho.key.quote != b ) break;
-          result.push_back( oho );
+          if(itr->key.base != a || itr->key.quote != b ) break;
+          result.push_back( *itr );
+          ++itr;
           ++count;
-          if (!history_idx.get_next(itr, oho)) break;
        }
-       history_idx.close_cursor(itr);
 
        return result;
     }
@@ -339,28 +337,24 @@ namespace graphene { namespace app {
        const auto& hist_idx = dynamic_cast<const bdb_index<account_transaction_history_object>&>(db.get_index(account_transaction_history_object::space_id, account_transaction_history_object::type_id));
        const auto& by_op_idx = hist_idx.get_bdb_secondary_index(1);
 
-       account_transaction_history_object obj;
        atho_by_op key;
        key.account = account;
        key.operation_id = start;
-       auto itr = by_op_idx.lower_bound(&key, sizeof(key), obj);
+       auto itr = by_op_idx.lower_bound(&key, sizeof(key));
 
-       while(itr != nullptr && obj.account == account && obj.operation_id.instance.value > stop.instance.value && result.size() < limit)
+       while(itr != by_op_idx.end() && itr->account == account && itr->operation_id.instance.value > stop.instance.value && result.size() < limit)
        {
-           if (obj.operation_id.instance.value <= start.instance.value)
+           if (itr->operation_id.instance.value <= start.instance.value)
            {
-               auto oho = db.find_db(obj.operation_id);
+               auto oho = db.find_db(itr->operation_id);
                result.push_back(*oho);
-           }
-          
-           if(!by_op_idx.get_previous(itr, obj))
-               break;
+           }          
+           --itr;
        }
-       if(stop.instance.value == 0 && result.size() < limit && obj.account == account) {
-           auto oho = db.find_db(obj.operation_id);
+       if(stop.instance.value == 0 && result.size() < limit && itr->account == account) {
+           auto oho = db.find_db(itr->operation_id);
            result.push_back(*oho);
        }
-       by_op_idx.close_cursor(itr);
 
        return result;
     }
@@ -418,9 +412,9 @@ namespace graphene { namespace app {
 
 
     vector<operation_history_object> history_api::get_relative_account_history( const std::string account_id_or_name,
-                                                                                uint32_t stop,
+                                                                                uint32_t start,
                                                                                 unsigned limit,
-                                                                                uint32_t start) const
+                                                                                uint32_t stop) const
     {
        FC_ASSERT( _app.chain_database() );
        const auto& db = *_app.chain_database();
@@ -431,12 +425,52 @@ namespace graphene { namespace app {
           account = database_api.get_account_id_from_string(account_id_or_name);
        } catch(...) { return result; }
        const auto& stats = account(db).statistics(db);
-       if( start == 0 )
-          start = stats.total_ops;
+       if( stop == 0 )
+          stop = stats.total_ops;
        else
-          start = min( stats.total_ops, start );
+          stop = min( stats.total_ops, stop );
 
-       if( start >= stop && start > stats.removed_ops && limit > 0 )
+       if( stop >= start && stop > stats.removed_ops && limit > 0 )
+       {
+          //const auto& hist_idx = db.get_index_type<account_transaction_history_index>();
+          //const auto& by_seq_idx = hist_idx.indices().get<by_seq>();
+          const auto& hist_idx = dynamic_cast<const bdb_index<account_transaction_history_object>&>(db.get_index(account_transaction_history_object::space_id, account_transaction_history_object::type_id));
+          const auto& by_seq_idx = hist_idx.get_bdb_secondary_index(0);
+
+          // auto itr = by_seq_idx.upper_bound(boost::make_tuple(account, stop));
+          // auto itr_stop = by_seq_idx.lower_bound(boost::make_tuple(account, start));
+
+          atho_by_seq key;
+          key.account = account;
+          key.sequence = start;
+          auto itr = by_seq_idx.upper_bound(&key, sizeof(key));
+
+          while( itr != by_seq_idx.end() && itr->account == account && itr->sequence >= stop && result.size() < limit)
+          {
+             auto oho = db.find_db(itr->operation_id);
+             result.push_back( *oho );
+             --itr;
+          } 
+       }
+       return result;
+    }
+
+
+    vector<operation_history_object> history_api::get_relative_account_history_by_ops(account_id_type account,
+                                                                                    vector<uint16_t> operation_types,
+                                                                                    uint32_t start,
+                                                                                    unsigned limit,
+                                                                                    size_t& total_count) const
+    {
+       FC_ASSERT(_app.chain_database());
+       const auto& db = *_app.chain_database();
+       FC_ASSERT(limit <= 100);
+       vector<operation_history_object> result;
+       const auto& stats = account(db).statistics(db);
+       uint32_t stop = stats.total_ops; 
+       total_count = stop;
+
+       if (stop >= start && stop > stats.removed_ops && limit > 0)
        {
           //const auto& hist_idx = db.get_index_type<account_transaction_history_index>();
           //const auto& by_seq_idx = hist_idx.indices().get<by_seq>();
@@ -446,22 +480,23 @@ namespace graphene { namespace app {
           // auto itr = by_seq_idx.upper_bound(boost::make_tuple(account, start));
           // auto itr_stop = by_seq_idx.lower_bound(boost::make_tuple(account, stop));
 
-          account_transaction_history_object obj;
           atho_by_seq key;
           key.account = account;
-          key.sequence = start;
-          auto itr = by_seq_idx.upper_bound(&key, sizeof(key), obj);
+          key.sequence = stop;
+          auto itr = by_seq_idx.upper_bound(&key, sizeof(key));
 
-          if( itr )
-          do
+          while (itr != by_seq_idx.end() && itr->account == account && itr->sequence >= start && result.size() < limit)
           {
-             auto oho = db.find_db(obj.operation_id);
-             result.push_back( *oho );  
+             auto oho = db.find_db(itr->operation_id);
+             if (operation_types.empty() || find(operation_types.begin(), operation_types.end(), oho->op.which()) != operation_types.end())
+               result.push_back(*oho);
+
+             --itr;
           }
-          while( obj.sequence > stop && result.size() < limit && by_seq_idx.get_previous(itr, obj) );
        }
        return result;
     }
+
 
     flat_set<uint32_t> history_api::get_market_history_buckets()const
     {
@@ -474,15 +509,11 @@ namespace graphene { namespace app {
     {
        FC_ASSERT(limit <= 100);
        history_operation_detail result;
-       vector<operation_history_object> objs = get_relative_account_history(account_id_or_name, start, limit, limit + start - 1);
-       std::for_each(objs.begin(), objs.end(), [&](const operation_history_object &o) {
-                    if (operation_types.empty() || find(operation_types.begin(), operation_types.end(), o.op.which()) != operation_types.end()) {
-                        result.operation_history_objs.push_back(o);
-                     }
-                 });
-
-        result.total_count = objs.size();
-        return result;
+       size_t total_count=0;
+       vector<operation_history_object> objs = get_relative_account_history_by_ops(account, operation_types, start, limit, total_count);
+       result.operation_history_objs = objs;
+       result.total_count = total_count;
+       return result;
     }
 
     vector<bucket_object> history_api::get_market_history( asset_id_type a, asset_id_type b,

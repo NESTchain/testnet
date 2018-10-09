@@ -1237,17 +1237,14 @@ vector< graphene::market_history::order_history_object > database_fixture::get_m
    if( a > b ) std::swap(a,b);
    hkey.base = a;
    hkey.quote = b;
-   hkey.sequence = std::numeric_limits<int64_t>::min();
-   graphene::market_history::order_history_object oho;
-   auto itr = history_idx.lower_bound( &hkey, sizeof(hkey), oho );
+   hkey.sequence = std::numeric_limits<int64_t>::min(); 
+   auto itr = history_idx.lower_bound( &hkey, sizeof(hkey));
    vector<graphene::market_history::order_history_object> result;
-   while( itr != nullptr )
+   while( itr != history_idx.end())
    {
-       result.push_back( oho );
-       if (!history_idx.get_next(itr, oho)) break;
+       result.push_back( *itr );
+       ++itr;
    }
-   history_idx.close_cursor(itr);
-
    return result;
 }
 
