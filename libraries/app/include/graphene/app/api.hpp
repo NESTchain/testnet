@@ -178,7 +178,7 @@ namespace graphene { namespace app {
                                                                         unsigned limit = 100,
                                                                         uint32_t start = 0) const;
 
-         vector<operation_history_object> get_relative_account_history_by_ops(account_id_type account,
+         vector<operation_history_object> get_relative_account_history_by_ops( const std::string account_id_or_name,
                                                                         vector<uint16_t> operation_types,
                                                                         uint32_t start,
                                                                         unsigned limit,

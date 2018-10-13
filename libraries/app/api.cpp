@@ -456,7 +456,7 @@ namespace graphene { namespace app {
     }
 
 
-    vector<operation_history_object> history_api::get_relative_account_history_by_ops(account_id_type account,
+    vector<operation_history_object> history_api::get_relative_account_history_by_ops( const std::string account_id_or_name,
                                                                                     vector<uint16_t> operation_types,
                                                                                     uint32_t start,
                                                                                     unsigned limit,
@@ -466,6 +466,11 @@ namespace graphene { namespace app {
        const auto& db = *_app.chain_database();
        FC_ASSERT(limit <= 100);
        vector<operation_history_object> result;
+       account_id_type account;
+       try {
+          account = database_api.get_account_id_from_string(account_id_or_name);
+       }
+       catch (...) { return result; }
        const auto& stats = account(db).statistics(db);
        uint32_t stop = stats.total_ops; 
        total_count = stop;
@@ -510,7 +515,7 @@ namespace graphene { namespace app {
        FC_ASSERT(limit <= 100);
        history_operation_detail result;
        size_t total_count=0;
-       vector<operation_history_object> objs = get_relative_account_history_by_ops(account, operation_types, start, limit, total_count);
+       vector<operation_history_object> objs = get_relative_account_history_by_ops(account_id_or_name, operation_types, start, limit, total_count);
        result.operation_history_objs = objs;
        result.total_count = total_count;
        return result;
