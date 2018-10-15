@@ -5,7 +5,7 @@
     ignore = dirty
 [submodule "libraries/fc"]
     path = libraries/fc
-    url = https://github.com/miuNEST/bitshares-fc.git
+    url = https://github.com/NESTchain/bitshares-fc.git
     branch = master
     ignore = dirty
 [submodule "libraries/wren"]
