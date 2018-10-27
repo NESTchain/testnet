@@ -47,6 +47,18 @@ const global_property_object& database::get_global_properties()const
    return *_p_global_prop_obj;
 }
 
+const vm_cpu_limit_t database::get_cpu_limit() const
+{
+    const chain_parameters& params = get_global_properties().parameters;
+    for (auto& ext : params.extensions) {
+        if (ext.which() == future_extensions::tag<vm_cpu_limit_t>::value) {
+            return ext.get<vm_cpu_limit_t>();
+        }
+    }
+    // return default value
+    return vm_cpu_limit_t();
+}
+
 const chain_property_object& database::get_chain_properties()const
 {
    return *_p_chain_property_obj;

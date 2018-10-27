@@ -26,8 +26,9 @@
 #include <boost/multiprecision/cpp_int.hpp>
 
 namespace graphene { namespace chain {
+
+      typedef boost::multiprecision::int128_t  boost_int128_t;
       typedef boost::multiprecision::uint128_t uint128_t;
-      typedef boost::multiprecision::int128_t  int128_t;
 
       bool operator == ( const price& a, const price& b )
       {
@@ -109,35 +110,35 @@ namespace graphene { namespace chain {
 
          if( r.numerator() == r.denominator() ) return p;
 
-         boost::rational<int128_t> p128( p.base.amount.value, p.quote.amount.value );
-         boost::rational<int128_t> r128( r.numerator(), r.denominator() );
+         boost::rational<boost_int128_t> p128( p.base.amount.value, p.quote.amount.value );
+         boost::rational<boost_int128_t> r128( r.numerator(), r.denominator() );
          auto cp = p128 * r128;
          auto ocp = cp;
 
          bool shrinked = false;
-         static const int128_t max( GRAPHENE_MAX_SHARE_SUPPLY );
+         static const boost_int128_t max( GRAPHENE_MAX_SHARE_SUPPLY );
          while( cp.numerator() > max || cp.denominator() > max )
          {
             if( cp.numerator() == 1 )
             {
-               cp = boost::rational<int128_t>( 1, max );
+               cp = boost::rational<boost_int128_t>( 1, max );
                break;
             }
             else if( cp.denominator() == 1 )
             {
-               cp = boost::rational<int128_t>( max, 1 );
+               cp = boost::rational<boost_int128_t>( max, 1 );
                break;
             }
             else
             {
-               cp = boost::rational<int128_t>( cp.numerator() >> 1, cp.denominator() >> 1 );
+               cp = boost::rational<boost_int128_t>( cp.numerator() >> 1, cp.denominator() >> 1 );
                shrinked = true;
             }
          }
          if( shrinked ) // maybe not accurate enough due to rounding, do additional checks here
          {
-            int128_t num = ocp.numerator();
-            int128_t den = ocp.denominator();
+            boost_int128_t num = ocp.numerator();
+            boost_int128_t den = ocp.denominator();
             if( num > den )
             {
                num /= den;
@@ -152,7 +153,7 @@ namespace graphene { namespace chain {
                   den = max;
                num = 1;
             }
-            boost::rational<int128_t> ncp( num, den );
+            boost::rational<boost_int128_t> ncp( num, den );
             if( num == max || den == max ) // it's on the edge, we know it's accurate enough
                cp = ncp;
             else
@@ -202,12 +203,12 @@ namespace graphene { namespace chain {
       { try {
          // TODO replace the calculation with new operator*() and/or operator/(), could be a hardfork change due to edge cases
          //wdump((debt)(collateral)(collateral_ratio));
-         boost::rational<int128_t> swan(debt.amount.value,collateral.amount.value);
-         boost::rational<int128_t> ratio( collateral_ratio, GRAPHENE_COLLATERAL_RATIO_DENOM );
+         boost::rational<boost_int128_t> swan(debt.amount.value,collateral.amount.value);
+         boost::rational<boost_int128_t> ratio( collateral_ratio, GRAPHENE_COLLATERAL_RATIO_DENOM );
          auto cp = swan * ratio;
 
          while( cp.numerator() > GRAPHENE_MAX_SHARE_SUPPLY || cp.denominator() > GRAPHENE_MAX_SHARE_SUPPLY )
-            cp = boost::rational<int128_t>( (cp.numerator() >> 1)+1, (cp.denominator() >> 1)+1 );
+            cp = boost::rational<boost_int128_t>( (cp.numerator() >> 1)+1, (cp.denominator() >> 1)+1 );
 
          return ~(asset( cp.numerator().convert_to<int64_t>(), debt.asset_id ) / asset( cp.denominator().convert_to<int64_t>(), collateral.asset_id ));
       } FC_CAPTURE_AND_RETHROW( (debt)(collateral)(collateral_ratio) ) }
@@ -255,12 +256,12 @@ namespace graphene { namespace chain {
       price price_feed::max_short_squeeze_price()const
       {
          // TODO replace the calculation with new operator*() and/or operator/(), could be a hardfork change due to edge cases
-         boost::rational<int128_t> sp( settlement_price.base.amount.value, settlement_price.quote.amount.value ); //debt.amount.value,collateral.amount.value);
-         boost::rational<int128_t> ratio( GRAPHENE_COLLATERAL_RATIO_DENOM, maximum_short_squeeze_ratio );
+         boost::rational<boost_int128_t> sp( settlement_price.base.amount.value, settlement_price.quote.amount.value ); //debt.amount.value,collateral.amount.value);
+         boost::rational<boost_int128_t> ratio( GRAPHENE_COLLATERAL_RATIO_DENOM, maximum_short_squeeze_ratio );
          auto cp = sp * ratio;
 
          while( cp.numerator() > GRAPHENE_MAX_SHARE_SUPPLY || cp.denominator() > GRAPHENE_MAX_SHARE_SUPPLY )
-            cp = boost::rational<int128_t>( (cp.numerator() >> 1)+(cp.numerator()&1), (cp.denominator() >> 1)+(cp.denominator()&1) );
+            cp = boost::rational<boost_int128_t>( (cp.numerator() >> 1)+(cp.numerator()&1), (cp.denominator() >> 1)+(cp.denominator()&1) );
 
          return (asset( cp.numerator().convert_to<int64_t>(), settlement_price.base.asset_id ) / asset( cp.denominator().convert_to<int64_t>(), settlement_price.quote.asset_id ));
       }

@@ -79,7 +79,7 @@ namespace graphene { namespace chain {
        *
        * In particular, core_fee_paid field is set by prepare_fee().
        */
-      void prepare_fee(account_id_type account_id, asset fee);
+       void prepare_fee(account_id_type account_id, asset fee, const operation& o);
 
       /**
        * Convert the fee into BTS through the exchange pool.
@@ -146,7 +146,7 @@ namespace graphene { namespace chain {
          auto* eval = static_cast<DerivedEvaluator*>(this);
          const auto& op = o.get<typename DerivedEvaluator::operation_type>();
 
-         prepare_fee(op.fee_payer(), op.fee);
+         eval->prepare_fee(op.fee_payer(), op.fee, o);
          if( !trx_state->skip_fee_schedule_check )
          {
             share_type required_fee = calculate_fee_for_operation(op);

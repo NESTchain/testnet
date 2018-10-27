@@ -8,8 +8,21 @@
     url = https://github.com/NESTchain/bitshares-fc.git
     branch = master
     ignore = dirty
-[submodule "libraries/wren"]
-    path = libraries/wren
-    url = https://github.com/miuNEST/wren.git
-    branch = master
-    ignore = dirty
+[submodule "libraries/softfloat"]
+	path = libraries/softfloat
+	url = git://github.com/NESTchain/berkeley-softfloat-3.git
+[submodule "externals/binaryen"]
+	path = externals/binaryen
+	url = git://github.com/NESTchain/binaryen.git
+[submodule "externals/magic_get"]
+	path = externals/magic_get
+	url = git://github.com/NESTchain/magic_get.git
+[submodule "contracts/musl/upstream"]
+	path = contracts/musl/upstream
+	url = git://github.com/NESTchain/musl.git
+[submodule "libraries/wabt"]
+	path = libraries/wabt
+	url = git://github.com/NESTchain/wabt.git
+[submodule "contracts/libc++/upstream"]
+	path = contracts/libc++/upstream
+	url = git://github.com/NESTchain/libcxx.git

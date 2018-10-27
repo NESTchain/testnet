@@ -24,6 +24,7 @@
  */
 #pragma once
 #include <graphene/chain/protocol/operations.hpp>
+#include <graphene/chain/abi_def.hpp>
 #include <graphene/db/generic_index.hpp>
 #include <boost/multi_index/composite_key.hpp>
 #include <boost/multi_index_container.hpp>
@@ -179,6 +180,12 @@ namespace graphene { namespace chain {
 
          /// The account's name. This name must be unique among all account names on the graph. May not be empty.
          string name;
+		 
+         string                 vm_type;
+         string                 vm_version;
+         bytes                  code;
+         string                 code_version;
+         abi_def                abi;
 
          /**
           * The owner authority represents absolute control over the account. Usually the keys in this authority will
@@ -422,46 +429,13 @@ namespace graphene { namespace chain {
     */
    typedef generic_index<account_statistics_object, account_stats_multi_index_type> account_stats_index;
 
-   class contract_object : public graphene::db::abstract_object<contract_object>
-   {
-      public:
-         static const uint8_t space_id = protocol_ids;
-         static const uint8_t type_id  = contract_object_type;
-
-         account_id_type          owner;         
-         contract_addr_type       contract_addr;
-         string                   bytecode;
-         string                   abi_json;
-         string                   construct_data;
-         string                   contract_name;
-         uint8_t                  state;
-         bool                     activated;
-         string                   contract_state;
-
-         typedef account_options  options_type;
-         options_type options;
-
-         contract_id_type get_id()const { return id; }
-   };
-
-   struct by_contract_addr {};
-
-   typedef multi_index_container<
-      contract_object,
-      indexed_by<
-      ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
-      ordered_unique< tag<by_contract_addr>, member< contract_object, contract_addr_type, &contract_object::contract_addr >>
-      >
-   > contract_multi_index_type;
-
-   typedef generic_index<contract_object, contract_multi_index_type> contract_index;
 }}
 
 FC_REFLECT_DERIVED( graphene::chain::account_object,
                     (graphene::db::object),
                     (membership_expiration_date)(registrar)(referrer)(lifetime_referrer)
                     (network_fee_percentage)(lifetime_referrer_fee_percentage)(referrer_rewards_percentage)
-                    (name)(owner)(active)(options)(statistics)(whitelisting_accounts)(blacklisting_accounts)
+                    (name)(vm_type)(vm_version)(code)(code_version)(abi)(owner)(active)(options)(statistics)(whitelisting_accounts)(blacklisting_accounts)
                     (whitelisted_accounts)(blacklisted_accounts)
                     (cashback_vb)
                     (owner_special_authority)(active_special_authority)
@@ -485,15 +459,4 @@ FC_REFLECT_DERIVED( graphene::chain::account_statistics_object,
                     (lifetime_fees_paid)
                     (pending_fees)(pending_vested_fees)
                   )
-
-FC_REFLECT_DERIVED( graphene::chain::contract_object,
-                   (graphene::db::object),
-                   (owner)
-                   (contract_addr)
-                   (bytecode)
-                   (abi_json)
-                   (construct_data)
-                   (contract_name)
-                   (activated)
-                   (contract_state)
-                  )
+				  

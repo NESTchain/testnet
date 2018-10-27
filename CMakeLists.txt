@@ -1,8 +1,11 @@
 # Defines BitShares library target.
 project( BitShares )
-cmake_minimum_required( VERSION 2.8.12 )
+cmake_minimum_required( VERSION 3.5 )
 
 set( BLOCKCHAIN_NAME "BitShares" )
+set( CMAKE_CXX_STANDARD 14 )
+set( CMAKE_CXX_EXTENSIONS ON )
+set( CXX_STANDARD_REQUIRED ON)
 
 set( CLI_CLIENT_EXECUTABLE_NAME graphene_client )
 set( GUI_CLIENT_EXECUTABLE_NAME BitShares )
@@ -21,6 +24,8 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif()
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
+include( GNUInstallDirs )
+include( InstallDirectoryPermissions )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
 set(GRAPHENE_EGENESIS_JSON "${CMAKE_CURRENT_SOURCE_DIR}/genesis.json" )
@@ -53,6 +58,7 @@ LIST(APPEND BOOST_COMPONENTS thread
                              chrono
                              unit_test_framework
                              context
+                             iostreams
                              locale)
 SET( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
 
@@ -62,9 +68,8 @@ IF( WIN32 )
   set(BOOST_ALL_DYN_LINK OFF) # force dynamic linking for all libraries
 ENDIF(WIN32)
 
-FIND_PACKAGE(Boost 1.57 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
-# For Boost 1.53 on windows, coroutine was not in BOOST_LIBRARYDIR and do not need it to build,  but if boost versin >= 1.54, find coroutine otherwise will cause link errors
-IF(NOT "${Boost_VERSION}" MATCHES "1.53(.*)")
+FIND_PACKAGE(Boost 1.67 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+IF(NOT "${Boost_VERSION}" MATCHES "1.67(.*)")
    SET(BOOST_LIBRARIES_TEMP ${Boost_LIBRARIES})
    FIND_PACKAGE(Boost 1.54 REQUIRED COMPONENTS coroutine)
    LIST(APPEND BOOST_COMPONENTS coroutine)
@@ -138,11 +143,11 @@ else( WIN32 ) # Apple AND Linux
     if( APPLE )
         # Apple Specific Options Here
         message( STATUS "Configuring BitShares on OS X" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -stdlib=libc++ -Wall" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++14 -stdlib=libc++ -Wall  -Wno-invalid-partial-specialization" )
     else( APPLE )
         # Linux Specific Options Here
         message( STATUS "Configuring BitShares on Linux" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -Wall" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++14 -Wall -fPIC" )
         if(USE_PROFILER)
             set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg" )
         endif( USE_PROFILER )
@@ -184,9 +189,18 @@ if(ENABLE_COVERAGE_TESTING)
     SET(CMAKE_CXX_FLAGS "--coverage ${CMAKE_CXX_FLAGS}")
 endif()
 
+add_subdirectory( externals )
+
+include(wasm)
+include(installer)
 add_subdirectory( libraries )
+add_subdirectory( contracts )
 add_subdirectory( programs )
 add_subdirectory( tests )
+add_subdirectory( tools )
+
+
+install_directory_permissions(DIRECTORY ${CMAKE_INSTALL_FULL_SYSCONFDIR}/gxc)
 
 
 if (ENABLE_INSTALLER)

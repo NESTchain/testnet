@@ -32,30 +32,6 @@
 
 namespace graphene { namespace chain {
 
-bool database::update_contract_activate_status(const contract_addr_type & contract_addr, bool activated)
-{
-    try
-    {
-        auto & index = get_index_type<contract_index>().indices().get<by_contract_addr>();
-        auto itr = index.find(contract_addr);
-        if (itr == index.end())
-            return false;
-
-        const auto &contract_itr = find(itr->get_id());
-        FC_ASSERT(contract_itr->activated != activated, "smart contract already activated/deactivated");
-
-        modify(*contract_itr,
-            [&](contract_object & b)
-            {
-                b.activated = activated;
-            }
-        );
-
-        return true;
-    } FC_CAPTURE_AND_RETHROW((contract_addr)(activated))
-}
-
-
 asset database::get_balance(account_id_type owner, asset_id_type asset_id) const
 {
    auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();

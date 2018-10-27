@@ -268,78 +268,6 @@ namespace graphene { namespace chain {
       void        validate()const;
    };
 
-   struct smart_contract_deploy_operation : public base_operation
-   {
-      struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
-
-      asset                 fee;
-      account_id_type       owner;
-      contract_addr_type    contract_addr;
-      string                bytecode;
-      string                abi_json;
-      string                construct_data;
-      string                contract_name;
-      extensions_type       extensions;
-
-      account_id_type fee_payer()const { return owner; }
-      void            validate()const;
-//      share_type      calculate_fee(const fee_parameters_type& k)const;
-   };
-
-
-   struct smart_contract_activate_operation : public base_operation
-   {
-      struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
-      
-      asset              fee;
-      account_id_type    activator;
-      contract_addr_type contract_addr;
-      extensions_type    extensions;
-
-      account_id_type fee_payer()const { return activator; }
-      void            validate()const;
-   };
-
-   struct smart_contract_deactivate_operation : public base_operation
-   {
-       struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
-
-       asset              fee;
-       account_id_type    deactivator;
-       contract_addr_type contract_addr;
-       extensions_type    extensions;
-
-       account_id_type fee_payer()const { return deactivator; }
-       void            validate()const;
-   };
-
-   struct smart_contract_kill_operation : public base_operation
-   {
-       struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
-
-       asset              fee;
-       account_id_type    killer;
-       contract_addr_type contract_addr;
-       extensions_type    extensions;
-
-       account_id_type fee_payer()const { return killer; }
-       void            validate()const;
-   };
-
-   struct smart_contract_call_operation : public base_operation
-   {      
-      struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
-
-      asset                                     fee;
-      account_id_type                           caller;
-      contract_addr_type                        contract_addr;
-      string                                    call_data;
-      extensions_type                           extensions;
-
-      account_id_type fee_payer()const { return caller; }
-      void            validate()const;
-   };
-
 } } // graphene::chain
 
 FC_REFLECT(graphene::chain::account_options, (memo_key)(voting_account)(num_witness)(num_committee)(votes)(extensions))
@@ -370,18 +298,3 @@ FC_REFLECT( graphene::chain::account_upgrade_operation::fee_parameters_type, (me
 FC_REFLECT( graphene::chain::account_transfer_operation::fee_parameters_type, (fee) )
 
 FC_REFLECT( graphene::chain::account_transfer_operation, (fee)(account_id)(new_owner)(extensions) )
-
-FC_REFLECT( graphene::chain::smart_contract_deploy_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::smart_contract_deploy_operation, (fee)(owner)(contract_addr)(bytecode)(abi_json)(construct_data)(contract_name)(extensions) )
-
-FC_REFLECT( graphene::chain::smart_contract_activate_operation::fee_parameters_type, (fee) )
-FC_REFLECT(graphene::chain::smart_contract_activate_operation, (fee)(activator)(contract_addr)(extensions))
-
-FC_REFLECT(graphene::chain::smart_contract_deactivate_operation::fee_parameters_type, (fee))
-FC_REFLECT(graphene::chain::smart_contract_deactivate_operation, (fee)(deactivator)(contract_addr)(extensions))
-
-FC_REFLECT(graphene::chain::smart_contract_kill_operation::fee_parameters_type, (fee))
-FC_REFLECT(graphene::chain::smart_contract_kill_operation, (fee)(killer)(contract_addr)(extensions))
-
-FC_REFLECT( graphene::chain::smart_contract_call_operation::fee_parameters_type, (fee))
-FC_REFLECT(graphene::chain::smart_contract_call_operation, (fee)(caller)(contract_addr)(call_data)(extensions))

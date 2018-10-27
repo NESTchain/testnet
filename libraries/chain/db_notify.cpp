@@ -27,6 +27,7 @@
 #include <graphene/chain/protocol/authority.hpp>
 #include <graphene/chain/protocol/operations.hpp>
 #include <graphene/chain/protocol/transaction.hpp>
+#include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/worker_object.hpp>
@@ -246,12 +247,6 @@ struct get_impacted_account_visitor
       _impacted.insert( op.fee_payer() ); // deposit_to_account
    }
 
-   void operator()(const smart_contract_deploy_operation& op)     {}
-   void operator()(const smart_contract_activate_operation& op)   {}
-   void operator()(const smart_contract_deactivate_operation& op) {}
-   void operator()(const smart_contract_kill_operation& op)       {}
-   void operator()(const smart_contract_call_operation& op)       {}
-
    void operator()( const override_transfer_operation& op )
    {
       _impacted.insert( op.to );
@@ -291,6 +286,14 @@ struct get_impacted_account_visitor
    void operator()( const send_message_operation& op ) 
    {
       _impacted.insert(op.to); 
+   }
+   void operator() (const contract_deploy_operation& op) {
+       _impacted.insert(op.account);
+   }
+
+   void operator() (const contract_call_operation& op) {
+       _impacted.insert(op.account);
+       _impacted.insert(op.contract_id);
    }
 };
 

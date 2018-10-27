@@ -47,6 +47,7 @@
 #include <deque>
 #include <cstdint>
 #include <graphene/chain/protocol/address.hpp>
+#include <graphene/chain/protocol/name.hpp>
 #include <graphene/db/object_id.hpp>
 #include <graphene/chain/protocol/config.hpp>
 
@@ -85,7 +86,65 @@ namespace graphene { namespace chain {
    using                               fc::ecc::range_proof_type;
    using                               fc::ecc::range_proof_info;
    using                               fc::ecc::commitment_type;
+
+   using bytes              = std::vector<char>;
+
    struct void_t{};
+
+   using action_name      = name;
+   using scope_name       = name;
+   using account_name     = uint64_t;
+   using permission_name  = name;
+   using table_name       = name;
+
+   using int128_t            = __int128;
+
+   using checksum256_type    = fc::sha256;
+   using checksum512_type    = fc::sha512;
+   using checksum160_type    = fc::ripemd160;
+
+   typedef vector<std::pair<uint16_t,vector<char>>> abi_extensions_type;
+
+   struct operation_ext_version_t {
+       uint8_t version = 0;
+   };
+
+   // vm execution cpu limit
+   struct vm_cpu_limit_t {
+       uint32_t trx_cpu_limit = 20000; // 20 ms
+       uint32_t block_cpu_limit = 800000; // 800 ms
+   };
+
+   struct asset_symbol_t {
+       std::string symbol;
+   };
+
+   struct operation_ext_copyright_hash_t {
+       fc::optional<string> copyright_hash;
+   };
+
+   struct pocs_threshold_league_t {
+       // Trigger pocs thresholds
+       vector<uint64_t> pocs_thresholds;
+       // the base fee rate
+       vector<uint64_t> fee_bases;
+       // the product weight of the pocs
+       vector<uint64_t> product_pocs_weights;
+   };
+
+   struct pocs_threshold_league_data_product_t{
+       uint64_t pocs_threshold = 0;
+   };
+
+   struct interest_rate_t {
+       uint32_t lock_days = 0;
+       uint32_t interest_rate = 0;
+       bool is_valid = false;//
+   };
+
+   struct lock_balance_params_t {
+       vector< pair<fc::string, interest_rate_t> > params;
+   };
 
    typedef fc::ecc::private_key        private_key_type;
    typedef fc::sha256 chain_id_type;
@@ -115,6 +174,17 @@ namespace graphene { namespace chain {
       implementation_ids    = 2
    };
 
+   /**
+    *  operation version
+    */
+   enum operation_version {
+       operation_version_one = 1,
+       operation_version_two = 2,
+       operation_version_three = 3,
+       operation_version_four = 4,
+       operation_version_five = 5
+   };
+
    inline bool is_relative( object_id_type o ){ return o.space() == 0; }
 
    /**
@@ -142,7 +212,12 @@ namespace graphene { namespace chain {
       vesting_balance_object_type,
       worker_object_type,
       balance_object_type,
-      contract_object_type,
+      index64_object_type,
+      index128_object_type,
+      index256_object_type,
+      index_double_object_type,
+      index_long_double_object_type,
+
       OBJECT_TYPE_COUNT ///< Sentry value which contains the number of different object types
    };
 
@@ -165,7 +240,10 @@ namespace graphene { namespace chain {
       impl_special_authority_object_type,
       impl_buyback_object_type,
       impl_fba_accumulator_object_type,
-      impl_collateral_bid_object_type
+      impl_collateral_bid_object_type,
+
+      impl_table_id_object_type,
+      impl_key_value_object_type,
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -185,7 +263,6 @@ namespace graphene { namespace chain {
    class worker_object;
    class balance_object;
    class blinded_balance_object;
-   class contract_object;
 
    typedef object_id< protocol_ids, account_object_type,            account_object>               account_id_type;
    typedef object_id< protocol_ids, asset_object_type,              asset_object>                 asset_id_type;
@@ -201,9 +278,6 @@ namespace graphene { namespace chain {
    typedef object_id< protocol_ids, vesting_balance_object_type,    vesting_balance_object>       vesting_balance_id_type;
    typedef object_id< protocol_ids, worker_object_type,             worker_object>                worker_id_type;
    typedef object_id< protocol_ids, balance_object_type,            balance_object>               balance_id_type;
-   typedef object_id< protocol_ids, contract_object_type,           contract_object>              contract_id_type;
-
-   typedef string contract_addr_type; //sha256 hash string of smart contract byte code
 
    // implementation types
    class global_property_object;
@@ -222,6 +296,9 @@ namespace graphene { namespace chain {
    class buyback_object;
    class fba_accumulator_object;
    class collateral_bid_object;
+
+   class table_id_object;
+   class key_value_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -243,6 +320,9 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_buyback_object_type, buyback_object >                                    buyback_id_type;
    typedef object_id< implementation_ids, impl_fba_accumulator_object_type, fba_accumulator_object >                    fba_accumulator_id_type;
    typedef object_id< implementation_ids, impl_collateral_bid_object_type, collateral_bid_object >                      collateral_bid_id_type;
+
+   typedef object_id< implementation_ids, impl_table_id_object_type, table_id_object>        table_id_object_id_type;
+   typedef object_id< implementation_ids, impl_key_value_object_type, key_value_object>      key_value_object_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;
@@ -353,7 +433,12 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (vesting_balance_object_type)
                  (worker_object_type)
                  (balance_object_type)
-                 (contract_object_type)
+                 (index64_object_type)
+                 (index128_object_type)
+                 (index256_object_type)
+                 (index_double_object_type)
+                 (index_long_double_object_type)
+				 
                  (OBJECT_TYPE_COUNT)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,
@@ -375,6 +460,9 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_buyback_object_type)
                  (impl_fba_accumulator_object_type)
                  (impl_collateral_bid_object_type)
+
+                 (impl_table_id_object_type)
+                 (impl_key_value_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -407,8 +495,11 @@ FC_REFLECT_TYPENAME( graphene::chain::special_authority_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::buyback_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::fba_accumulator_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::collateral_bid_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::table_id_object_id_type)
+FC_REFLECT_TYPENAME( graphene::chain::key_value_object_id_type)
 
 FC_REFLECT( graphene::chain::void_t, )
+FC_REFLECT(graphene::chain::vm_cpu_limit_t, (trx_cpu_limit)(block_cpu_limit))
 
 FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)

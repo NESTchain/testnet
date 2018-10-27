@@ -37,6 +37,8 @@
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/evaluator.hpp>
 
+#include <graphene/chain/protocol/contract_receipt.hpp>
+
 #include <fc/smart_ref_impl.hpp>
 
 namespace graphene { namespace chain {
@@ -377,24 +379,35 @@ signed_block database::_generate_block(
    _pending_tx_session.reset();
    _pending_tx_session = _undo_db.start_undo_session();
 
+   uint64_t block_cpu_limit = get_cpu_limit().block_cpu_limit;
+   uint64_t new_block_cpu = 0;
    uint64_t postponed_tx_count = 0;
    // pop pending state (reset to head block state)
-   for( const processed_transaction& tx : _pending_tx )
-   {
-      size_t new_total_size = total_block_size + fc::raw::pack_size( tx );
+   for (const processed_transaction &tx : _pending_tx) {
+       size_t new_total_size = total_block_size + fc::raw::pack_size(tx);
 
-      // postpone transaction if it would make block too big
-      if( new_total_size >= maximum_block_size )
-      {
-         postponed_tx_count++;
-         continue;
-      }
+       // postpone transaction if it would make block too big
+       if (new_total_size >= maximum_block_size || new_block_cpu >= block_cpu_limit) {
+           postponed_tx_count++;
+           continue;
+       }
 
-      try
-      {
-         auto temp_session = _undo_db.start_undo_session();
-         processed_transaction ptx = _apply_transaction( tx );
-         temp_session.merge();
+       try {
+           auto temp_session = _undo_db.start_undo_session();
+           processed_transaction ptx = _apply_transaction(tx);
+           // check block cpu limit
+           for (const auto op_result : ptx.operation_results) {
+               if (op_result.which() == operation_result::tag<contract_receipt>::value) {
+                   new_block_cpu += op_result.get<contract_receipt>().billed_cpu_time_us;
+               }
+           }
+           if (new_block_cpu >= block_cpu_limit) {
+               wlog("posponed due to block cpu limit");
+               postponed_tx_count++;
+               continue;
+           }
+
+           temp_session.merge();
 
          // We have to recompute pack_size(ptx) because it may be different
          // than pack_size(tx) (i.e. if one or more results increased
@@ -409,9 +422,8 @@ signed_block database::_generate_block(
          wlog( "The transaction was ${t}", ("t", tx) );
       }
    }
-   if( postponed_tx_count > 0 )
-   {
-      wlog( "Postponed ${n} transactions due to block size limit", ("n", postponed_tx_count) );
+   if (postponed_tx_count > 0) {
+       wlog("Postponed ${n} transactions due to block size limit or block cpu limit", ("n", postponed_tx_count));
    }
 
    _pending_tx_session.reset();
@@ -543,6 +555,17 @@ void database::_apply_block( const signed_block& next_block )
       apply_transaction( trx, skip );
       ++_current_trx_in_block;
    }
+
+   // check block cpu limit
+   uint64_t block_cpu_time_us = 0;
+   for (const auto &trx : next_block.transactions) {
+       for (const auto op_result : trx.operation_results) {
+           if (op_result.which() == operation_result::tag<contract_receipt>::value) {
+               block_cpu_time_us += op_result.get<contract_receipt>().billed_cpu_time_us;
+           }
+       }
+   }
+   FC_ASSERT(block_cpu_time_us <= get_cpu_limit().block_cpu_limit, "block cpu time exceed global block limit");
 
    const uint32_t missed = update_witness_missed_blocks( next_block );
    update_global_dynamic_data( next_block, missed );

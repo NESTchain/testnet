@@ -40,6 +40,7 @@
 #include <graphene/chain/protocol/withdraw_permission.hpp>
 #include <graphene/chain/protocol/witness.hpp>
 #include <graphene/chain/protocol/worker.hpp>
+#include <graphene/chain/protocol/contract_ops.hpp>
 
 namespace graphene { namespace chain {
 
@@ -94,11 +95,10 @@ namespace graphene { namespace chain {
             asset_settle_cancel_operation,  // VIRTUAL
             asset_claim_fees_operation,
             fba_distribute_operation,       // VIRTUAL
-            smart_contract_deploy_operation,
-            smart_contract_activate_operation,
-            smart_contract_deactivate_operation,
-            smart_contract_kill_operation,
-            smart_contract_call_operation,
+			
+            contract_deploy_operation,
+            contract_call_operation,
+			
             bid_collateral_operation,
             execute_bid_operation,          // VIRTUAL
             pio_operation,

@@ -50,7 +50,7 @@ database& generic_evaluator::db()const { return trx_state->db(); }
       return result;
    } FC_CAPTURE_AND_RETHROW() }
 
-   void generic_evaluator::prepare_fee(account_id_type account_id, asset fee)
+   void generic_evaluator::prepare_fee(account_id_type account_id, asset fee, const operation& o)
    {
       const database& d = db();
       fee_from_account = fee;

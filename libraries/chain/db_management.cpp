@@ -39,6 +39,7 @@
 namespace graphene { namespace chain {
 
 database::database()
+    : wasmif(graphene::chain::wasm_interface::vm_type::wabt)
 {
    initialize_indexes();
    initialize_evaluators();

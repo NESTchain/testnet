@@ -289,30 +289,5 @@ void account_transfer_operation::validate()const
    FC_ASSERT( fee.amount >= 0 );
 }
 
-void smart_contract_deploy_operation::validate() const
-{
-    //TODO: there are more condition to be checked
-}
-
-void smart_contract_activate_operation::validate() const
-{
-    //TODO: there are more condition to be checked
-}
-
-void smart_contract_deactivate_operation::validate() const
-{
-    //TODO: there are more condition to be checked
-}
-
-void smart_contract_kill_operation::validate() const
-{
-    //TODO: there are more condition to be checked
-}
-
-void smart_contract_call_operation::validate() const
-{
-    //TODO: there are more condition to be checked
-}
-
 }
 } // graphene::chain

@@ -48,6 +48,8 @@
 #include <graphene/chain/witness_schedule_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 
+#include <graphene/chain/contract_table_objects.hpp>
+
 #include <graphene/chain/account_evaluator.hpp>
 #include <graphene/chain/asset_evaluator.hpp>
 #include <graphene/chain/assert_evaluator.hpp>
@@ -63,6 +65,7 @@
 #include <graphene/chain/witness_evaluator.hpp>
 #include <graphene/chain/worker_evaluator.hpp>
 #include <graphene/chain/pio_evaluator.hpp>
+#include <graphene/chain/contract_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -176,13 +179,11 @@ void database::initialize_evaluators()
    register_evaluator<asset_claim_fees_evaluator>();
    register_evaluator<asset_update_issuer_evaluator>();
    register_evaluator<asset_claim_pool_evaluator>();
-   register_evaluator<smart_contract_deploy_evaluator>();
-   register_evaluator<smart_contract_activate_evaluator>();
-   register_evaluator<smart_contract_deactivate_evaluator>();
-   register_evaluator<smart_contract_kill_evaluator>();
-   register_evaluator<smart_contract_call_evaluator>();
    register_evaluator<pio_evaluator>();
    register_evaluator<send_message_evaluator>();
+   
+   register_evaluator<contract_deploy_evaluator>();
+   register_evaluator<contract_call_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -202,9 +203,6 @@ void database::initialize_indexes()
    add_index< primary_index<witness_index> >();
    add_index< primary_index<limit_order_index > >();
    add_index< primary_index<call_order_index > >();
-
-   //smart contract index
-   add_index<primary_index<contract_index>>();
     
    auto prop_index = add_index< primary_index<proposal_index > >();
    prop_index->add_secondary_index<required_approval_index>();
@@ -232,6 +230,10 @@ void database::initialize_indexes()
    add_index< primary_index<collateral_bid_index                          > >();
 
    add_index< primary_index< simple_index< fba_accumulator_object       > > >();
+   // contract object indexes
+   add_index< primary_index< table_id_multi_index> >();
+   add_index< primary_index< key_value_index> >();
+   add_index< primary_index< index64_index> >();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)

@@ -334,7 +334,6 @@ class wallet_api
        * we possess.
        * @returns a list of account objects
        */
-      contract_object list_contract_addrs(const string &addr);
       vector<account_object>            list_my_accounts();
       /** Lists all accounts registered in the blockchain.
        * This returns a list of all account names and their account ids, sorted by account name.
@@ -766,6 +765,68 @@ class wallet_api
        */
       string normalize_brain_key(string s) const;
 
+
+
+
+      /** Deploy contract
+       *
+       * deploy contract
+       * @param name name
+       * @param account this account use to deploy contract
+       * @param vm_type vm_type
+       * @param vm_version vm_version
+       * @param contract_dir contract_dir
+       * @param fee_asset_symbol the symbol of the fee asset.
+       * @param broadcast broadcast
+       * @returns signed_transaction
+       */
+      signed_transaction deploy_contract(string name,
+                                         string account,
+                                         string vm_type,
+                                         string vm_version,
+                                         string contract_dir,
+                                         string fee_asset_symbol,
+                                         bool broadcast = false);
+
+
+    /** Call contract
+     *
+     * call contract
+     * @param account this account use to call contract
+     * @param contract contract
+     * @param amount amount of asset sent to contract
+     * @param method method
+     * @param arg arg
+     * @param fee_asset_symbol the symbol of the fee asset.
+     * @param broadcast broadcast
+     * @returns signed_transaction
+     */
+    signed_transaction call_contract(string account,
+                                     string contract,
+                                     optional<asset> amount,
+                                     string method,
+                                     string arg,
+                                     string fee_asset_symbol,
+                                     bool broadcast = false);
+
+      /** Returns table infos about the given contract.
+       *
+       * @param contract the name of the contract to query
+       * @returns the table names/types stored in the blockchain
+       */
+      variant get_contract_tables(string contract) const;
+
+      /** Returns table infos about the given contract.
+       *
+       * @param contract the name of the contract to query
+       * @param table the table of the contract to query
+       * @param lower the start primary key of the table primary index
+       * @param upper the end primary key of the table primary index
+       * @param limit the max item to return
+       * @returns the table names/types stored in the blockchain
+       */
+      variant get_table_objects(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit) const;
+
       /** Registers a third party's account on the blockckain.
        *
        * This function is used to register an account for which you do not own the private keys.
@@ -833,32 +894,6 @@ class wallet_api
                                                        string registrar_account,
                                                        string referrer_account,
                                                        bool broadcast = false);
-
-
-      signed_transaction deploy_contract(string bytecode,
-                                         string abi_json,
-                                         string construct_data,
-                                         string contract_name,
-                                         bool broadcast = true);
-
-      signed_transaction upload_contract(string bytecode_file,
-                                         string abi_json,
-                                         string construct_data,
-                                         string contract_name,
-                                         bool broadcast = true);
-
-      signed_transaction activate_contract(contract_addr_type contract_addr,
-                                           bool broadcast = true);
-
-      signed_transaction deactivate_contract(contract_addr_type contract_addr,
-                                             bool broadcast = true);
-
-      signed_transaction kill_contract(contract_addr_type contract_addr,
-                                       bool broadcast = true);
-
-      signed_transaction call_contract(contract_addr_type contract_addr,
-                                       string call_data,
-                                       bool broadcast = true);
 
       /** Transfer an amount from one account to another.
        * @param from the name or id of the account sending the funds
@@ -1785,7 +1820,6 @@ FC_API( graphene::wallet::wallet_api,
         (is_locked)
         (lock)(unlock)(set_password)
         (dump_private_keys)
-        (list_contract_addrs)
         (list_my_accounts)
         (list_accounts)
         (list_account_balances)
@@ -1800,12 +1834,12 @@ FC_API( graphene::wallet::wallet_api,
         (register_account)
         (upgrade_account)
         (create_account_with_brain_key)
-        (upload_contract)
+		
         (deploy_contract)
-        (activate_contract)
-        (deactivate_contract)
-        (kill_contract)
         (call_contract)
+        (get_contract_tables)
+        (get_table_objects)
+		
         (sell_asset)
         (borrow_asset)
         (borrow_asset_ext)

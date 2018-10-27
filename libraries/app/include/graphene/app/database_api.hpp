@@ -138,6 +138,8 @@ class database_api
        * If any of the provided IDs does not map to an object, a null variant is returned in its position.
        */
       fc::variants get_objects(const vector<object_id_type>& ids)const;
+      fc::variants get_table_objects(uint64_t code, uint64_t scope, uint64_t table, uint64_t lower, uint64_t uppper, uint64_t limit=10) const;
+      bytes serialize_contract_call_args(string contract, string method, string json_args) const;
 
       ///////////////////
       // Subscriptions //
@@ -225,6 +227,10 @@ class database_api
        * @brief Retrieve the current @ref global_property_object
        */
       global_property_object get_global_properties()const;
+      /**
+       *  @brief Retrieve vm cpu_limit
+       */
+      vm_cpu_limit_t get_cpu_limit() const;
 
       /**
        * @brief Retrieve compile-time constants
@@ -332,10 +338,7 @@ class database_api
        * @return The accounts holding the provided names
        *
        * This function has semantics identical to @ref get_objects
-       */
-      vector<optional<contract_object>> lookup_contracts(const vector<contract_addr_type> &contract_addrs)const;
-
-      
+       */      
       vector<optional<account_object>> lookup_account_names(const vector<string>& account_names)const;
 
       /**
@@ -738,7 +741,8 @@ FC_REFLECT( graphene::app::market_trade, (sequence)(date)(price)(amount)(value)(
 FC_API(graphene::app::database_api,
    // Objects
    (get_objects)
-
+   (get_table_objects)
+   (serialize_contract_call_args)
    // Subscriptions
    (set_subscribe_callback)
    (set_pending_transaction_callback)
@@ -772,9 +776,6 @@ FC_API(graphene::app::database_api,
    (lookup_account_names)
    (lookup_accounts)
    (get_account_count)
-   
-   // contract
-   (lookup_contracts)
 
    // Balances
    (get_account_balances)

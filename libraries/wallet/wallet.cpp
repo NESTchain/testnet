@@ -73,6 +73,9 @@
 #include <graphene/wallet/api_documentation.hpp>
 #include <graphene/wallet/reflect_util.hpp>
 #include <graphene/debug_witness/debug_api.hpp>
+#include <graphene/chain/wast_to_wasm.hpp>
+#include <graphene/chain/abi_serializer.hpp>
+#include <graphene/chain/protocol/name.hpp>
 #include <fc/smart_ref_impl.hpp>
 
 #ifndef WIN32
@@ -91,6 +94,10 @@ namespace fc {
                                 // commitments the length of the range proof will hint
                                 // strongly at the value amount that is being hidden.
 
+#define OWNER "owner"
+#define ACTIVE "active"
+#define ALL "all"
+
 namespace graphene { namespace wallet {
 
 namespace detail {
@@ -106,20 +113,21 @@ public:
    std::string operator()(const void_result& x) const;
    std::string operator()(const object_id_type& oid);
    std::string operator()(const asset& a);
+   std::string operator()(const contract_receipt& r);
 };
 
 // BLOCK  TRX  OP  VOP
 struct operation_printer
 {
 private:
-   ostream& out;
+   std::ostream& out;
    const wallet_api_impl& wallet;
    operation_result result;
 
    std::string fee(const asset& a) const;
 
 public:
-   operation_printer( ostream& out, const wallet_api_impl& wallet, const operation_result& r = operation_result() )
+   operation_printer( std::ostream& out, const wallet_api_impl& wallet, const operation_result& r = operation_result() )
       : out(out),
         wallet(wallet),
         result(r)
@@ -480,7 +488,7 @@ public:
       while( fc::exists(dest_path) )
       {
          ++suffix;
-         dest_path = destination_filename + "-" + to_string( suffix ) + _wallet_filename_extension;
+         dest_path = destination_filename + "-" + fc::to_string( suffix ) + _wallet_filename_extension;
       }
       wlog( "backing up wallet ${src} to ${dest}",
             ("src", src_path)
@@ -515,11 +523,16 @@ public:
       return ob.template as<T>( GRAPHENE_MAX_NESTED_OBJECTS );
    }
 
-   void set_operation_fees( signed_transaction& tx, const fee_schedule& s  )
-   {
-      for( auto& op : tx.operations )
-         s.set_fee(op);
-   }
+       /**
+        * @brief set_operation_fees
+        * @param tx
+        * @param s
+        */
+       void set_operation_fees(signed_transaction& tx, const fee_schedule& s)
+       {
+           for( auto& op : tx.operations )
+               s.set_fee(op);
+       }
 
    variant info() const
    {
@@ -615,53 +628,6 @@ public:
          return *rec;
       }
    }
-
-//   contract_object get_contract(string contract_id) const
-//   {
-//      FC_ASSERT( contract_id.size() > 0 );
- //     //这里需要再加强，添加些一些判断条件。
- //     auto rec = _remote_db->find(contract_id);
- //     FC_ASSERT(rec);
- //     return *rec;
- //  }
-
-   contract_object get_contract(const contract_addr_type &contract_addr) const
-   {
-      auto rec = _remote_db->lookup_contracts({contract_addr}).front();
-      FC_ASSERT(rec);
-      return *rec;
-   }
-
-   //contract_object get_contract(const string &contract_add) const
-   //{
-   //   FC_ASSERT( contract_add.size() > 0 );
-
-
-   //   if (auto id = maybe_id<uint64_t>(contract_add))
-   //   {
-   //      // It's an ID
-   //       return get_contract(*id);
-   //   } else {
-   //         return contract_object();
-   //      // It's a name
-   //   //    if( _wallet.my_accounts.get<by_name>().count(account_name_or_id) )
-   //   //    {
-   //   //       auto local_account = *_wallet.my_accounts.get<by_name>().find(account_name_or_id);
-   //   //       auto blockchain_account = _remote_db->lookup_account_names({account_name_or_id}).front();
-   //   //       FC_ASSERT( blockchain_account );
-   //   //       if (local_account.id != blockchain_account->id)
-   //   //          elog("my account id ${id} different from blockchain id ${id2}", ("id", local_account.id)("id2", blockchain_account->id));
-   //   //       if (local_account.name != blockchain_account->name)
-   //   //          elog("my account name ${id} different from blockchain name ${id2}", ("id", local_account.name)("id2", blockchain_account->name));
-
-   //   //       return *_wallet.my_accounts.get<by_name>().find(account_name_or_id);
-   //   //    }
-   //   //    auto rec = _remote_db->lookup_account_names({account_name_or_id}).front();
-   //   //    FC_ASSERT( rec && rec->name == account_name_or_id );
-   //   //    return *rec;
-   //   }
-   //}
-
 
    account_id_type get_account_id(string account_name_or_id) const
    {
@@ -994,6 +960,135 @@ public:
       _builder_transactions.erase(handle);
    }
 
+       variants get_table_objects(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit)
+       { try {
+             GRAPHENE_ASSERT(lower < upper && limit > 0, table_not_found_exception, "invalid parameters");
+             account_object contract_obj = get_account(contract);
+
+             const auto& tables = contract_obj.abi.tables;
+             auto iter = std::find_if(tables.begin(), tables.end(),
+                     [&](const table_def& t) { return t.name == table; });
+
+             if (iter != tables.end()) {
+                 return _remote_db->get_table_objects(contract_obj.id.number, contract_obj.id.number, name(table), lower, upper, limit);
+             } else {
+                 GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
+             }
+             return variants();
+       } FC_CAPTURE_AND_RETHROW((contract)(table)) }
+
+       variant get_contract_tables(string contract)
+       { try {
+             account_object contract_obj = get_account(contract);
+
+             fc::variants result;
+             const auto &tables = contract_obj.abi.tables;
+             result.reserve(tables.size());
+
+             std::transform(tables.begin(), tables.end(), std::back_inserter(result),
+                     [](const table_def &t_def) -> fc::variant {
+                         return name(t_def.name).to_string();
+                     });
+
+             return result;
+       } FC_CAPTURE_AND_RETHROW((contract)) }
+
+       signed_transaction deploy_contract(string name,
+                                          string account,
+                                          string vm_type,
+                                          string vm_version,
+                                          string contract_dir,
+                                          string fee_asset_symbol,
+                                          bool broadcast = false)
+       { try {
+           FC_ASSERT(!self.is_locked());
+           FC_ASSERT(is_valid_name(name));
+           fc::optional<asset_object> fee_asset_obj = get_asset(fee_asset_symbol);
+
+           std::vector<uint8_t> wasm;
+           variant abi_def_data;
+
+           auto load_contract = [&]() {
+               fc::path cpath(contract_dir);
+               if (cpath.filename().generic_string() == ".") cpath = cpath.parent_path();
+
+               fc::path wasm_path = cpath / (cpath.filename().generic_string() + ".wasm");
+               fc::path abi_path = cpath / (cpath.filename().generic_string() + ".abi");
+
+               bool wasm_exist = fc::exists(wasm_path);
+               bool abi_exist = fc::exists(abi_path);
+
+               FC_ASSERT(abi_exist, "no abi file exist");
+               FC_ASSERT(wasm_exist, "no wasm file exist");
+
+               abi_def_data = fc::json::from_file(abi_path);
+
+               std::string wasm_string;
+               fc::read_file_contents(wasm_path, wasm_string);
+               const string binary_wasm_header("\x00\x61\x73\x6d", 4);
+               FC_ASSERT(wasm_string.size() > 4 && (wasm_string.compare(0, 4, binary_wasm_header) == 0), "wasm invalid");
+
+               for (auto it = wasm_string.begin(); it != wasm_string.end(); ++it) {
+                   wasm.push_back(*it); //TODO
+               }
+           };
+
+           load_contract();
+
+           account_object creator_account_object = this->get_account(account);
+           account_id_type creator_account_id = creator_account_object.id;
+
+           contract_deploy_operation op;
+           op.name = name;
+           op.account = creator_account_id;
+           op.vm_type = vm_type;
+           op.vm_version = vm_version;
+           op.code = bytes(wasm.begin(), wasm.end());
+           op.abi = abi_def_data.as<abi_def>(GRAPHENE_MAX_NESTED_OBJECTS);
+
+           signed_transaction tx;
+           tx.operations.push_back(op);
+           set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+           tx.validate();
+
+           return sign_transaction(tx, broadcast);
+       } FC_CAPTURE_AND_RETHROW( (name)(account)(vm_type)(vm_version)(contract_dir)(fee_asset_symbol)(broadcast)) }
+
+       signed_transaction call_contract(string account,
+                                        string contract,
+                                        optional<asset> amount,
+                                        string method,
+                                        string args,
+                                        string fee_asset_symbol,
+                                        bool broadcast = false)
+       { try {
+             FC_ASSERT(!self.is_locked());
+             fc::optional<asset_object> fee_asset_obj = get_asset(fee_asset_symbol);
+
+             account_object caller = get_account(account);
+             account_object contract_obj = get_account(contract);
+
+             contract_call_operation contract_call_op;
+             contract_call_op.account = caller.id;
+             contract_call_op.contract_id = contract_obj.id;
+             if (amount.valid()) {
+                 contract_call_op.amount = amount;
+             }
+             contract_call_op.method_name = string_to_name(method.c_str());
+             fc::variant action_args_var = fc::json::from_string(args);
+
+             abi_serializer abis(contract_obj.abi, fc::milliseconds(1000000));
+             auto action_type = abis.get_action_type(method);
+             GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));
+             contract_call_op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+
+             signed_transaction tx;
+             tx.operations.push_back(contract_call_op);
+             set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+             tx.validate();
+
+             return sign_transaction(tx, broadcast);
+       } FC_CAPTURE_AND_RETHROW( (account)(contract)(amount)(method)(args)(fee_asset_symbol)(broadcast)) }
 
    signed_transaction register_account(string name,
                                        public_key_type owner,
@@ -1209,133 +1304,6 @@ public:
       } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account)(referrer_account) )
    }
 
-   //bytecode must be base64-encoded.
-   signed_transaction deploy_contract(string bytecode,
-                                      string abi_json,
-                                      string construct_data,
-                                      string contract_name,
-                                      bool broadcast /* = true */)
-    {
-        try
-        {
-            FC_ASSERT(!self.is_locked());
-            FC_ASSERT(fc::base64_decode(bytecode).size() > 0, "currently byte code must be base64-encoded");
-
-            smart_contract_deploy_operation deploy_op;      
-            deploy_op.owner          = get_wallet_account_id();
-            deploy_op.bytecode       = bytecode;
-            deploy_op.abi_json       = abi_json;
-            deploy_op.construct_data = construct_data;
-            deploy_op.contract_name  = contract_name;
-            deploy_op.contract_addr  = fc::sha256::hash(bytecode + abi_json + construct_data);
-
-            ilog("deploy smart contract, addr: ${a}, name: ${n}", ("a", deploy_op.contract_addr)("n", deploy_op.contract_name));
-
-            signed_transaction tx;
-            tx.operations.push_back(deploy_op);
-            set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-            tx.validate();
-            return sign_transaction(tx, broadcast);
-        } FC_CAPTURE_AND_RETHROW((bytecode)(abi_json)(construct_data)(contract_name)(broadcast))
-    }
-
-
-    signed_transaction upload_contract(string bytecode_file,
-                                       string abi_json,
-                                       string construct_data,
-                                       string contract_name,
-                                       bool broadcast /* = true */)
-    {
-        try
-        {
-            FC_ASSERT( !self.is_locked());
-
-            std::ifstream input(bytecode_file, std::fstream::binary | std::fstream::in);
-            std::vector<char> buffer((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
-            FC_ASSERT(!buffer.empty());
-
-            return deploy_contract(fc::base64_encode(&buffer[0], buffer.size()), 
-                                   abi_json, construct_data, contract_name, broadcast);
-        } FC_CAPTURE_AND_RETHROW((bytecode_file)(abi_json)(construct_data)(contract_name)(broadcast))
-    }
-
-    signed_transaction activate_contract(contract_addr_type contract_addr,
-                                         bool broadcast /* = true */)
-    {
-        try
-        {
-            FC_ASSERT( !self.is_locked() );
-
-            smart_contract_activate_operation activate_op;                       
-            activate_op.activator     = get_wallet_account_id();
-            activate_op.contract_addr = contract_addr;
-
-            signed_transaction tx;
-            tx.operations.push_back(activate_op);
-            set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-            tx.validate();
-            return sign_transaction(tx, broadcast);
-        } FC_CAPTURE_AND_RETHROW((contract_addr)(broadcast))
-    }
-
-    signed_transaction deactivate_contract(contract_addr_type contract_addr,
-                                           bool broadcast /* = true */)
-    {
-        try
-        {
-            FC_ASSERT(!self.is_locked());
-
-            smart_contract_deactivate_operation deactivate_op;
-            deactivate_op.deactivator   = get_wallet_account_id();
-            deactivate_op.contract_addr = contract_addr;
-
-            signed_transaction tx;
-            tx.operations.push_back(deactivate_op);
-            set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-            tx.validate();
-            return sign_transaction(tx, broadcast);
-        } FC_CAPTURE_AND_RETHROW((contract_addr)(broadcast))
-    }
-
-    signed_transaction kill_contract(contract_addr_type contract_addr,
-                                     bool broadcast /* = true */)
-    {
-        try
-        {
-            FC_ASSERT(!self.is_locked());
-
-            smart_contract_kill_operation kill_op;
-            kill_op.killer        = get_wallet_account_id();
-            kill_op.contract_addr = contract_addr;
-
-            signed_transaction tx;
-            tx.operations.push_back(kill_op);
-            set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-            tx.validate();
-            return sign_transaction(tx, broadcast);
-        } FC_CAPTURE_AND_RETHROW((contract_addr)(broadcast))
-    }
-
-    signed_transaction call_contract(contract_addr_type contract_addr,
-                                     string call_data,
-                                     bool broadcast = true)
-    {
-        try
-        {
-            FC_ASSERT( !self.is_locked() );
-
-            smart_contract_call_operation call_op;     
-            call_op.caller                    = get_wallet_account_id();
-            call_op.contract_addr             = contract_addr;
-            call_op.call_data                 = call_data;
-
-            signed_transaction tx;
-            tx.operations.push_back(call_op);
-            set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-            tx.validate();
-            return sign_transaction(tx, broadcast);
-        } FC_CAPTURE_AND_RETHROW((contract_addr)(call_data)(broadcast))
-    }
 
    signed_transaction create_asset(string issuer,
                                    string symbol,
@@ -3099,7 +3067,12 @@ std::string operation_result_printer::operator()(const asset& a)
    return _wallet.get_asset(a.asset_id).amount_to_pretty_string(a);
 }
 
-}}}
+    std::string operation_result_printer::operator()(const contract_receipt& r)
+    {
+       return std::string(r);
+    }
+
+    }}}
 
 namespace graphene { namespace wallet {
    vector<brain_key_info> utility::derive_owner_keys_from_brain_key(string brain_key, int number_of_desired_keys)
@@ -3478,11 +3451,6 @@ asset_bitasset_data_object wallet_api::get_bitasset_data(string asset_name_or_id
    return my->get_object<asset_bitasset_data_object>(*asset.bitasset_data_id);
 }
 
-contract_object wallet_api::list_contract_addrs(const string &addr)
-{
-   return my->get_contract(addr);
-}
-
 account_id_type wallet_api::get_account_id(string account_name_or_id) const
 {
    return my->get_account_id(account_name_or_id);
@@ -3649,6 +3617,37 @@ fc::ecc::private_key wallet_api::derive_private_key(const std::string& prefix_st
    return detail::derive_private_key( prefix_string, sequence_number );
 }
 
+    signed_transaction wallet_api::deploy_contract(string name,
+                                                  string account,
+                                                  string vm_type,
+                                                  string vm_version,
+                                                  string contract_dir,
+                                                  string fee_asset_symbol,
+                                                  bool broadcast)
+    {
+        return my->deploy_contract(name, account, vm_type, vm_version, contract_dir, fee_asset_symbol, broadcast);
+    }
+
+    signed_transaction wallet_api::call_contract(string account,
+                                      string contract,
+                                      optional<asset> amount,
+                                      string method,
+                                      string args,
+                                      string fee_asset_symbol,
+                                      bool broadcast)
+    {
+        return my->call_contract(account, contract, amount, method, args, fee_asset_symbol, broadcast);
+    }
+
+    variant wallet_api::get_contract_tables(string contract) const
+    {
+        return my->get_contract_tables(contract);
+    }
+
+    variant wallet_api::get_table_objects(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit) const
+    {
+        return my->get_table_objects(contract, table, lower, upper, limit);
+    }
 signed_transaction wallet_api::register_account(string name,
                                                 public_key_type owner_pubkey,
                                                 public_key_type active_pubkey,
@@ -3667,44 +3666,6 @@ signed_transaction wallet_api::create_account_with_brain_key(string brain_key, s
             brain_key, account_name, registrar_account,
             referrer_account, broadcast
             );
-}
-
-signed_transaction wallet_api::deploy_contract(string bytecode,
-                                               string abi_json,
-                                               string construct_data,
-                                               string contract_name,
-                                               bool broadcast /*= true*/)
-{
-    return my->deploy_contract(bytecode, abi_json, construct_data, contract_name, broadcast);
-}
-
-signed_transaction wallet_api::upload_contract(string bytecode_file,
-                                               string abi_json,
-                                               string construct_data,
-                                               string contract_name,
-                                               bool broadcast /* = true */)
-{
-    return my->upload_contract(bytecode_file, abi_json, construct_data, contract_name, broadcast);
-}
-
-signed_transaction wallet_api::activate_contract(contract_addr_type contract_addr, bool broadcast /*= true*/)
-{
-    return my->activate_contract(contract_addr, broadcast);
-}
-
-signed_transaction wallet_api::deactivate_contract(contract_addr_type contract_addr, bool broadcast /*= true*/)
-{
-    return my->deactivate_contract(contract_addr, broadcast);
-}
-
-signed_transaction wallet_api::kill_contract(contract_addr_type contract_addr, bool broadcast /*= true*/)
-{
-    return my->kill_contract(contract_addr, broadcast);
-}
-
-signed_transaction wallet_api::call_contract(contract_addr_type contract_addr, string call_data, bool broadcast /*= true*/)
-{
-    return my->call_contract(contract_addr, call_data, broadcast);
 }
 
 signed_transaction wallet_api::issue_asset(string to_account, string amount, string symbol,

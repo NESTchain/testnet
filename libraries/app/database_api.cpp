@@ -26,6 +26,8 @@
 #include <graphene/app/database_api.hpp>
 #include <graphene/app/util.hpp>
 #include <graphene/chain/get_config.hpp>
+#include <graphene/chain/abi_serializer.hpp>
+#include <graphene/chain/contract_table_objects.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -54,10 +56,10 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       explicit database_api_impl( graphene::chain::database& db, const application_options* app_options );
       ~database_api_impl();
 
-      vector<optional<contract_object>> lookup_contracts(const vector<contract_addr_type> & contract_addrs) const;
-
       // Objects
       fc::variants get_objects(const vector<object_id_type>& ids)const;
+	  fc::variants get_table_objects(uint64_t code, uint64_t scope, uint64_t table, uint64_t lower, uint64_t uppper, uint64_t limit=10) const;
+	  bytes serialize_contract_call_args(string contract, string method, string json_args) const;
 
       // Subscriptions
       void set_subscribe_callback( std::function<void(const variant&)> cb, bool notify_remove_create );
@@ -87,6 +89,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<optional<account_object>> get_accounts(const vector<std::string>& account_names_or_ids)const;
       std::map<string,full_account> get_full_accounts( const vector<string>& names_or_ids, bool subscribe );
       optional<account_object> get_account_by_name( string name )const;
+      optional<account_object> get_account_by_contract_code(uint64_t code)const;
       vector<account_id_type> get_account_references( const std::string account_id_or_name )const;
       vector<optional<account_object>> lookup_account_names(const vector<string>& account_names)const;
       map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
@@ -346,6 +349,64 @@ fc::variants database_api_impl::get_objects(const vector<object_id_type>& ids)co
    });
 
    return result;
+}
+
+fc::variants database_api::get_table_objects(uint64_t code, uint64_t scope, uint64_t table, uint64_t lower, uint64_t uppper, uint64_t limit) const
+{
+    return my->get_table_objects(code, scope, table, lower, uppper, limit);
+}
+
+fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope, uint64_t table, uint64_t lower_id, uint64_t uppper_id, uint64_t limit) const
+{ try {
+    fc::variants result;
+
+    const auto &account_obj = get_account_by_contract_code(code);
+    if(!account_obj.valid())
+        return result;
+
+    abi_serializer abis(account_obj->abi, fc::milliseconds(10000));
+
+    const auto &table_idx = _db.get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
+    auto existing_tid = table_idx.find(boost::make_tuple(code & GRAPHENE_DB_MAX_INSTANCE_ID, name(scope & GRAPHENE_DB_MAX_INSTANCE_ID), name(table)));
+    if (existing_tid != table_idx.end()) {
+        const auto &kv_idx = _db.get_index_type<key_value_index>().indices().get<by_scope_primary>();
+
+        auto lower = kv_idx.lower_bound(boost::make_tuple(existing_tid->id, lower_id));
+        auto upper = kv_idx.lower_bound(boost::make_tuple(existing_tid->id, uppper_id));
+
+        auto end = fc::time_point::now() + fc::microseconds(1000 * 10);
+        name tname(table);
+        uint64_t count = 0;
+        for(auto it = lower; it != upper; ++it) {
+            if(fc::time_point::now() > end || count == limit) break;
+            result.emplace_back(abis.binary_to_variant(tname.to_string(), it->value, fc::microseconds(1000 * 10)));
+            ++count;
+        }
+    }
+    return result;
+    }
+    FC_CAPTURE_AND_RETHROW((code)(scope)(table))
+}
+
+bytes database_api::serialize_contract_call_args(string contract, string method, string json_args) const 
+{
+    return my->serialize_contract_call_args(contract, method, json_args);
+}
+
+bytes database_api_impl::serialize_contract_call_args(string contract, string method, string json_args) const
+{
+    auto contract_obj = get_account_by_name(contract);
+    if(!contract_obj) {
+        return bytes();
+    }
+
+    fc::variant action_args_var = fc::json::from_string(json_args);
+
+    abi_serializer abis(contract_obj->abi, fc::milliseconds(10000));
+    auto action_type = abis.get_action_type(method);
+    GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));
+    bytes bin_data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(10000));
+    return bin_data;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -863,6 +924,16 @@ optional<account_object> database_api_impl::get_account_by_name( string name )co
    return optional<account_object>();
 }
 
+optional<account_object> database_api_impl::get_account_by_contract_code(uint64_t code)const
+{
+   object_id_type oid(1, 2, code & GRAPHENE_DB_MAX_INSTANCE_ID);
+   const auto& idx = _db.get_index_type<account_index>().indices().get<by_id>();
+   auto itr = idx.find(oid);
+   if (itr != idx.end())
+      return *itr;
+   return optional<account_object>();
+}
+
 vector<account_id_type> database_api::get_account_references( const std::string account_id_or_name )const
 {
    return my->get_account_references( account_id_or_name );
@@ -883,38 +954,6 @@ vector<account_id_type> database_api_impl::get_account_references( const std::st
       for( auto item : itr->second ) result.push_back(item);
    }
    return result;
-}
-
-vector<optional<contract_object>> database_api::lookup_contracts(const vector<contract_addr_type> &contract_addrs) const
-{
-    return my->lookup_contracts(contract_addrs);
-}
-
-vector<optional<contract_object>> database_api_impl::lookup_contracts(const vector<contract_addr_type> &contract_addrs) const
-{
-    const auto & contract_by_addr = _db.get_index_type<contract_index>().indices().get<by_contract_addr>();
-
-    vector<optional<contract_object>> result;
-    result.reserve(contract_addrs.size());
-
-    std::transform(contract_addrs.begin(), contract_addrs.end(), std::back_inserter(result),
-        [&](const contract_addr_type & addr) -> optional<contract_object>
-        {
-            auto itr = contract_by_addr.find(addr);
-            if (itr != contract_by_addr.end())
-            {
-                auto _p = _db.find(itr->get_id());
-                if (_p != nullptr)
-                    return *_p;
-
-                return optional<contract_object>();
-            }
-
-            return optional<contract_object>();
-        }
-    );
-
-    return result;
 }
 
 vector<optional<account_object>> database_api::lookup_account_names(const vector<string>& account_names)const
