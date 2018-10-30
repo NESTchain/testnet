@@ -63,30 +63,30 @@ struct get_impacted_account_visitor
    {
       _impacted.insert( op.fee_payer() ); // issuer
    }
-   void operator()( const limit_order_create_operation& op )
-   {
-      _impacted.insert( op.fee_payer() ); // seller
-   }
-   void operator()( const limit_order_cancel_operation& op )
-   {
-      _impacted.insert( op.fee_payer() ); // fee_paying_account
-   }
-   void operator()( const call_order_update_operation& op )
-   {
-      _impacted.insert( op.fee_payer() ); // funding_account
-   }
-   void operator()( const bid_collateral_operation& op )
-   {
-      _impacted.insert( op.fee_payer() ); // bidder
-   }
+//   void operator()( const limit_order_create_operation& op )
+//   {
+//      _impacted.insert( op.fee_payer() ); // seller
+//   }
+//   void operator()( const limit_order_cancel_operation& op )
+//   {
+//      _impacted.insert( op.fee_payer() ); // fee_paying_account
+//   }
+//   void operator()( const call_order_update_operation& op )
+//   {
+//      _impacted.insert( op.fee_payer() ); // funding_account
+//   }
+//   void operator()( const bid_collateral_operation& op )
+//   {
+//      _impacted.insert( op.fee_payer() ); // bidder
+//   }
    void operator()( const fill_order_operation& op )
    {
       _impacted.insert( op.fee_payer() ); // account_id
    }
-   void operator()( const execute_bid_operation& op )
-   {
-      _impacted.insert( op.fee_payer() ); // bidder
-   }
+//   void operator()( const execute_bid_operation& op )
+//   {
+//      _impacted.insert( op.fee_payer() ); // bidder
+//   }
    void operator()( const account_create_operation& op )
    {
       _impacted.insert( op.fee_payer() ); // registrar
@@ -134,10 +134,10 @@ struct get_impacted_account_visitor
    {
       _impacted.insert( op.fee_payer() ); // issuer
    }
-   void operator()( const asset_update_feed_producers_operation& op )
-   {
-      _impacted.insert( op.fee_payer() ); // issuer
-   }
+//   void operator()( const asset_update_feed_producers_operation& op )
+//   {
+//      _impacted.insert( op.fee_payer() ); // issuer
+//   }
    void operator()( const asset_issue_operation& op )
    {
       _impacted.insert( op.fee_payer() ); // issuer
@@ -151,18 +151,18 @@ struct get_impacted_account_visitor
    {
       _impacted.insert( op.fee_payer() ); // from_account
    }
-   void operator()( const asset_settle_operation& op )
-   {
-      _impacted.insert( op.fee_payer() ); // account
-   }
-   void operator()( const asset_global_settle_operation& op )
-   {
-      _impacted.insert( op.fee_payer() ); // issuer
-   }
-   void operator()( const asset_publish_feed_operation& op )
-   {
-      _impacted.insert( op.fee_payer() ); // publisher
-   }
+//   void operator()( const asset_settle_operation& op )
+//   {
+//      _impacted.insert( op.fee_payer() ); // account
+//   }
+//   void operator()( const asset_global_settle_operation& op )
+//   {
+//      _impacted.insert( op.fee_payer() ); // issuer
+//   }
+//   void operator()( const asset_publish_feed_operation& op )
+//   {
+//      _impacted.insert( op.fee_payer() ); // publisher
+//   }
    void operator()( const witness_create_operation& op )
    {
       _impacted.insert( op.fee_payer() ); // witness_account
@@ -279,10 +279,10 @@ struct get_impacted_account_visitor
       for( const auto& in : op.inputs )
          add_authority_accounts( _impacted, in.owner );
    }
-   void operator()( const asset_settle_cancel_operation& op )
-   {
-      _impacted.insert( op.fee_payer() ); // account
-   }
+//   void operator()( const asset_settle_cancel_operation& op )
+//   {
+//      _impacted.insert( op.fee_payer() ); // account
+//   }
    void operator()( const fba_distribute_operation& op )
    {
       _impacted.insert( op.fee_payer() ); // account_id
@@ -324,12 +324,14 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
            FC_ASSERT( aobj != nullptr );
            accounts.insert( aobj->issuer );
            break;
-        } case force_settlement_object_type:{
-           const auto& aobj = dynamic_cast<const force_settlement_object*>(obj);
-           FC_ASSERT( aobj != nullptr );
-           accounts.insert( aobj->owner );
-           break;
-        } case committee_member_object_type:{
+        }
+//        case force_settlement_object_type:{
+//           const auto& aobj = dynamic_cast<const force_settlement_object*>(obj);
+//           FC_ASSERT( aobj != nullptr );
+//           accounts.insert( aobj->owner );
+//           break;
+//        }
+        case committee_member_object_type:{
            const auto& aobj = dynamic_cast<const committee_member_object*>(obj);
            FC_ASSERT( aobj != nullptr );
            accounts.insert( aobj->committee_member_account );
@@ -339,17 +341,19 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
            FC_ASSERT( aobj != nullptr );
            accounts.insert( aobj->witness_account );
            break;
-        } case limit_order_object_type:{
-           const auto& aobj = dynamic_cast<const limit_order_object*>(obj);
-           FC_ASSERT( aobj != nullptr );
-           accounts.insert( aobj->seller );
-           break;
-        } case call_order_object_type:{
-           const auto& aobj = dynamic_cast<const call_order_object*>(obj);
-           FC_ASSERT( aobj != nullptr );
-           accounts.insert( aobj->borrower );
-           break;
-        } case custom_object_type:{
+        }
+//        case limit_order_object_type:{
+//           const auto& aobj = dynamic_cast<const limit_order_object*>(obj);
+//           FC_ASSERT( aobj != nullptr );
+//           accounts.insert( aobj->seller );
+//           break;
+//        } case call_order_object_type:{
+//           const auto& aobj = dynamic_cast<const call_order_object*>(obj);
+//           FC_ASSERT( aobj != nullptr );
+//           accounts.insert( aobj->borrower );
+//           break;
+//        }
+        case custom_object_type:{
           break;
         } case proposal_object_type:{
            const auto& aobj = dynamic_cast<const proposal_object*>(obj);
@@ -437,12 +441,12 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
               break;
              case impl_fba_accumulator_object_type:
               break;
-             case impl_collateral_bid_object_type:{
-              const auto& aobj = dynamic_cast<const collateral_bid_object*>(obj);
-              FC_ASSERT( aobj != nullptr );
-              accounts.insert( aobj->bidder );
-              break;
-           }
+//             case impl_collateral_bid_object_type:{
+//              const auto& aobj = dynamic_cast<const collateral_bid_object*>(obj);
+//              FC_ASSERT( aobj != nullptr );
+//              accounts.insert( aobj->bidder );
+//              break;
+//           }
       }
    }
 } // end get_relevant_accounts( const object* obj, flat_set<account_id_type>& accounts )

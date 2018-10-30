@@ -225,15 +225,15 @@ struct database_fixture {
       public_key_type key = public_key_type()
       );
 
-   void force_global_settle(const asset_object& what, const price& p);
-   operation_result force_settle(account_id_type who, asset what)
-   { return force_settle(who(db), what); }
-   operation_result force_settle(const account_object& who, asset what);
-   void update_feed_producers(asset_id_type mia, flat_set<account_id_type> producers)
-   { update_feed_producers(mia(db), producers); }
-   void update_feed_producers(const asset_object& mia, flat_set<account_id_type> producers);
-   void publish_feed(asset_id_type mia, account_id_type by, const price_feed& f)
-   { publish_feed(mia(db), by(db), f); }
+//   void force_global_settle(const asset_object& what, const price& p);
+//   operation_result force_settle(account_id_type who, asset what)
+//   { return force_settle(who(db), what); }
+//   operation_result force_settle(const account_object& who, asset what);
+//   void update_feed_producers(asset_id_type mia, flat_set<account_id_type> producers)
+//   { update_feed_producers(mia(db), producers); }
+//   void update_feed_producers(const asset_object& mia, flat_set<account_id_type> producers);
+//   void publish_feed(asset_id_type mia, account_id_type by, const price_feed& f)
+//   { publish_feed(mia(db), by(db), f); }
 
    /***
     * @brief helper method to add a price feed
@@ -247,24 +247,24 @@ struct database_fixture {
     * @param amount2 the amount of the quote asset
     * @param core_id id of core (helps with core_exchange_rate)
     */
-   void publish_feed(const account_id_type& publisher,
-         const asset_id_type& asset1, int64_t amount1,
-         const asset_id_type& asset2, int64_t amount2,
-         const asset_id_type& core_id);
+//   void publish_feed(const account_id_type& publisher,
+//         const asset_id_type& asset1, int64_t amount1,
+//         const asset_id_type& asset2, int64_t amount2,
+//         const asset_id_type& core_id);
 
-   void publish_feed(const asset_object& mia, const account_object& by, const price_feed& f);
+//   void publish_feed(const asset_object& mia, const account_object& by, const price_feed& f);
 
-   const call_order_object* borrow( account_id_type who, asset what, asset collateral,
-                                    optional<uint16_t> target_cr = {} )
-   { return borrow(who(db), what, collateral, target_cr); }
-   const call_order_object* borrow( const account_object& who, asset what, asset collateral,
-                                    optional<uint16_t> target_cr = {} );
+//   const call_order_object* borrow( account_id_type who, asset what, asset collateral,
+//                                    optional<uint16_t> target_cr = {} )
+//   { return borrow(who(db), what, collateral, target_cr); }
+//   const call_order_object* borrow( const account_object& who, asset what, asset collateral,
+//                                    optional<uint16_t> target_cr = {} );
    void cover(account_id_type who, asset what, asset collateral_freed,
                                     optional<uint16_t> target_cr = {} )
    { cover(who(db), what, collateral_freed, target_cr); }
    void cover(const account_object& who, asset what, asset collateral_freed,
                                     optional<uint16_t> target_cr = {} );
-   void bid_collateral(const account_object& who, const asset& to_bid, const asset& to_cover);
+//   void bid_collateral(const account_object& who, const asset& to_bid, const asset& to_cover);
 
    const asset_object& get_asset( const string& symbol )const;
    const account_object& get_account( const string& name )const;
@@ -319,13 +319,13 @@ struct database_fixture {
    uint64_t fund( const account_object& account, const asset& amount = asset(500000) );
    digest_type digest( const transaction& tx );
    void sign( signed_transaction& trx, const fc::ecc::private_key& key );
-   const limit_order_object* create_sell_order( account_id_type user, const asset& amount, const asset& recv,
-                                                const time_point_sec order_expiration = time_point_sec::maximum(),
-                                                const price& fee_core_exchange_rate = price::unit_price() );
-   const limit_order_object* create_sell_order( const account_object& user, const asset& amount, const asset& recv,
-                                                const time_point_sec order_expiration = time_point_sec::maximum(),
-                                                const price& fee_core_exchange_rate = price::unit_price() );
-   asset cancel_limit_order( const limit_order_object& order );
+//   const limit_order_object* create_sell_order( account_id_type user, const asset& amount, const asset& recv,
+//                                                const time_point_sec order_expiration = time_point_sec::maximum(),
+//                                                const price& fee_core_exchange_rate = price::unit_price() );
+//   const limit_order_object* create_sell_order( const account_object& user, const asset& amount, const asset& recv,
+//                                                const time_point_sec order_expiration = time_point_sec::maximum(),
+//                                                const price& fee_core_exchange_rate = price::unit_price() );
+//   asset cancel_limit_order( const limit_order_object& order );
    void transfer( account_id_type from, account_id_type to, const asset& amount, const asset& fee = asset() );
    void transfer( const account_object& from, const account_object& to, const asset& amount, const asset& fee = asset() );
    void fund_fee_pool( const account_object& from, const asset_object& asset_to_fund, const share_type amount );
@@ -337,7 +337,7 @@ struct database_fixture {
    void upgrade_to_annual_member( const account_object& account );
    void print_market( const string& syma, const string& symb )const;
    string pretty( const asset& a )const;
-   void print_limit_order( const limit_order_object& cur )const;
+//   void print_limit_order( const limit_order_object& cur )const;
    void print_call_orders( )const;
    void print_joint_market( const string& syma, const string& symb )const;
    int64_t get_balance( account_id_type account, asset_id_type a )const;

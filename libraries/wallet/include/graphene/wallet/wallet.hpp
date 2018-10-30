@@ -423,16 +423,16 @@ class wallet_api
        *    if \c ostart_id is specified and valid, its price will be used to do page query preferentially,
        *    otherwise the \c ostart_price will be used 
        */
-      vector<limit_order_object>        get_account_limit_orders( const string& name_or_id,
-                                            const string &base,
-                                            const string &quote,
-                                            uint32_t limit = 101,
-                                            optional<limit_order_id_type> ostart_id = optional<limit_order_id_type>(),
-                                            optional<price> ostart_price = optional<price>());
-
-      vector<limit_order_object>        get_limit_orders(string a, string b, uint32_t limit)const;
-      vector<call_order_object>         get_call_orders(string a, uint32_t limit)const;
-      vector<force_settlement_object>   get_settle_orders(string a, uint32_t limit)const;
+//      vector<limit_order_object>        get_account_limit_orders( const string& name_or_id,
+//                                            const string &base,
+//                                            const string &quote,
+//                                            uint32_t limit = 101,
+//                                            optional<limit_order_id_type> ostart_id = optional<limit_order_id_type>(),
+//                                            optional<price> ostart_price = optional<price>());
+//
+//      vector<limit_order_object>        get_limit_orders(string a, string b, uint32_t limit)const;
+//      vector<call_order_object>         get_call_orders(string a, uint32_t limit)const;
+//      vector<force_settlement_object>   get_settle_orders(string a, uint32_t limit)const;
 
       /** Returns the collateral_bid object for the given MPA
        *
@@ -441,7 +441,7 @@ class wallet_api
        * @param start the sequence number where to start looping back throw the history
        * @returns a list of \c collateral_bid_objects
        */
-      vector<collateral_bid_object> get_collateral_bids(string asset, uint32_t limit = 100, uint32_t start = 0)const;
+//      vector<collateral_bid_object> get_collateral_bids(string asset, uint32_t limit = 100, uint32_t start = 0)const;
       
       /** Returns the block chain's slowly-changing settings.
        * This object contains all of the properties of the blockchain that are fixed
@@ -1059,8 +1059,8 @@ class wallet_api
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction borrowing the asset
        */
-      signed_transaction borrow_asset(string borrower_name, string amount_to_borrow, string asset_symbol,
-                                      string amount_of_collateral, bool broadcast = false);
+//      signed_transaction borrow_asset(string borrower_name, string amount_to_borrow, string asset_symbol,
+//                                      string amount_of_collateral, bool broadcast = false);
 
       /** Borrow an asset or update the debt/collateral ratio for the loan, with additional options.
        *
@@ -1077,10 +1077,10 @@ class wallet_api
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction borrowing the asset
        */
-      signed_transaction borrow_asset_ext( string borrower_name, string amount_to_borrow, string asset_symbol,
-                                           string amount_of_collateral,
-                                           call_order_update_operation::extensions_type extensions,
-                                           bool broadcast = false );
+//      signed_transaction borrow_asset_ext( string borrower_name, string amount_to_borrow, string asset_symbol,
+//                                           string amount_of_collateral,
+//                                           call_order_update_operation::extensions_type extensions,
+//                                           bool broadcast = false );
 
       /** Cancel an existing order
        *
@@ -1196,9 +1196,9 @@ class wallet_api
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction updating the bitasset's feed producers
        */
-      signed_transaction update_asset_feed_producers(string symbol,
-                                                     flat_set<string> new_feed_producers,
-                                                     bool broadcast = false);
+//      signed_transaction update_asset_feed_producers(string symbol,
+//                                                     flat_set<string> new_feed_producers,
+//                                                     bool broadcast = false);
       
       /** Publishes a price feed for the named asset.
        *
@@ -1220,10 +1220,10 @@ class wallet_api
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction updating the price feed for the given asset
        */
-      signed_transaction publish_asset_feed(string publishing_account,
-                                            string symbol,
-                                            price_feed feed,
-                                            bool broadcast = false);
+//      signed_transaction publish_asset_feed(string publishing_account,
+//                                            string symbol,
+//                                            price_feed feed,
+//                                            bool broadcast = false);
 
       /** Pay into the fee pool for the given asset.
        *
@@ -1293,9 +1293,9 @@ class wallet_api
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction settling the named asset
        */
-      signed_transaction global_settle_asset(string symbol,
-                                             price settle_price,
-                                             bool broadcast = false);
+//      signed_transaction global_settle_asset(string symbol,
+//                                             price settle_price,
+//                                             bool broadcast = false);
 
       /** Schedules a market-issued asset for automatic settlement.
        *
@@ -1669,7 +1669,7 @@ class wallet_api
          bool broadcast /* = false */
          );
          
-      order_book get_order_book( const string& base, const string& quote, unsigned limit = 50);
+//      order_book get_order_book( const string& base, const string& quote, unsigned limit = 50);
 
       void dbg_make_uia(string creator, string symbol);
       void dbg_make_mia(string creator, string symbol);
@@ -1806,10 +1806,10 @@ FC_API( graphene::wallet::wallet_api,
         (deactivate_contract)
         (kill_contract)
         (call_contract)
-        (sell_asset)
-        (borrow_asset)
-        (borrow_asset_ext)
-        (cancel_order)
+//        (sell_asset)
+//        (borrow_asset)
+//        (borrow_asset_ext)
+//        (cancel_order)
         (transfer)
         (transfer2)
         (get_transaction_id)
@@ -1817,17 +1817,17 @@ FC_API( graphene::wallet::wallet_api,
         (update_asset)
         (update_asset_issuer)
         (update_bitasset)
-        (update_asset_feed_producers)
-        (publish_asset_feed)
+//        (update_asset_feed_producers)
+//        (publish_asset_feed)
         (issue_asset)
         (get_asset)
         (get_bitasset_data)
         (fund_asset_fee_pool)
         (claim_asset_fee_pool)
         (reserve_asset)
-        (global_settle_asset)
-        (settle_asset)
-        (bid_collateral)
+//        (global_settle_asset)
+//        (settle_asset)
+//        (bid_collateral)
         (whitelist_account)
         (create_committee_member)
         (get_witness)
@@ -1851,7 +1851,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_account_history)
         (get_relative_account_history)
         (get_account_history_by_operations)
-        (get_collateral_bids)
+//        (get_collateral_bids)
         (is_public_key_registered)
         (get_full_account)
         (get_market_history)
@@ -1861,10 +1861,10 @@ FC_API( graphene::wallet::wallet_api,
         (get_private_key)
         (load_wallet_file)
         (normalize_brain_key)
-        (get_account_limit_orders)
-        (get_limit_orders)
-        (get_call_orders)
-        (get_settle_orders)
+//        (get_account_limit_orders)
+//        (get_limit_orders)
+//        (get_call_orders)
+//        (get_settle_orders)
         (save_wallet_file)
         (serialize_transaction)
         (sign_transaction)
@@ -1895,7 +1895,7 @@ FC_API( graphene::wallet::wallet_api,
         (blind_transfer)
         (blind_history)
         (receive_blind_transfer)
-        (get_order_book)
+//        (get_order_book)
         (quit)
 		(send_message)
       )

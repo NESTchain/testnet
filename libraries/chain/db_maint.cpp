@@ -734,25 +734,25 @@ void create_buyback_orders( database& db )
             transaction_evaluation_state buyback_context(&db);
             buyback_context.skip_fee_schedule_check = true;
 
-            limit_order_create_operation create_vop;
-            create_vop.fee = asset( 0, asset_id_type() );
-            create_vop.seller = buyback_account.id;
-            create_vop.amount_to_sell = asset( amount_to_sell, asset_to_sell );
-            create_vop.min_to_receive = asset( 1, asset_to_buy.id );
-            create_vop.expiration = time_point_sec::maximum();
-            create_vop.fill_or_kill = false;
-
-            limit_order_id_type order_id = db.apply_operation( buyback_context, create_vop ).get< object_id_type >();
-
-            if( db.find( order_id ) != nullptr )
-            {
-               limit_order_cancel_operation cancel_vop;
-               cancel_vop.fee = asset( 0, asset_id_type() );
-               cancel_vop.order = order_id;
-               cancel_vop.fee_paying_account = buyback_account.id;
-
-               db.apply_operation( buyback_context, cancel_vop );
-            }
+//            limit_order_create_operation create_vop;
+//            create_vop.fee = asset( 0, asset_id_type() );
+//            create_vop.seller = buyback_account.id;
+//            create_vop.amount_to_sell = asset( amount_to_sell, asset_to_sell );
+//            create_vop.min_to_receive = asset( 1, asset_to_buy.id );
+//            create_vop.expiration = time_point_sec::maximum();
+//            create_vop.fill_or_kill = false;
+//
+//            limit_order_id_type order_id = db.apply_operation( buyback_context, create_vop ).get< object_id_type >();
+//
+//            if( db.find( order_id ) != nullptr )
+//            {
+//               limit_order_cancel_operation cancel_vop;
+//               cancel_vop.fee = asset( 0, asset_id_type() );
+//               cancel_vop.order = order_id;
+//               cancel_vop.fee_paying_account = buyback_account.id;
+//
+//               db.apply_operation( buyback_context, cancel_vop );
+//            }
          }
          catch( const fc::exception& e )
          {
@@ -797,55 +797,55 @@ void deprecate_annual_members( database& db )
    return;
 }
 
-void database::process_bids( const asset_bitasset_data_object& bad )
-{
-   if( bad.is_prediction_market ) return;
-   if( bad.current_feed.settlement_price.is_null() ) return;
-
-   asset_id_type to_revive_id = (asset( 0, bad.options.short_backing_asset ) * bad.settlement_price).asset_id;
-   const asset_object& to_revive = to_revive_id( *this );
-   const asset_dynamic_data_object& bdd = to_revive.dynamic_data( *this );
-
-   const auto& bid_idx = get_index_type< collateral_bid_index >().indices().get<by_price>();
-   const auto start = bid_idx.lower_bound( boost::make_tuple( to_revive_id, price::max( bad.options.short_backing_asset, to_revive_id ), collateral_bid_id_type() ) );
-
-   share_type covered = 0;
-   auto itr = start;
-   while( covered < bdd.current_supply && itr != bid_idx.end() && itr->inv_swan_price.quote.asset_id == to_revive_id )
-   {
-      const collateral_bid_object& bid = *itr;
-      asset total_collateral = bid.inv_swan_price.quote * bad.settlement_price;
-      total_collateral += bid.inv_swan_price.base;
-      price call_price = price::call_price( bid.inv_swan_price.quote, total_collateral, bad.current_feed.maintenance_collateral_ratio );
-      if( ~call_price >= bad.current_feed.settlement_price ) break;
-      covered += bid.inv_swan_price.quote.amount;
-      ++itr;
-   }
-   if( covered < bdd.current_supply ) return;
-
-   const auto end = itr;
-   share_type to_cover = bdd.current_supply;
-   share_type remaining_fund = bad.settlement_fund;
-   for( itr = start; itr != end; )
-   {
-      const collateral_bid_object& bid = *itr;
-      ++itr;
-      share_type debt = bid.inv_swan_price.quote.amount;
-      share_type collateral = (bid.inv_swan_price.quote * bad.settlement_price).amount;
-      if( bid.inv_swan_price.quote.amount >= to_cover )
-      {
-         debt = to_cover;
-         collateral = remaining_fund;
-      }
-      to_cover -= debt;
-      remaining_fund -= collateral;
-      execute_bid( bid, debt, collateral, bad.current_feed );
-   }
-   FC_ASSERT( remaining_fund == 0 );
-   FC_ASSERT( to_cover == 0 );
-
-   _cancel_bids_and_revive_mpa( to_revive, bad );
-}
+//void database::process_bids( const asset_bitasset_data_object& bad )
+//{
+//   if( bad.is_prediction_market ) return;
+//   if( bad.current_feed.settlement_price.is_null() ) return;
+//
+//   asset_id_type to_revive_id = (asset( 0, bad.options.short_backing_asset ) * bad.settlement_price).asset_id;
+//   const asset_object& to_revive = to_revive_id( *this );
+//   const asset_dynamic_data_object& bdd = to_revive.dynamic_data( *this );
+//
+//   const auto& bid_idx = get_index_type< collateral_bid_index >().indices().get<by_price>();
+//   const auto start = bid_idx.lower_bound( boost::make_tuple( to_revive_id, price::max( bad.options.short_backing_asset, to_revive_id ), collateral_bid_id_type() ) );
+//
+//   share_type covered = 0;
+//   auto itr = start;
+//   while( covered < bdd.current_supply && itr != bid_idx.end() && itr->inv_swan_price.quote.asset_id == to_revive_id )
+//   {
+//      const collateral_bid_object& bid = *itr;
+//      asset total_collateral = bid.inv_swan_price.quote * bad.settlement_price;
+//      total_collateral += bid.inv_swan_price.base;
+//      price call_price = price::call_price( bid.inv_swan_price.quote, total_collateral, bad.current_feed.maintenance_collateral_ratio );
+//      if( ~call_price >= bad.current_feed.settlement_price ) break;
+//      covered += bid.inv_swan_price.quote.amount;
+//      ++itr;
+//   }
+//   if( covered < bdd.current_supply ) return;
+//
+//   const auto end = itr;
+//   share_type to_cover = bdd.current_supply;
+//   share_type remaining_fund = bad.settlement_fund;
+//   for( itr = start; itr != end; )
+//   {
+//      const collateral_bid_object& bid = *itr;
+//      ++itr;
+//      share_type debt = bid.inv_swan_price.quote.amount;
+//      share_type collateral = (bid.inv_swan_price.quote * bad.settlement_price).amount;
+//      if( bid.inv_swan_price.quote.amount >= to_cover )
+//      {
+//         debt = to_cover;
+//         collateral = remaining_fund;
+//      }
+//      to_cover -= debt;
+//      remaining_fund -= collateral;
+//      execute_bid( bid, debt, collateral, bad.current_feed );
+//   }
+//   FC_ASSERT( remaining_fund == 0 );
+//   FC_ASSERT( to_cover == 0 );
+//
+//   _cancel_bids_and_revive_mpa( to_revive, bad );
+//}
 
 void update_and_match_call_orders( database& db )
 {
@@ -854,20 +854,20 @@ void update_and_match_call_orders( database& db )
    asset_id_type current_asset;
    const asset_bitasset_data_object* abd = nullptr;
    // by_collateral index won't change after call_price updated, so it's safe to iterate
-   for( const auto& call_obj : db.get_index_type<call_order_index>().indices().get<by_collateral>() )
-   {
-      if( current_asset != call_obj.debt_type() ) // debt type won't be asset_id_type(), abd will always get initialized
-      {
-         current_asset = call_obj.debt_type();
-         abd = &current_asset(db).bitasset_data(db);
-      }
-      if( !abd || abd->is_prediction_market ) // nothing to do with PM's; check !abd just to be safe
-         continue;
-      db.modify( call_obj, [abd]( call_order_object& call ) {
-         call.call_price  =  price::call_price( call.get_debt(), call.get_collateral(),
-                                                abd->current_feed.maintenance_collateral_ratio );
-      });
-   }
+//   for( const auto& call_obj : db.get_index_type<call_order_index>().indices().get<by_collateral>() )
+//   {
+//      if( current_asset != call_obj.debt_type() ) // debt type won't be asset_id_type(), abd will always get initialized
+//      {
+//         current_asset = call_obj.debt_type();
+//         abd = &current_asset(db).bitasset_data(db);
+//      }
+//      if( !abd || abd->is_prediction_market ) // nothing to do with PM's; check !abd just to be safe
+//         continue;
+//      db.modify( call_obj, [abd]( call_order_object& call ) {
+//         call.call_price  =  price::call_price( call.get_debt(), call.get_collateral(),
+//                                                abd->current_feed.maintenance_collateral_ratio );
+//      });
+//   }
    // Match call orders
    const auto& asset_idx = db.get_index_type<asset_index>().indices().get<by_type>();
    auto itr = asset_idx.lower_bound( true /** market issued */ );
@@ -881,43 +881,43 @@ void update_and_match_call_orders( database& db )
    wlog( "Done updating all call orders for hardfork core-343 at block ${n}", ("n",db.head_block_num()) );
 }
 
-void database::process_bitassets()
-{
-   time_point_sec head_time = head_block_time();
-   uint32_t head_epoch_seconds = head_time.sec_since_epoch();
-   bool after_hf_core_518 = ( head_time >= HARDFORK_CORE_518_TIME ); // clear expired feeds
-
-   const auto update_bitasset = [this,head_time,head_epoch_seconds,after_hf_core_518]( asset_bitasset_data_object &o )
-   {
-      o.force_settled_volume = 0; // Reset all BitAsset force settlement volumes to zero
-
-      // clear expired feeds
-      if( after_hf_core_518 )
-      {
-         const auto &asset = get( o.asset_id );
-         auto flags = asset.options.flags;
-         if ( ( flags & ( witness_fed_asset | committee_fed_asset ) ) &&
-              o.options.feed_lifetime_sec < head_epoch_seconds ) // if smartcoin && check overflow
-         {
-            fc::time_point_sec calculated = head_time - o.options.feed_lifetime_sec;
-            for( auto itr = o.feeds.rbegin(); itr != o.feeds.rend(); ) // loop feeds
-            {
-               auto feed_time = itr->second.first;
-               std::advance( itr, 1 );
-               if( feed_time < calculated )
-                  o.feeds.erase( itr.base() ); // delete expired feed
-            }
-         }
-      }
-   };
-
-   for( const auto& d : get_index_type<asset_bitasset_data_index>().indices() )
-   {
-      modify( d, update_bitasset );
-      if( d.has_settlement() )
-         process_bids(d);
-   }
-}
+//void database::process_bitassets()
+//{
+//   time_point_sec head_time = head_block_time();
+//   uint32_t head_epoch_seconds = head_time.sec_since_epoch();
+//   bool after_hf_core_518 = ( head_time >= HARDFORK_CORE_518_TIME ); // clear expired feeds
+//
+//   const auto update_bitasset = [this,head_time,head_epoch_seconds,after_hf_core_518]( asset_bitasset_data_object &o )
+//   {
+//      o.force_settled_volume = 0; // Reset all BitAsset force settlement volumes to zero
+//
+//      // clear expired feeds
+//      if( after_hf_core_518 )
+//      {
+//         const auto &asset = get( o.asset_id );
+//         auto flags = asset.options.flags;
+//         if ( ( flags & ( witness_fed_asset | committee_fed_asset ) ) &&
+//              o.options.feed_lifetime_sec < head_epoch_seconds ) // if smartcoin && check overflow
+//         {
+//            fc::time_point_sec calculated = head_time - o.options.feed_lifetime_sec;
+//            for( auto itr = o.feeds.rbegin(); itr != o.feeds.rend(); ) // loop feeds
+//            {
+//               auto feed_time = itr->second.first;
+//               std::advance( itr, 1 );
+//               if( feed_time < calculated )
+//                  o.feeds.erase( itr.base() ); // delete expired feed
+//            }
+//         }
+//      }
+//   };
+//
+//   for( const auto& d : get_index_type<asset_bitasset_data_index>().indices() )
+//   {
+//      modify( d, update_bitasset );
+//      if( d.has_settlement() )
+//         process_bids(d);
+//   }
+//}
 
 /******
  * @brief one-time data process for hard fork core-868-890
@@ -1234,7 +1234,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
    if( to_update_and_match_call_orders )
       update_and_match_call_orders(*this);
 
-   process_bitassets();
+//   process_bitassets();
 
    // process_budget needs to run at the bottom because
    //   it needs to know the next_maintenance_time

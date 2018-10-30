@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(bsip36)
       const asset_object &core = asset_id_type()(db);
       price_feed feed;
       feed.settlement_price = bit_usd_id(db).amount(1) / core.amount(5);
-      publish_feed(bit_usd_id(db), witness0_id(db), feed);
+//      publish_feed(bit_usd_id(db), witness0_id(db), feed);
 
       asset_bitasset_data_object bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 1);
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(bsip36)
       BOOST_CHECK_EQUAL(itr[0].first.instance.value, 16);
 
       feed.settlement_price = bit_usd_id(db).amount(2) / core.amount(5);
-      publish_feed(bit_usd_id(db), witness1_id(db), feed);
+//      publish_feed(bit_usd_id(db), witness1_id(db), feed);
 
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       itr = bitasset_data.feeds.begin();
@@ -257,9 +257,9 @@ BOOST_AUTO_TEST_CASE(bsip36)
 
       // Other witnesses add more feeds
       feed.settlement_price = bit_usd_id(db).amount(4) / core.amount(5);
-      publish_feed(bit_usd_id(db), witness2_id(db), feed);
+//      publish_feed(bit_usd_id(db), witness2_id(db), feed);
       feed.settlement_price = bit_usd_id(db).amount(3) / core.amount(5);
-      publish_feed(bit_usd_id(db), witness3_id(db), feed);
+//      publish_feed(bit_usd_id(db), witness3_id(db), feed);
 
       // But the one from witness0 is never removed
       bitasset_data = bit_usd_id(db).bitasset_data(db);
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(bsip36)
 
       // witness1 start feed producing again
       feed.settlement_price = bit_usd_id(db).amount(1) / core.amount(5);
-      publish_feed(bit_usd_id(db), witness1_id(db), feed);
+//      publish_feed(bit_usd_id(db), witness1_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 1);
       itr = bitasset_data.feeds.begin();
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(bsip36)
 
       // add another feed with witness2
       feed.settlement_price = bit_usd_id(db).amount(1) / core.amount(5);
-      publish_feed(bit_usd_id(db), witness2_id(db), feed);
+//      publish_feed(bit_usd_id(db), witness2_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 2);
       itr = bitasset_data.feeds.begin();
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(bsip36)
 
       // add new feed with witness1
       feed.settlement_price = bit_usd_id(db).amount(1) / core.amount(5);
-      publish_feed(bit_usd_id(db), witness1_id(db), feed);
+//      publish_feed(bit_usd_id(db), witness1_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 1);
       itr = bitasset_data.feeds.begin();
@@ -404,15 +404,15 @@ BOOST_AUTO_TEST_CASE(bsip36_update_feed_producers)
 
       // Add 3 feed producers for asset
       {
-         asset_update_feed_producers_operation op;
-         op.asset_to_update = bit_usd_id;
-         op.issuer = bob_id;
-         op.new_feed_producers = {sam_id, alice_id, paul_id};
-         trx.operations.push_back(op);
-         sign(trx, bob_private_key);
-         PUSH_TX(db, trx);
-         generate_block();
-         trx.clear();
+//         asset_update_feed_producers_operation op;
+//         op.asset_to_update = bit_usd_id;
+//         op.issuer = bob_id;
+//         op.new_feed_producers = {sam_id, alice_id, paul_id};
+//         trx.operations.push_back(op);
+//         sign(trx, bob_private_key);
+//         PUSH_TX(db, trx);
+//         generate_block();
+//         trx.clear();
       }
 
       // Bitshares will create entries in the field feed after feed producers are added
@@ -426,15 +426,15 @@ BOOST_AUTO_TEST_CASE(bsip36_update_feed_producers)
 
       // Removing a feed producer
       {
-         asset_update_feed_producers_operation op;
-         op.asset_to_update = bit_usd_id;
-         op.issuer = bob_id;
-         op.new_feed_producers = {alice_id, paul_id};
-         trx.operations.push_back(op);
-         sign(trx, bob_private_key);
-         PUSH_TX(db, trx);
-         generate_block();
-         trx.clear();
+//         asset_update_feed_producers_operation op;
+//         op.asset_to_update = bit_usd_id;
+//         op.issuer = bob_id;
+//         op.new_feed_producers = {alice_id, paul_id};
+//         trx.operations.push_back(op);
+//         sign(trx, bob_private_key);
+//         PUSH_TX(db, trx);
+//         generate_block();
+//         trx.clear();
       }
 
       // Feed for removed producer is removed
@@ -505,7 +505,7 @@ BOOST_AUTO_TEST_CASE(bsip36_additional)
 
       price_feed feed;
       feed.settlement_price = bit_usd_id(db).amount(1) / core_id(db).amount(5);
-      publish_feed(bit_usd_id(db), witness5_id(db), feed);
+//      publish_feed(bit_usd_id(db), witness5_id(db), feed);
       auto bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 1);
       auto itr = bitasset_data.feeds.begin();
@@ -515,7 +515,7 @@ BOOST_AUTO_TEST_CASE(bsip36_additional)
       generate_block();
 
       feed.settlement_price = bit_usd_id(db).amount(1) / core_id(db).amount(5);
-      publish_feed(bit_usd_id(db), witness6_id(db), feed);
+//      publish_feed(bit_usd_id(db), witness6_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 2);
       itr = bitasset_data.feeds.begin();
@@ -526,7 +526,7 @@ BOOST_AUTO_TEST_CASE(bsip36_additional)
       generate_block();
 
       feed.settlement_price = bit_usd_id(db).amount(1) / core_id(db).amount(5);
-      publish_feed(bit_usd_id(db), witness7_id(db), feed);
+//      publish_feed(bit_usd_id(db), witness7_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 3);
       itr = bitasset_data.feeds.begin();
@@ -538,7 +538,7 @@ BOOST_AUTO_TEST_CASE(bsip36_additional)
       generate_block();
 
       feed.settlement_price = bit_usd_id(db).amount(1) / core_id(db).amount(5);
-      publish_feed(bit_usd_id(db), witness8_id(db), feed);
+//      publish_feed(bit_usd_id(db), witness8_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 4);
       itr = bitasset_data.feeds.begin();
@@ -551,7 +551,7 @@ BOOST_AUTO_TEST_CASE(bsip36_additional)
       generate_block();
 
       feed.settlement_price = bit_usd_id(db).amount(1) / core_id(db).amount(5);
-      publish_feed(bit_usd_id(db), witness9_id(db), feed);
+//      publish_feed(bit_usd_id(db), witness9_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 5);
       itr = bitasset_data.feeds.begin();
@@ -565,7 +565,7 @@ BOOST_AUTO_TEST_CASE(bsip36_additional)
       generate_block();
 
       feed.settlement_price = bit_usd_id(db).amount(1) / core_id(db).amount(5);
-      publish_feed(bit_usd_id(db), witness10_id(db), feed);
+//      publish_feed(bit_usd_id(db), witness10_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 6);
       itr = bitasset_data.feeds.begin();
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(bsip36_additional)
 
       // witness5 add new feed, feeds are sorted by witness_id not by feed_time
       feed.settlement_price = bit_usd_id(db).amount(1) / core_id(db).amount(5);
-      publish_feed(bit_usd_id(db), witness5_id(db), feed);
+//      publish_feed(bit_usd_id(db), witness5_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 4);
       itr = bitasset_data.feeds.begin();

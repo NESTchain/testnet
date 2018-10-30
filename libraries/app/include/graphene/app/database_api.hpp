@@ -72,46 +72,46 @@ struct order
    string                     base;
 };
 
-struct order_book
-{
-  string                      base;
-  string                      quote;
-  vector< order >             bids;
-  vector< order >             asks;
-};
+//struct order_book
+//{
+//  string                      base;
+//  string                      quote;
+//  vector< order >             bids;
+//  vector< order >             asks;
+//};
 
-struct market_ticker
-{
-   time_point_sec             time;
-   string                     base;
-   string                     quote;
-   string                     latest;
-   string                     lowest_ask;
-   string                     highest_bid;
-   string                     percent_change;
-   string                     base_volume;
-   string                     quote_volume;
-};
+//struct market_ticker
+//{
+//   time_point_sec             time;
+//   string                     base;
+//   string                     quote;
+//   string                     latest;
+//   string                     lowest_ask;
+//   string                     highest_bid;
+//   string                     percent_change;
+//   string                     base_volume;
+//   string                     quote_volume;
+//};
 
-struct market_volume
-{
-   time_point_sec             time;
-   string                     base;
-   string                     quote;
-   string                     base_volume;
-   string                     quote_volume;
-};
+//struct market_volume
+//{
+//   time_point_sec             time;
+//   string                     base;
+//   string                     quote;
+//   string                     base_volume;
+//   string                     quote_volume;
+//};
 
-struct market_trade
-{
-   int64_t                    sequence = 0;
-   fc::time_point_sec         date;
-   string                     price;
-   string                     amount;
-   string                     value;
-   account_id_type            side1_account_id = GRAPHENE_NULL_ACCOUNT;
-   account_id_type            side2_account_id = GRAPHENE_NULL_ACCOUNT;
-};
+//struct market_trade
+//{
+//   int64_t                    sequence = 0;
+//   fc::time_point_sec         date;
+//   string                     price;
+//   string                     amount;
+//   string                     value;
+//   account_id_type            side1_account_id = GRAPHENE_NULL_ACCOUNT;
+//   account_id_type            side2_account_id = GRAPHENE_NULL_ACCOUNT;
+//};
 
 /**
  * @brief The database_api class implements the RPC API for the chain database.
@@ -299,12 +299,12 @@ class database_api
        *    was just canceled accidentally, in such case, the result orders' price may lower or equal to start_price,
        *    but orders' id greater than start_id
        */
-      vector<limit_order_object> get_account_limit_orders( const string& account_name_or_id,
-                                                  const string &base,
-                                                  const string &quote,
-                                                  uint32_t limit = 101,
-                                                  optional<limit_order_id_type> ostart_id = optional<limit_order_id_type>(),
-                                                  optional<price> ostart_price = optional<price>());
+//      vector<limit_order_object> get_account_limit_orders( const string& account_name_or_id,
+//                                                  const string &base,
+//                                                  const string &quote,
+//                                                  uint32_t limit = 101,
+//                                                  optional<limit_order_id_type> ostart_id = optional<limit_order_id_type>(),
+//                                                  optional<price> ostart_price = optional<price>());
 
       /**
        * @brief Fetch all objects relevant to the specified accounts and subscribe to updates
@@ -420,7 +420,7 @@ class database_api
        * @param limit Maximum number of orders to retrieve
        * @return The limit orders, ordered from least price to greatest
        */
-      vector<limit_order_object> get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
+//      vector<limit_order_object> get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
 
       /**
        * @brief Get call orders in a given asset
@@ -428,7 +428,7 @@ class database_api
        * @param limit Maximum number of orders to retrieve
        * @return The call orders, ordered from earliest to be called to latest
        */
-      vector<call_order_object> get_call_orders(asset_id_type a, uint32_t limit)const;
+//      vector<call_order_object> get_call_orders(asset_id_type a, uint32_t limit)const;
 
       /**
        * @brief Get forced settlement orders in a given asset
@@ -436,7 +436,7 @@ class database_api
        * @param limit Maximum number of orders to retrieve
        * @return The settle orders, ordered from earliest settlement date to latest
        */
-      vector<force_settlement_object> get_settle_orders(asset_id_type a, uint32_t limit)const;
+//      vector<force_settlement_object> get_settle_orders(asset_id_type a, uint32_t limit)const;
 
       /**
        * @brief Get collateral_bid_objects for a given asset
@@ -445,12 +445,12 @@ class database_api
        * @param start skip that many results
        * @return The settle orders, ordered from earliest settlement date to latest
        */
-      vector<collateral_bid_object> get_collateral_bids(const asset_id_type asset, uint32_t limit, uint32_t start)const;
+//      vector<collateral_bid_object> get_collateral_bids(const asset_id_type asset, uint32_t limit, uint32_t start)const;
 
       /**
        *  @return all open margin positions for a given account id or name.
        */
-      vector<call_order_object> get_margin_positions( const std::string account_id_or_name )const;
+//      vector<call_order_object> get_margin_positions( const std::string account_id_or_name )const;
 
       /**
        * @brief Request notification when the active orders in the market between two assets changes
@@ -477,7 +477,7 @@ class database_api
        * @param b String name of the second asset
        * @return The market ticker for the past 24 hours.
        */
-      market_ticker get_ticker( const string& base, const string& quote )const;
+//      market_ticker get_ticker( const string& base, const string& quote )const;
 
       /**
        * @brief Returns the 24 hour volume for the market assetA:assetB
@@ -485,7 +485,7 @@ class database_api
        * @param b String name of the second asset
        * @return The market volume over the past 24 hours
        */
-      market_volume get_24_volume( const string& base, const string& quote )const;
+//      market_volume get_24_volume( const string& base, const string& quote )const;
 
       /**
        * @brief Returns the order book for the market base:quote
@@ -494,7 +494,7 @@ class database_api
        * @param depth of the order book. Up to depth of each asks and bids, capped at 50. Prioritizes most moderate of each
        * @return Order book of the market
        */
-      order_book get_order_book( const string& base, const string& quote, unsigned limit = 50 )const;
+//      order_book get_order_book( const string& base, const string& quote, unsigned limit = 50 )const;
 
       /**
        * @brief Returns vector of 24 hour volume markets sorted by reverse base_volume
@@ -502,7 +502,7 @@ class database_api
        * @param limit Max number of results
        * @return Desc Sorted volume vector
        */
-      vector<market_volume> get_top_markets(uint32_t limit)const;
+//      vector<market_volume> get_top_markets(uint32_t limit)const;
 
       /**
        * @brief Returns recent trades for the market assetA:assetB, ordered by time, most recent first. The range is [stop, start)
@@ -514,7 +514,7 @@ class database_api
        * @param start Start time as a UNIX timestamp, the latest trade to retrieve
        * @return Recent transactions in the market
        */
-      vector<market_trade> get_trade_history( const string& base, const string& quote, fc::time_point_sec start, fc::time_point_sec stop, unsigned limit = 100 )const;
+//      vector<market_trade> get_trade_history( const string& base, const string& quote, fc::time_point_sec start, fc::time_point_sec stop, unsigned limit = 100 )const;
 
       /**
        * @brief Returns trades for the market assetA:assetB, ordered by time, most recent first. The range is [stop, start)
@@ -526,7 +526,7 @@ class database_api
        * @param start Start sequence as an Integer, the latest trade to retrieve
        * @return Transactions in the market
        */
-      vector<market_trade> get_trade_history_by_sequence( const string& base, const string& quote, int64_t start, fc::time_point_sec stop, unsigned limit = 100 )const;
+//      vector<market_trade> get_trade_history_by_sequence( const string& base, const string& quote, int64_t start, fc::time_point_sec stop, unsigned limit = 100 )const;
 
 
 
@@ -729,11 +729,11 @@ class database_api
 } }
 
 FC_REFLECT( graphene::app::order, (price)(quote)(base) );
-FC_REFLECT( graphene::app::order_book, (base)(quote)(bids)(asks) );
-FC_REFLECT( graphene::app::market_ticker,
-            (time)(base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
-FC_REFLECT( graphene::app::market_volume, (time)(base)(quote)(base_volume)(quote_volume) );
-FC_REFLECT( graphene::app::market_trade, (sequence)(date)(price)(amount)(value)(side1_account_id)(side2_account_id) );
+//FC_REFLECT( graphene::app::order_book, (base)(quote)(bids)(asks) );
+//FC_REFLECT( graphene::app::market_ticker,
+//            (time)(base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
+//FC_REFLECT( graphene::app::market_volume, (time)(base)(quote)(base_volume)(quote_volume) );
+//FC_REFLECT( graphene::app::market_trade, (sequence)(date)(price)(amount)(value)(side1_account_id)(side2_account_id) );
 
 FC_API(graphene::app::database_api,
    // Objects
@@ -790,20 +790,20 @@ FC_API(graphene::app::database_api,
    (get_asset_count)
 
    // Markets / feeds
-   (get_order_book)
-   (get_limit_orders)
-   (get_account_limit_orders)
-   (get_call_orders)
-   (get_settle_orders)
-   (get_margin_positions)
-   (get_collateral_bids)
+//   (get_order_book)
+//   (get_limit_orders)
+//   (get_account_limit_orders)
+//   (get_call_orders)
+//   (get_settle_orders)
+//   (get_margin_positions)
+//   (get_collateral_bids)
    (subscribe_to_market)
    (unsubscribe_from_market)
-   (get_ticker)
-   (get_24_volume)
-   (get_top_markets)
-   (get_trade_history)
-   (get_trade_history_by_sequence)
+//   (get_ticker)
+//   (get_24_volume)
+//   (get_top_markets)
+//   (get_trade_history)
+//   (get_trade_history_by_sequence)
 
    // Witnesses
    (get_witnesses)

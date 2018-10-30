@@ -366,11 +366,11 @@ namespace graphene { namespace chain {
 
          /// @{ @group Market Helpers
          void globally_settle_asset( const asset_object& bitasset, const price& settle_price );
-         void cancel_settle_order(const force_settlement_object& order, bool create_virtual_op = true);
-         void cancel_limit_order(const limit_order_object& order, bool create_virtual_op = true, bool skip_cancel_fee = false);
-         void revive_bitasset( const asset_object& bitasset );
-         void cancel_bid(const collateral_bid_object& bid, bool create_virtual_op = true);
-         void execute_bid( const collateral_bid_object& bid, share_type debt_covered, share_type collateral_from_fund, const price_feed& current_feed );
+//         void cancel_settle_order(const force_settlement_object& order, bool create_virtual_op = true);
+//         void cancel_limit_order(const limit_order_object& order, bool create_virtual_op = true, bool skip_cancel_fee = false);
+//         void revive_bitasset( const asset_object& bitasset );
+//         void cancel_bid(const collateral_bid_object& bid, bool create_virtual_op = true);
+//         void execute_bid( const collateral_bid_object& bid, share_type debt_covered, share_type collateral_from_fund, const price_feed& current_feed );
 
          /**
           * @brief Process a new limit order through the markets
@@ -380,8 +380,8 @@ namespace graphene { namespace chain {
           * This function takes a new limit order, and runs the markets attempting to match it with existing orders
           * already on the books.
           */
-         bool apply_order_before_hardfork_625(const limit_order_object& new_order_object, bool allow_black_swan = true);
-         bool apply_order(const limit_order_object& new_order_object, bool allow_black_swan = true);
+//         bool apply_order_before_hardfork_625(const limit_order_object& new_order_object, bool allow_black_swan = true);
+//         bool apply_order(const limit_order_object& new_order_object, bool allow_black_swan = true);
 
          /**
           * Matches the two orders, the first parameter is taker, the second is maker.
@@ -394,26 +394,26 @@ namespace graphene { namespace chain {
           * 3 - both were filled
           */
          ///@{
-         int match( const limit_order_object& taker, const limit_order_object& maker, const price& trade_price );
-         int match( const limit_order_object& taker, const call_order_object& maker, const price& trade_price,
-                    const price& feed_price, const uint16_t maintenance_collateral_ratio );
-         /// @return the amount of asset settled
-         asset match(const call_order_object& call,
-                   const force_settlement_object& settle,
-                   const price& match_price,
-                   asset max_settlement,
-                   const price& fill_price);
+//         int match( const limit_order_object& taker, const limit_order_object& maker, const price& trade_price );
+//         int match( const limit_order_object& taker, const call_order_object& maker, const price& trade_price,
+//                    const price& feed_price, const uint16_t maintenance_collateral_ratio );
+//         /// @return the amount of asset settled
+//         asset match(const call_order_object& call,
+//                   const force_settlement_object& settle,
+//                   const price& match_price,
+//                   asset max_settlement,
+//                   const price& fill_price);
          ///@}
 
          /**
           * @return true if the order was completely filled and thus freed.
           */
-         bool fill_limit_order( const limit_order_object& order, const asset& pays, const asset& receives, bool cull_if_small,
-                                const price& fill_price, const bool is_maker );
-         bool fill_call_order( const call_order_object& order, const asset& pays, const asset& receives,
-                               const price& fill_price, const bool is_maker );
-         bool fill_settle_order( const force_settlement_object& settle, const asset& pays, const asset& receives,
-                                 const price& fill_price, const bool is_maker );
+//         bool fill_limit_order( const limit_order_object& order, const asset& pays, const asset& receives, bool cull_if_small,
+//                                const price& fill_price, const bool is_maker );
+//         bool fill_call_order( const call_order_object& order, const asset& pays, const asset& receives,
+//                               const price& fill_price, const bool is_maker );
+//         bool fill_settle_order( const force_settlement_object& settle, const asset& pays, const asset& receives,
+//                                 const price& fill_price, const bool is_maker );
 
          bool check_call_orders( const asset_object& mia, bool enable_black_swan = true, bool for_new_limit_order = false,
                                  const asset_bitasset_data_object* bitasset_ptr = nullptr );

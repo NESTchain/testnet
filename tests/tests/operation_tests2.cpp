@@ -956,14 +956,14 @@ BOOST_AUTO_TEST_CASE( mia_feeds )
       trx.clear();
    }
    {
-      asset_update_feed_producers_operation op;
-      op.asset_to_update = bit_usd_id;
-      op.issuer = nathan_id;
-      op.new_feed_producers = {dan_id, ben_id, vikram_id};
-      trx.operations.push_back(op);
-      sign( trx, nathan_private_key );
-      PUSH_TX( db, trx );
-      generate_block(database::skip_nothing);
+//      asset_update_feed_producers_operation op;
+//      op.asset_to_update = bit_usd_id;
+//      op.issuer = nathan_id;
+//      op.new_feed_producers = {dan_id, ben_id, vikram_id};
+//      trx.operations.push_back(op);
+//      sign( trx, nathan_private_key );
+//      PUSH_TX( db, trx );
+//      generate_block(database::skip_nothing);
    }
    {
       const asset_bitasset_data_object& obj = bit_usd_id(db).bitasset_data(db);
@@ -971,42 +971,42 @@ BOOST_AUTO_TEST_CASE( mia_feeds )
       BOOST_CHECK(obj.current_feed == price_feed());
    }
    {
-      const asset_object& bit_usd = bit_usd_id(db);
-      asset_publish_feed_operation op;
-      op.publisher = vikram_id;
-      op.asset_id = bit_usd_id;
-      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(30));
-
-      // We'll expire margins after a month
-      // Accept defaults for required collateral
-      trx.operations.emplace_back(op);
-      PUSH_TX( db, trx, ~0 );
-
-      const asset_bitasset_data_object& bitasset = bit_usd.bitasset_data(db);
-      BOOST_CHECK(bitasset.current_feed.settlement_price.to_real() == 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(bitasset.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
-
-      op.publisher = ben_id;
-      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(25));
-      trx.operations.back() = op;
-      PUSH_TX( db, trx, ~0 );
-
-      BOOST_CHECK_EQUAL(bitasset.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(bitasset.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
-
-      op.publisher = dan_id;
-      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(40));
-      op.feed.maximum_short_squeeze_ratio = 1001;
-      op.feed.maintenance_collateral_ratio = 1001;
-      trx.operations.back() = op;
-      PUSH_TX( db, trx, ~0 );
-
-      BOOST_CHECK_EQUAL(bitasset.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(bitasset.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
-
-      op.publisher = nathan_id;
-      trx.operations.back() = op;
-      GRAPHENE_CHECK_THROW(PUSH_TX( db, trx, ~0 ), fc::exception);
+//      const asset_object& bit_usd = bit_usd_id(db);
+//      asset_publish_feed_operation op;
+//      op.publisher = vikram_id;
+//      op.asset_id = bit_usd_id;
+//      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(30));
+//
+//      // We'll expire margins after a month
+//      // Accept defaults for required collateral
+//      trx.operations.emplace_back(op);
+//      PUSH_TX( db, trx, ~0 );
+//
+//      const asset_bitasset_data_object& bitasset = bit_usd.bitasset_data(db);
+//      BOOST_CHECK(bitasset.current_feed.settlement_price.to_real() == 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
+//      BOOST_CHECK(bitasset.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+//
+//      op.publisher = ben_id;
+//      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(25));
+//      trx.operations.back() = op;
+//      PUSH_TX( db, trx, ~0 );
+//
+//      BOOST_CHECK_EQUAL(bitasset.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
+//      BOOST_CHECK(bitasset.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+//
+//      op.publisher = dan_id;
+//      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(40));
+//      op.feed.maximum_short_squeeze_ratio = 1001;
+//      op.feed.maintenance_collateral_ratio = 1001;
+//      trx.operations.back() = op;
+//      PUSH_TX( db, trx, ~0 );
+//
+//      BOOST_CHECK_EQUAL(bitasset.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
+//      BOOST_CHECK(bitasset.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+//
+//      op.publisher = nathan_id;
+//      trx.operations.back() = op;
+//      GRAPHENE_CHECK_THROW(PUSH_TX( db, trx, ~0 ), fc::exception);
    }
 } FC_LOG_AND_RETHROW() }
 
@@ -1123,69 +1123,69 @@ BOOST_AUTO_TEST_CASE( global_settle_test )
    ACTORS((nathan)(ben)(valentine)(dan));
    asset_id_type bit_usd_id = create_bitasset("USDBIT", nathan_id, 100, global_settle | charge_market_fee).get_id();
 
-   update_feed_producers( bit_usd_id(db), { nathan_id } );
+//   update_feed_producers( bit_usd_id(db), { nathan_id } );
 
    price_feed feed;
    feed.settlement_price = price( asset( 1000, bit_usd_id ), asset( 500 ) );
    feed.maintenance_collateral_ratio = 175 * GRAPHENE_COLLATERAL_RATIO_DENOM / 100;
    feed.maximum_short_squeeze_ratio = 150 * GRAPHENE_COLLATERAL_RATIO_DENOM / 100;
-   publish_feed( bit_usd_id(db), nathan, feed );
+//   publish_feed( bit_usd_id(db), nathan, feed );
 
    transfer(committee_account, ben_id, asset(10000));
    transfer(committee_account, valentine_id, asset(10000));
    transfer(committee_account, dan_id, asset(10000));
-   borrow(ben, asset(1000, bit_usd_id), asset(1000));
+//   borrow(ben, asset(1000, bit_usd_id), asset(1000));
    BOOST_CHECK_EQUAL(get_balance(ben_id, bit_usd_id), 1000);
    BOOST_CHECK_EQUAL(get_balance(ben_id, asset_id_type()), 9000);
 
-   create_sell_order(ben_id, asset(1000, bit_usd_id), asset(1000));
-   BOOST_CHECK_EQUAL(get_balance(ben_id, bit_usd_id), 0);
-   BOOST_CHECK_EQUAL(get_balance(ben_id, asset_id_type()), 9000);
+//   create_sell_order(ben_id, asset(1000, bit_usd_id), asset(1000));
+//   BOOST_CHECK_EQUAL(get_balance(ben_id, bit_usd_id), 0);
+//   BOOST_CHECK_EQUAL(get_balance(ben_id, asset_id_type()), 9000);
+//
+//   create_sell_order(valentine_id, asset(1000), asset(1000, bit_usd_id));
+//   BOOST_CHECK_EQUAL(get_balance(ben_id, bit_usd_id), 0);
+//   BOOST_CHECK_EQUAL(get_balance(ben_id, asset_id_type()), 10000);
+//   BOOST_CHECK_EQUAL(get_balance(valentine_id, bit_usd_id), 990);
+//   BOOST_CHECK_EQUAL(get_balance(valentine_id, asset_id_type()), 9000);
 
-   create_sell_order(valentine_id, asset(1000), asset(1000, bit_usd_id));
-   BOOST_CHECK_EQUAL(get_balance(ben_id, bit_usd_id), 0);
-   BOOST_CHECK_EQUAL(get_balance(ben_id, asset_id_type()), 10000);
-   BOOST_CHECK_EQUAL(get_balance(valentine_id, bit_usd_id), 990);
-   BOOST_CHECK_EQUAL(get_balance(valentine_id, asset_id_type()), 9000);
-
-   borrow(valentine, asset(500, bit_usd_id), asset(600));
+//   borrow(valentine, asset(500, bit_usd_id), asset(600));
    BOOST_CHECK_EQUAL(get_balance(valentine_id, bit_usd_id), 1490);
    BOOST_CHECK_EQUAL(get_balance(valentine_id, asset_id_type()), 8400);
 
-   create_sell_order(valentine_id, asset(500, bit_usd_id), asset(600));
-   BOOST_CHECK_EQUAL(get_balance(valentine_id, bit_usd_id), 990);
-   BOOST_CHECK_EQUAL(get_balance(valentine_id, asset_id_type()), 8400);
-
-   create_sell_order(dan_id, asset(600), asset(500, bit_usd_id));
-   BOOST_CHECK_EQUAL(get_balance(valentine_id, bit_usd_id), 990);
-   BOOST_CHECK_EQUAL(get_balance(valentine_id, asset_id_type()), 9000);
-   BOOST_CHECK_EQUAL(get_balance(ben_id, bit_usd_id), 0);
-   BOOST_CHECK_EQUAL(get_balance(ben_id, asset_id_type()), 10000);
-   BOOST_CHECK_EQUAL(get_balance(dan_id, bit_usd_id), 495);
-   BOOST_CHECK_EQUAL(get_balance(dan_id, asset_id_type()), 9400);
+//   create_sell_order(valentine_id, asset(500, bit_usd_id), asset(600));
+//   BOOST_CHECK_EQUAL(get_balance(valentine_id, bit_usd_id), 990);
+//   BOOST_CHECK_EQUAL(get_balance(valentine_id, asset_id_type()), 8400);
+//
+//   create_sell_order(dan_id, asset(600), asset(500, bit_usd_id));
+//   BOOST_CHECK_EQUAL(get_balance(valentine_id, bit_usd_id), 990);
+//   BOOST_CHECK_EQUAL(get_balance(valentine_id, asset_id_type()), 9000);
+//   BOOST_CHECK_EQUAL(get_balance(ben_id, bit_usd_id), 0);
+//   BOOST_CHECK_EQUAL(get_balance(ben_id, asset_id_type()), 10000);
+//   BOOST_CHECK_EQUAL(get_balance(dan_id, bit_usd_id), 495);
+//   BOOST_CHECK_EQUAL(get_balance(dan_id, asset_id_type()), 9400);
 
    // add some collateral
-   borrow(ben, asset(0, bit_usd_id), asset(1000));
+//   borrow(ben, asset(0, bit_usd_id), asset(1000));
    BOOST_CHECK_EQUAL(get_balance(ben_id, asset_id_type()), 9000);
 
    {
-      asset_global_settle_operation op;
-      op.asset_to_settle = bit_usd_id;
-      op.issuer = nathan_id;
-      op.settle_price = ~price(asset(10), asset(11, bit_usd_id));
-      trx.clear();
-      trx.operations.push_back(op);
-      REQUIRE_THROW_WITH_VALUE(op, settle_price, ~price(asset(2001), asset(1000, bit_usd_id)));
-      REQUIRE_THROW_WITH_VALUE(op, asset_to_settle, asset_id_type());
-      REQUIRE_THROW_WITH_VALUE(op, asset_to_settle, asset_id_type(100));
-      REQUIRE_THROW_WITH_VALUE(op, issuer, account_id_type(2));
-      trx.operations.back() = op;
-      sign( trx, nathan_private_key );
-      PUSH_TX( db, trx );
+//      asset_global_settle_operation op;
+//      op.asset_to_settle = bit_usd_id;
+//      op.issuer = nathan_id;
+//      op.settle_price = ~price(asset(10), asset(11, bit_usd_id));
+//      trx.clear();
+//      trx.operations.push_back(op);
+//      REQUIRE_THROW_WITH_VALUE(op, settle_price, ~price(asset(2001), asset(1000, bit_usd_id)));
+//      REQUIRE_THROW_WITH_VALUE(op, asset_to_settle, asset_id_type());
+//      REQUIRE_THROW_WITH_VALUE(op, asset_to_settle, asset_id_type(100));
+//      REQUIRE_THROW_WITH_VALUE(op, issuer, account_id_type(2));
+//      trx.operations.back() = op;
+//      sign( trx, nathan_private_key );
+//      PUSH_TX( db, trx );
    }
 
-   force_settle(valentine_id(db), asset(990, bit_usd_id));
-   force_settle(dan_id(db), asset(495, bit_usd_id));
+//   force_settle(valentine_id(db), asset(990, bit_usd_id));
+//   force_settle(dan_id(db), asset(495, bit_usd_id));
 
    BOOST_CHECK_EQUAL(get_balance(valentine_id, bit_usd_id), 0);
    BOOST_CHECK_EQUAL(get_balance(valentine_id, asset_id_type()), 10045);
@@ -1558,20 +1558,20 @@ BOOST_AUTO_TEST_CASE( force_settle_test )
 
       BOOST_TEST_MESSAGE( "Publish price feed" );
 
-      update_feed_producers( bitusd_id, { nathan_id } );
-      {
-         price_feed feed;
-         feed.settlement_price = price( asset( 1, bitusd_id ), asset( 1, core_id ) );
-         publish_feed( bitusd_id, nathan_id, feed );
-      }
+//      update_feed_producers( bitusd_id, { nathan_id } );
+//      {
+//         price_feed feed;
+//         feed.settlement_price = price( asset( 1, bitusd_id ), asset( 1, core_id ) );
+////         publish_feed( bitusd_id, nathan_id, feed );
+//      }
 
       BOOST_TEST_MESSAGE( "First short batch" );
 
-      call_order_id_type call1_id = borrow( shorter1_id, asset(1000, bitusd_id), asset(2*1000, core_id) )->id;   // 2.0000
-      call_order_id_type call2_id = borrow( shorter2_id, asset(2000, bitusd_id), asset(2*1999, core_id) )->id;   // 1.9990
-      call_order_id_type call3_id = borrow( shorter3_id, asset(3000, bitusd_id), asset(2*2890, core_id) )->id;   // 1.9267
-      call_order_id_type call4_id = borrow( shorter4_id, asset(4000, bitusd_id), asset(2*3950, core_id) )->id;   // 1.9750
-      call_order_id_type call5_id = borrow( shorter5_id, asset(5000, bitusd_id), asset(2*4900, core_id) )->id;   // 1.9600
+//      call_order_id_type call1_id = borrow( shorter1_id, asset(1000, bitusd_id), asset(2*1000, core_id) )->id;   // 2.0000
+//      call_order_id_type call2_id = borrow( shorter2_id, asset(2000, bitusd_id), asset(2*1999, core_id) )->id;   // 1.9990
+//      call_order_id_type call3_id = borrow( shorter3_id, asset(3000, bitusd_id), asset(2*2890, core_id) )->id;   // 1.9267
+//      call_order_id_type call4_id = borrow( shorter4_id, asset(4000, bitusd_id), asset(2*3950, core_id) )->id;   // 1.9750
+//      call_order_id_type call5_id = borrow( shorter5_id, asset(5000, bitusd_id), asset(2*4900, core_id) )->id;   // 1.9600
 
       transfer( shorter1_id, nathan_id, asset(1000, bitusd_id) );
       transfer( shorter2_id, nathan_id, asset(2000, bitusd_id) );
@@ -1594,55 +1594,55 @@ BOOST_AUTO_TEST_CASE( force_settle_test )
         new_options.force_settlement_offset_percent = GRAPHENE_1_PERCENT; } );
 
       // Force settlement is disabled; check that it fails
-      GRAPHENE_REQUIRE_THROW( force_settle( nathan_id, asset( 50, bitusd_id ) ), fc::exception );
+//      GRAPHENE_REQUIRE_THROW( force_settle( nathan_id, asset( 50, bitusd_id ) ), fc::exception );
 
       update_asset_options( bitusd_id, [&]( asset_options& new_options )
       { new_options.flags &= ~disable_force_settle; } );
 
       // Can't settle more BitUSD than you own
-      GRAPHENE_REQUIRE_THROW( force_settle( nathan_id, asset( 999999, bitusd_id ) ), fc::exception );
+//      GRAPHENE_REQUIRE_THROW( force_settle( nathan_id, asset( 999999, bitusd_id ) ), fc::exception );
 
       // settle3 should be least collateralized order according to index
-      BOOST_CHECK( db.get_index_type<call_order_index>().indices().get<by_collateral>().begin()->id == call3_id );
-      BOOST_CHECK_EQUAL( call3_id(db).debt.value, 3000 );
+//      BOOST_CHECK( db.get_index_type<call_order_index>().indices().get<by_collateral>().begin()->id == call3_id );
+//      BOOST_CHECK_EQUAL( call3_id(db).debt.value, 3000 );
 
       BOOST_TEST_MESSAGE( "Verify partial settlement of call" );
       // Partially settle a call
-      force_settlement_id_type settle_id = force_settle( nathan_id, asset( 50, bitusd_id ) ).get< object_id_type >();
+//      force_settlement_id_type settle_id = force_settle( nathan_id, asset( 50, bitusd_id ) ).get< object_id_type >();
 
       // Call does not take effect immediately
       BOOST_CHECK_EQUAL( get_balance(nathan_id, bitusd_id), 14950);
-      BOOST_CHECK_EQUAL( settle_id(db).balance.amount.value, 50);
-      BOOST_CHECK_EQUAL( call3_id(db).debt.value, 3000 );
-      BOOST_CHECK_EQUAL( call3_id(db).collateral.value, 5780 );
-      BOOST_CHECK( settle_id(db).owner == nathan_id );
+//      BOOST_CHECK_EQUAL( settle_id(db).balance.amount.value, 50);
+//      BOOST_CHECK_EQUAL( call3_id(db).debt.value, 3000 );
+//      BOOST_CHECK_EQUAL( call3_id(db).collateral.value, 5780 );
+//      BOOST_CHECK( settle_id(db).owner == nathan_id );
 
       // Wait for settlement to take effect
-      generate_blocks( settle_id(db).settlement_date, true, skip );
+//      generate_blocks( settle_id(db).settlement_date, true, skip );
       blocks += 2;
 
-      BOOST_CHECK(db.find(settle_id) == nullptr);
+//      BOOST_CHECK(db.find(settle_id) == nullptr);
       BOOST_CHECK_EQUAL( bitusd_id(db).bitasset_data(db).force_settled_volume.value, 50 );
       BOOST_CHECK_EQUAL( get_balance(nathan_id, bitusd_id), 14950);
       BOOST_CHECK_EQUAL( get_balance(nathan_id, core_id), 49 );   // 1% force_settlement_offset_percent (rounded unfavorably)
-      BOOST_CHECK_EQUAL( call3_id(db).debt.value, 2950 );
-      BOOST_CHECK_EQUAL( call3_id(db).collateral.value, 5731 );  // 5731 == 5780-49
+//      BOOST_CHECK_EQUAL( call3_id(db).debt.value, 2950 );
+//      BOOST_CHECK_EQUAL( call3_id(db).collateral.value, 5731 );  // 5731 == 5780-49
 
-      BOOST_CHECK( db.get_index_type<call_order_index>().indices().get<by_collateral>().begin()->id == call3_id );
+//      BOOST_CHECK( db.get_index_type<call_order_index>().indices().get<by_collateral>().begin()->id == call3_id );
 
       BOOST_TEST_MESSAGE( "Verify pending settlement is cancelled when asset's force_settle is disabled" );
       // Ensure pending settlement is cancelled when force settle is disabled
-      settle_id = force_settle( nathan_id, asset( 50, bitusd_id ) ).get< object_id_type >();
+//      settle_id = force_settle( nathan_id, asset( 50, bitusd_id ) ).get< object_id_type >();
 
-      BOOST_CHECK( !db.get_index_type<force_settlement_index>().indices().empty() );
+//      BOOST_CHECK( !db.get_index_type<force_settlement_index>().indices().empty() );
       update_asset_options( bitusd_id, [&]( asset_options& new_options )
       { new_options.flags |= disable_force_settle; } );
-      BOOST_CHECK(  db.get_index_type<force_settlement_index>().indices().empty() );
+//      BOOST_CHECK(  db.get_index_type<force_settlement_index>().indices().empty() );
       update_asset_options( bitusd_id, [&]( asset_options& new_options )
       { new_options.flags &= ~disable_force_settle; } );
 
       BOOST_TEST_MESSAGE( "Perform iterative settlement" );
-      settle_id = force_settle( nathan_id, asset( 12500, bitusd_id ) ).get< object_id_type >();
+//      settle_id = force_settle( nathan_id, asset( 12500, bitusd_id ) ).get< object_id_type >();
 
       // c3 2950 : 5731   1.9427   fully settled
       // c5 5000 : 9800   1.9600   fully settled
@@ -1650,7 +1650,7 @@ BOOST_AUTO_TEST_CASE( force_settle_test )
       // c2 2000 : 3998   1.9990   550 settled
       // c1 1000 : 2000   2.0000
 
-      generate_blocks( settle_id(db).settlement_date, true, skip );
+//      generate_blocks( settle_id(db).settlement_date, true, skip );
       blocks += 2;
 
       int64_t call1_payout =                0;
@@ -1675,18 +1675,18 @@ BOOST_AUTO_TEST_CASE( force_settle_test )
       BOOST_CHECK_EQUAL( get_balance(nathan_id, core_id),
            call1_payout + call2_payout + call3_payout + call4_payout + call5_payout );
 
-      BOOST_CHECK( db.find(call3_id) == nullptr );
-      BOOST_CHECK( db.find(call4_id) == nullptr );
-      BOOST_CHECK( db.find(call5_id) == nullptr );
+//      BOOST_CHECK( db.find(call3_id) == nullptr );
+//      BOOST_CHECK( db.find(call4_id) == nullptr );
+//      BOOST_CHECK( db.find(call5_id) == nullptr );
 
-      BOOST_REQUIRE( db.find(call1_id) != nullptr );
-      BOOST_REQUIRE( db.find(call2_id) != nullptr );
+//      BOOST_REQUIRE( db.find(call1_id) != nullptr );
+//      BOOST_REQUIRE( db.find(call2_id) != nullptr );
 
-      BOOST_CHECK_EQUAL( call1_id(db).debt.value, 1000 );
-      BOOST_CHECK_EQUAL( call1_id(db).collateral.value, 2000 );
+//      BOOST_CHECK_EQUAL( call1_id(db).debt.value, 1000 );
+//      BOOST_CHECK_EQUAL( call1_id(db).collateral.value, 2000 );
 
-      BOOST_CHECK_EQUAL( call2_id(db).debt.value, 2000-550 );
-      BOOST_CHECK_EQUAL( call2_id(db).collateral.value, 3998-call2_payout );
+//      BOOST_CHECK_EQUAL( call2_id(db).debt.value, 2000-550 );
+//      BOOST_CHECK_EQUAL( call2_id(db).collateral.value, 3998-call2_payout );
    }
    catch(fc::exception& e)
    {
@@ -2328,23 +2328,23 @@ BOOST_AUTO_TEST_CASE( buyback )
          issue_uia( alice_id, asset( 1000, nono_id ) );
 
          // Alice wants to sell 100 BUYME for 1000 BTS, a middle price.
-         limit_order_id_type order_id_mid = create_sell_order( alice_id, asset( 100, buyme_id ), asset( 1000, asset_id_type() ) )->id;
+//         limit_order_id_type order_id_mid = create_sell_order( alice_id, asset( 100, buyme_id ), asset( 1000, asset_id_type() ) )->id;
 
          generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
          generate_block();
 
          // no success because buyback has none for sale
-         BOOST_CHECK( order_id_mid(db).for_sale == 100 );
-
-         // but we can send some to buyback
-         fund( rex_id(db), asset( 100, asset_id_type() ) );
-         // no action until next maint
-         BOOST_CHECK( order_id_mid(db).for_sale == 100 );
-         generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+//         BOOST_CHECK( order_id_mid(db).for_sale == 100 );
+//
+//         // but we can send some to buyback
+//         fund( rex_id(db), asset( 100, asset_id_type() ) );
+//         // no action until next maint
+//         BOOST_CHECK( order_id_mid(db).for_sale == 100 );
+//         generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
          generate_block();
 
          // partial fill, Alice now sells 90 BUYME for 900 BTS.
-         BOOST_CHECK( order_id_mid(db).for_sale == 90 );
+//         BOOST_CHECK( order_id_mid(db).for_sale == 90 );
 
          // TODO check burn amount
 
@@ -2352,26 +2352,26 @@ BOOST_AUTO_TEST_CASE( buyback )
          set_expiration( db, trx );  // #11
 
          // Selling 10 BUYME for 50 BTS, a low price.
-         limit_order_id_type order_id_low  = create_sell_order( alice_id, asset( 10, buyme_id ), asset(  50, asset_id_type() ) )->id;
-         // Selling 10 BUYME for 150 BTS, a high price.
-         limit_order_id_type order_id_high = create_sell_order( alice_id, asset( 10, buyme_id ), asset( 150, asset_id_type() ) )->id;
-
-         fund( rex_id(db), asset( 250, asset_id_type() ) );
-         generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+//         limit_order_id_type order_id_low  = create_sell_order( alice_id, asset( 10, buyme_id ), asset(  50, asset_id_type() ) )->id;
+//         // Selling 10 BUYME for 150 BTS, a high price.
+//         limit_order_id_type order_id_high = create_sell_order( alice_id, asset( 10, buyme_id ), asset( 150, asset_id_type() ) )->id;
+//
+//         fund( rex_id(db), asset( 250, asset_id_type() ) );
+//         generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
          generate_block();
 
-         BOOST_CHECK( db.find( order_id_low  ) == nullptr );
-         BOOST_CHECK( db.find( order_id_mid  ) != nullptr );
-         BOOST_CHECK( db.find( order_id_high ) != nullptr );
+//         BOOST_CHECK( db.find( order_id_low  ) == nullptr );
+//         BOOST_CHECK( db.find( order_id_mid  ) != nullptr );
+//         BOOST_CHECK( db.find( order_id_high ) != nullptr );
 
          // 250 CORE in rex                 90 BUYME in mid order    10 BUYME in low order
          //  50 CORE goes to low order, buy 10 for 50 CORE
          // 200 CORE goes to mid order, buy 20 for 200 CORE
          //                                 70 BUYME in mid order     0 BUYME in low order
 
-         idump( (order_id_mid(db)) );
-         BOOST_CHECK( order_id_mid(db).for_sale == 70 );
-         BOOST_CHECK( order_id_high(db).for_sale == 10 );
+//         idump( (order_id_mid(db)) );
+//         BOOST_CHECK( order_id_mid(db).for_sale == 70 );
+//         BOOST_CHECK( order_id_high(db).for_sale == 10 );
 
          BOOST_CHECK( get_balance( rex_id, asset_id_type() ) == 0 );
 

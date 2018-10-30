@@ -93,10 +93,10 @@ BOOST_AUTO_TEST_CASE( flat_index_test )
    ACTORS((sam));
    const auto& bitusd = create_bitasset("USDBIT", sam.id);
    const asset_id_type bitusd_id = bitusd.id;
-   update_feed_producers(bitusd, {sam.id});
+//   update_feed_producers(bitusd, {sam.id});
    price_feed current_feed;
    current_feed.settlement_price = bitusd.amount(100) / asset(100);
-   publish_feed(bitusd, sam, current_feed);
+//   publish_feed(bitusd, sam, current_feed);
    BOOST_CHECK_EQUAL( (int)bitusd.bitasset_data_id->instance, 1 );
    BOOST_CHECK( !(*bitusd.bitasset_data_id)(db).current_feed.settlement_price.is_null() );
    try {
