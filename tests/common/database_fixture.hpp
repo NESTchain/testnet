@@ -30,7 +30,6 @@
 #include <fc/smart_ref_impl.hpp>
 
 #include <graphene/chain/operation_history_object.hpp>
-#include <graphene/market_history/market_history_plugin.hpp>
 
 #include <iostream>
 
@@ -342,8 +341,7 @@ struct database_fixture {
    void print_joint_market( const string& syma, const string& symb )const;
    int64_t get_balance( account_id_type account, asset_id_type a )const;
    int64_t get_balance( const account_object& account, const asset_object& a )const;
-   vector< operation_history_object > get_operation_history( account_id_type account_id )const;
-   vector< graphene::market_history::order_history_object > get_market_order_history( asset_id_type a, asset_id_type b )const;
+   vector< operation_history_object > get_operation_history( account_id_type account_id )const; 
 };
 
 namespace test {

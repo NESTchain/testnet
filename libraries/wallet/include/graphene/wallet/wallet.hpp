@@ -403,36 +403,6 @@ class wallet_api
        *
        */
       full_account                      get_full_account( const string& name_or_id);
-      vector<bucket_object>             get_market_history(string symbol, string symbol2, uint32_t bucket, fc::time_point_sec start, fc::time_point_sec end)const;
-
-      /**
-       * @brief Fetch all orders relevant to the specified account sorted descendingly by price
-       *
-       * @param name_or_id  The name or ID of an account to retrieve
-       * @param base  Base asset
-       * @param quote  Quote asset
-       * @param limit  The limitation of items each query can fetch (max: 101)
-       * @param ostart_id  Start order id, fetch orders which price are lower than or equal to this order
-       * @param ostart_price  Fetch orders with price lower than or equal to this price
-       *
-       * @return List of orders from \c name_or_id to the corresponding account
-       *
-       * @note
-       * 1. if \c name_or_id cannot be tied to an account, empty result will be returned
-       * 2. \c ostart_id and \c ostart_price can be \c null, if so the api will return the "first page" of orders;
-       *    if \c ostart_id is specified and valid, its price will be used to do page query preferentially,
-       *    otherwise the \c ostart_price will be used 
-       */
-//      vector<limit_order_object>        get_account_limit_orders( const string& name_or_id,
-//                                            const string &base,
-//                                            const string &quote,
-//                                            uint32_t limit = 101,
-//                                            optional<limit_order_id_type> ostart_id = optional<limit_order_id_type>(),
-//                                            optional<price> ostart_price = optional<price>());
-//
-//      vector<limit_order_object>        get_limit_orders(string a, string b, uint32_t limit)const;
-//      vector<call_order_object>         get_call_orders(string a, uint32_t limit)const;
-//      vector<force_settlement_object>   get_settle_orders(string a, uint32_t limit)const;
 
       /** Returns the collateral_bid object for the given MPA
        *
@@ -441,8 +411,7 @@ class wallet_api
        * @param start the sequence number where to start looping back throw the history
        * @returns a list of \c collateral_bid_objects
        */
-//      vector<collateral_bid_object> get_collateral_bids(string asset, uint32_t limit = 100, uint32_t start = 0)const;
-      
+
       /** Returns the block chain's slowly-changing settings.
        * This object contains all of the properties of the blockchain that are fixed
        * or that change only once per maintenance interval (daily) such as the
@@ -1854,7 +1823,7 @@ FC_API( graphene::wallet::wallet_api,
 //        (get_collateral_bids)
         (is_public_key_registered)
         (get_full_account)
-        (get_market_history)
+//        (get_market_history)
         (get_global_properties)
         (get_dynamic_global_properties)
         (get_object)
@@ -1897,5 +1866,5 @@ FC_API( graphene::wallet::wallet_api,
         (receive_blind_transfer)
 //        (get_order_book)
         (quit)
-		(send_message)
+        (send_message)
       )

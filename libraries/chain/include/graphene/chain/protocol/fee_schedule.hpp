@@ -63,7 +63,7 @@ namespace graphene { namespace chain {
       }
    };
 
-   template<>
+//   template<>
 //   class fee_helper<bid_collateral_operation> {
 //     public:
 //      const bid_collateral_operation::fee_parameters_type& cget(const flat_set<fee_parameters>& parameters)const

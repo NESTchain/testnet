@@ -40,6 +40,7 @@ BOOST_FIXTURE_TEST_SUITE(market_rounding_tests, database_fixture)
  *  requested price the resulting payout to one party is 0
  *  ( Reproduces https://github.com/bitshares/bitshares-core/issues/184 )
  */
+ /*
 BOOST_AUTO_TEST_CASE( trade_amount_equals_zero )
 {
    try {
@@ -90,10 +91,11 @@ BOOST_AUTO_TEST_CASE( trade_amount_equals_zero )
       throw;
    }
 }
-
+*/
 /**
  *  The something-for-nothing bug should be fixed https://github.com/bitshares/bitshares-core/issues/184
  */
+/*
 BOOST_AUTO_TEST_CASE( trade_amount_equals_zero_after_hf_184 )
 {
    try {
@@ -142,7 +144,7 @@ BOOST_AUTO_TEST_CASE( trade_amount_equals_zero_after_hf_184 )
       throw;
    }
 }
-
+*/
 /***
  * This test case reproduces one of the scenarios described in bitshares-core issue #342:
  *   when matching a limit order with another limit order, a small taker order will pay more than minimum required.

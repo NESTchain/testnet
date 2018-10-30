@@ -413,9 +413,6 @@ void application_impl::startup()
    //if( _options->count("enable-subscribe-to-all") )
    //   _app_options.enable_subscribe_to_all = _options->at("enable-subscribe-to-all").as<bool>();
 
-   if( _active_plugins.find( "market_history" ) != _active_plugins.end() )
-      _app_options.has_market_history_plugin = true;
-
    if( _options->count("api-access") ) {
 
       if(fc::exists(_options->at("api-access").as<boost::filesystem::path>()))
@@ -1011,7 +1008,6 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
    {
       wanted.push_back("witness");
       wanted.push_back("account_history");
-      wanted.push_back("market_history");
       wanted.push_back("grouped_orders");
    }
    int es_ah_conflict_counter = 0;

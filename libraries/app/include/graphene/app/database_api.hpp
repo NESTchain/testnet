@@ -29,6 +29,7 @@
 #include <graphene/chain/protocol/types.hpp>
 
 #include <graphene/chain/database.hpp>
+#include <graphene/app/application.hpp>
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
@@ -41,8 +42,6 @@
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/witness_object.hpp>
-
-#include <graphene/market_history/market_history_plugin.hpp>
 
 #include <fc/api.hpp>
 #include <fc/optional.hpp>
@@ -60,7 +59,6 @@
 namespace graphene { namespace app {
 
 using namespace graphene::chain;
-using namespace graphene::market_history;
 using namespace std;
 
 class database_api_impl;
@@ -729,11 +727,7 @@ class database_api
 } }
 
 FC_REFLECT( graphene::app::order, (price)(quote)(base) );
-//FC_REFLECT( graphene::app::order_book, (base)(quote)(bids)(asks) );
-//FC_REFLECT( graphene::app::market_ticker,
-//            (time)(base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
-//FC_REFLECT( graphene::app::market_volume, (time)(base)(quote)(base_volume)(quote_volume) );
-//FC_REFLECT( graphene::app::market_trade, (sequence)(date)(price)(amount)(value)(side1_account_id)(side2_account_id) );
+
 
 FC_API(graphene::app::database_api,
    // Objects
@@ -788,22 +782,6 @@ FC_API(graphene::app::database_api,
    (list_assets)
    (lookup_asset_symbols)
    (get_asset_count)
-
-   // Markets / feeds
-//   (get_order_book)
-//   (get_limit_orders)
-//   (get_account_limit_orders)
-//   (get_call_orders)
-//   (get_settle_orders)
-//   (get_margin_positions)
-//   (get_collateral_bids)
-   (subscribe_to_market)
-   (unsubscribe_from_market)
-//   (get_ticker)
-//   (get_24_volume)
-//   (get_top_markets)
-//   (get_trade_history)
-//   (get_trade_history_by_sequence)
 
    // Witnesses
    (get_witnesses)
