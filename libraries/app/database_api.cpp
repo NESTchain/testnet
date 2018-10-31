@@ -1768,7 +1768,7 @@ void database_api_impl::on_applied_block()
 
    const auto& ops = _db.get_applied_operations();
    map< std::pair<asset_id_type,asset_id_type>, vector<pair<operation, operation_result>> > subscribed_markets_ops;
-   for(const optional< operation_history_object >& o_op : ops)
+   /*for(const optional< operation_history_object >& o_op : ops)
    {
       if( !o_op.valid() )
          continue;
@@ -1781,19 +1781,19 @@ void database_api_impl::on_applied_block()
          case operation::tag<limit_order_create_operation>::value:
             market = op.op.get<limit_order_create_operation>().get_market();
             break;
-         */
+
          case operation::tag<fill_order_operation>::value:
             market = op.op.get<fill_order_operation>().get_market();
             break;
-            /*
+
          case operation::tag<limit_order_cancel_operation>::value:
-         */
+         
          default: break;
       }
       if( market.valid() && _market_subscriptions.count(*market) )
          // FIXME this may cause fill_order_operation be pushed before order creation
          subscribed_markets_ops[*market].emplace_back( std::move( std::make_pair( op.op, op.result ) ) );
-   }
+   }*/
    /// we need to ensure the database_api is not deleted for the life of the async operation
    auto capture_this = shared_from_this();
    fc::async([this,capture_this,subscribed_markets_ops](){

@@ -1793,12 +1793,12 @@ BOOST_AUTO_TEST_CASE( witness_feeds )
 //} FC_LOG_AND_RETHROW() }
 
 /// Shameless code coverage plugging. Otherwise, these calls never happen.
-BOOST_AUTO_TEST_CASE( fill_order )
-{ try {
-   fill_order_operation o;
-   GRAPHENE_CHECK_THROW(o.validate(), fc::exception);
-   //o.calculate_fee(db.current_fee_schedule());
-} FC_LOG_AND_RETHROW() }
+//BOOST_AUTO_TEST_CASE( fill_order )
+//{ try {
+//   fill_order_operation o;
+//   GRAPHENE_CHECK_THROW(o.validate(), fc::exception);
+//   //o.calculate_fee(db.current_fee_schedule());
+//} FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( witness_pay_test )
 { try {
