@@ -385,6 +385,10 @@ void application_impl::startup()
    }
    _chain_db->add_checkpoints( loaded_checkpoints );
 
+   if (_options->count("max-transaction-time")) {
+       _chain_db->set_max_trx_cpu_time(_options->at("max-transaction-time").as<int32_t>());
+   }
+
    if( _options->count("enable-standby-votes-tracking") )
    {
       _chain_db->enable_standby_votes_tracking( _options->at("enable-standby-votes-tracking").as<bool>() );
@@ -407,6 +411,10 @@ void application_impl::startup()
    {
       ilog( "All transaction signatures will be validated" );
       _force_validate = true;
+   }
+
+   if (_options->count("contracts-console")) {
+       _chain_db->set_contract_log_to_console(true);
    }
 
    // TODO uncomment this when GUI is ready
@@ -949,6 +957,9 @@ void application::set_program_options(boost::program_options::options_descriptio
          // TODO uncomment this when GUI is ready
          //("enable-subscribe-to-all", bpo::value<bool>()->implicit_value(false),
          // "Whether allow API clients to subscribe to universal object creation and removal events")
+
+         ("max-transaction-time", bpo::value<int32_t>()->implicit_value(50), "max exec time for smart contract")
+         ("contracts-console", bpo::value<bool>()->implicit_value(true), "smart contract prints to console")
          ;
    command_line_options.add(configuration_file_options);
    command_line_options.add_options()

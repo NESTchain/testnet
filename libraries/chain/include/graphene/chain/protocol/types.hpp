@@ -212,11 +212,6 @@ namespace graphene { namespace chain {
       vesting_balance_object_type,
       worker_object_type,
       balance_object_type,
-      index64_object_type,
-      index128_object_type,
-      index256_object_type,
-      index_double_object_type,
-      index_long_double_object_type,
 
       OBJECT_TYPE_COUNT ///< Sentry value which contains the number of different object types
    };
@@ -244,6 +239,12 @@ namespace graphene { namespace chain {
 
       impl_table_id_object_type,
       impl_key_value_object_type,
+
+       index64_object_type,
+       index128_object_type,
+       index256_object_type,
+       index_double_object_type,
+       index_long_double_object_type,
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -433,12 +434,7 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (vesting_balance_object_type)
                  (worker_object_type)
                  (balance_object_type)
-                 (index64_object_type)
-                 (index128_object_type)
-                 (index256_object_type)
-                 (index_double_object_type)
-                 (index_long_double_object_type)
-				 
+
                  (OBJECT_TYPE_COUNT)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,
@@ -463,6 +459,13 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
 
                  (impl_table_id_object_type)
                  (impl_key_value_object_type)
+
+                 (index64_object_type)
+                 (index128_object_type)
+                 (index256_object_type)
+                 (index_double_object_type)
+                 (index_long_double_object_type)
+
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
- * Copyright (c) 2018- ¦ÌNEST Foundation, and contributors.
+ * Copyright (c) 2018- ï¿½ï¿½NEST Foundation, and contributors.
  *
  * The MIT License
  *
@@ -182,6 +182,7 @@ namespace graphene { namespace db {
             typedef typename IndexType::object_type ObjectType;
             if( _index[ObjectType::space_id].size() <= ObjectType::type_id  )
                 _index[ObjectType::space_id].resize( 255 );
+            //printf("add_index: %d %d\n",ObjectType::space_id, ObjectType::type_id);
             assert(!_index[ObjectType::space_id][ObjectType::type_id]);
             unique_ptr<index> indexptr( new IndexType(*this) );
             _index[ObjectType::space_id][ObjectType::type_id] = std::move(indexptr);
