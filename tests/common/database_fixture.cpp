@@ -25,7 +25,6 @@
 #include <boost/program_options.hpp>
 
 #include <graphene/account_history/account_history_plugin.hpp>
-#include <graphene/market_history/market_history_plugin.hpp>
 #include <graphene/grouped_orders/grouped_orders_plugin.hpp>
 #include <graphene/elasticsearch/elasticsearch_plugin.hpp>
 #include <graphene/es_objects/es_objects.hpp>
@@ -70,7 +69,6 @@ database_fixture::database_fixture()
       if( arg == "--show-test-names" )
          std::cout << "running test " << boost::unit_test::framework::current_test_case().p_name << std::endl;
    }
-   auto mhplugin = app.register_plugin<graphene::market_history::market_history_plugin>();
    auto goplugin = app.register_plugin<graphene::grouped_orders::grouped_orders_plugin>();
    init_account_pub_key = init_account_priv_key.get_public_key();
 
@@ -167,13 +165,10 @@ database_fixture::database_fixture()
    }
 
    options.insert(std::make_pair("bucket-size", boost::program_options::variable_value(string("[15]"),false)));
-   mhplugin->plugin_set_app(&app);
-   mhplugin->plugin_initialize(options);
 
    goplugin->plugin_set_app(&app);
    goplugin->plugin_initialize(options);
 
-   mhplugin->plugin_startup();
    goplugin->plugin_startup();
 
    generate_block();
@@ -228,8 +223,8 @@ void database_fixture::verify_asset_supplies( const database& db )
 
    const auto& statistics_index = db.get_index_type<account_stats_index>().indices();
    const auto& balance_index = db.get_index_type<account_balance_index>().indices();
-   const auto& settle_index = db.get_index_type<force_settlement_index>().indices();
-   const auto& bids = db.get_index_type<collateral_bid_index>().indices();
+//   const auto& settle_index = db.get_index_type<force_settlement_index>().indices();
+//   const auto& bids = db.get_index_type<collateral_bid_index>().indices();
    map<asset_id_type,share_type> total_balances;
    map<asset_id_type,share_type> total_debts;
    share_type core_in_orders;
@@ -237,30 +232,30 @@ void database_fixture::verify_asset_supplies( const database& db )
 
    for( const account_balance_object& b : balance_index )
       total_balances[b.asset_type] += b.balance;
-   for( const force_settlement_object& s : settle_index )
-      total_balances[s.balance.asset_id] += s.balance.amount;
-   for( const collateral_bid_object& b : bids )
-      total_balances[b.inv_swan_price.base.asset_id] += b.inv_swan_price.base.amount;
+//   for( const force_settlement_object& s : settle_index )
+//      total_balances[s.balance.asset_id] += s.balance.amount;
+//   for( const collateral_bid_object& b : bids )
+//      total_balances[b.inv_swan_price.base.asset_id] += b.inv_swan_price.base.amount;
    for( const account_statistics_object& a : statistics_index )
    {
       reported_core_in_orders += a.total_core_in_orders;
       total_balances[asset_id_type()] += a.pending_fees + a.pending_vested_fees;
    }
-   for( const limit_order_object& o : db.get_index_type<limit_order_index>().indices() )
-   {
-      asset for_sale = o.amount_for_sale();
-      if( for_sale.asset_id == asset_id_type() ) core_in_orders += for_sale.amount;
-      total_balances[for_sale.asset_id] += for_sale.amount;
-      total_balances[asset_id_type()] += o.deferred_fee;
-      total_balances[o.deferred_paid_fee.asset_id] += o.deferred_paid_fee.amount;
-   }
-   for( const call_order_object& o : db.get_index_type<call_order_index>().indices() )
-   {
-      asset col = o.get_collateral();
-      if( col.asset_id == asset_id_type() ) core_in_orders += col.amount;
-      total_balances[col.asset_id] += col.amount;
-      total_debts[o.get_debt().asset_id] += o.get_debt().amount;
-   }
+//   for( const limit_order_object& o : db.get_index_type<limit_order_index>().indices() )
+//   {
+//      asset for_sale = o.amount_for_sale();
+//      if( for_sale.asset_id == asset_id_type() ) core_in_orders += for_sale.amount;
+//      total_balances[for_sale.asset_id] += for_sale.amount;
+//      total_balances[asset_id_type()] += o.deferred_fee;
+//      total_balances[o.deferred_paid_fee.asset_id] += o.deferred_paid_fee.amount;
+//   }
+//   for( const call_order_object& o : db.get_index_type<call_order_index>().indices() )
+//   {
+//      asset col = o.get_collateral();
+//      if( col.asset_id == asset_id_type() ) core_in_orders += col.amount;
+//      total_balances[col.asset_id] += col.amount;
+//      total_debts[o.get_debt().asset_id] += o.get_debt().amount;
+//   }
    for( const asset_object& asset_obj : db.get_index_type<asset_index>().indices() )
    {
       const auto& dasset_obj = asset_obj.dynamic_asset_data_id(db);
@@ -792,49 +787,6 @@ digest_type database_fixture::digest( const transaction& tx )
    return tx.digest();
 }
 
-const limit_order_object*database_fixture::create_sell_order(account_id_type user, const asset& amount, const asset& recv,
-                                                const time_point_sec order_expiration,
-                                                const price& fee_core_exchange_rate )
-{
-   auto r =  create_sell_order( user(db), amount, recv, order_expiration, fee_core_exchange_rate );
-   verify_asset_supplies(db);
-   return r;
-}
-
-const limit_order_object* database_fixture::create_sell_order( const account_object& user, const asset& amount, const asset& recv,
-                                                const time_point_sec order_expiration,
-                                                const price& fee_core_exchange_rate )
-{
-   //wdump((amount)(recv));
-   limit_order_create_operation buy_order;
-   buy_order.seller = user.id;
-   buy_order.amount_to_sell = amount;
-   buy_order.min_to_receive = recv;
-   buy_order.expiration = order_expiration;
-   trx.operations.push_back(buy_order);
-   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op, fee_core_exchange_rate);
-   trx.validate();
-   auto processed = db.push_transaction(trx, ~0);
-   trx.operations.clear();
-   verify_asset_supplies(db);
-   //wdump((processed));
-   return db.find<limit_order_object>( processed.operation_results[0].get<object_id_type>() );
-}
-
-asset database_fixture::cancel_limit_order( const limit_order_object& order )
-{
-  limit_order_cancel_operation cancel_order;
-  cancel_order.fee_paying_account = order.seller;
-  cancel_order.order = order.id;
-  trx.operations.push_back(cancel_order);
-  for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
-  trx.validate();
-  auto processed = db.push_transaction(trx, ~0);
-  trx.operations.clear();
-   verify_asset_supplies(db);
-  return processed.operation_results[0].get<asset>();
-}
-
 void database_fixture::transfer(
    account_id_type from,
    account_id_type to,
@@ -870,167 +822,6 @@ void database_fixture::transfer(
       trx.operations.clear();
    } FC_CAPTURE_AND_RETHROW( (from.id)(to.id)(amount)(fee) )
 }
-
-void database_fixture::update_feed_producers( const asset_object& mia, flat_set<account_id_type> producers )
-{ try {
-   set_expiration( db, trx );
-   trx.operations.clear();
-   asset_update_feed_producers_operation op;
-   op.asset_to_update = mia.id;
-   op.issuer = mia.issuer;
-   op.new_feed_producers = std::move(producers);
-   trx.operations = {std::move(op)};
-
-   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
-   trx.validate();
-   db.push_transaction(trx, ~0);
-   trx.operations.clear();
-   verify_asset_supplies(db);
-} FC_CAPTURE_AND_RETHROW( (mia)(producers) ) }
-
-void database_fixture::publish_feed( const asset_object& mia, const account_object& by, const price_feed& f )
-{
-   set_expiration( db, trx );
-   trx.operations.clear();
-
-   asset_publish_feed_operation op;
-   op.publisher = by.id;
-   op.asset_id = mia.id;
-   op.feed = f;
-   if( op.feed.core_exchange_rate.is_null() )
-      op.feed.core_exchange_rate = op.feed.settlement_price;
-   trx.operations.emplace_back( std::move(op) );
-
-   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
-   trx.validate();
-   db.push_transaction(trx, ~0);
-   trx.operations.clear();
-   verify_asset_supplies(db);
-}
-
-/***
- * @brief helper method to add a price feed
- *
- * Adds a price feed for asset2, pushes the transaction, and generates the block
- *
- * @param fixture the database_fixture
- * @param publisher who is publishing the feed
- * @param asset1 the base asset
- * @param amount1 the amount of the base asset
- * @param asset2 the quote asset
- * @param amount2 the amount of the quote asset
- * @param core_id id of core (helps with core_exchange_rate)
- */
-void database_fixture::publish_feed(const account_id_type& publisher,
-      const asset_id_type& asset1, int64_t amount1,
-      const asset_id_type& asset2, int64_t amount2,
-      const asset_id_type& core_id)
-{
-   const asset_object& a1 = asset1(db);
-   const asset_object& a2 = asset2(db);
-   const asset_object& core = core_id(db);
-   asset_publish_feed_operation op;
-   op.publisher = publisher;
-   op.asset_id = asset2;
-   op.feed.settlement_price = ~price(a1.amount(amount1),a2.amount(amount2));
-   op.feed.core_exchange_rate = ~price(core.amount(amount1), a2.amount(amount2));
-   trx.operations.push_back(std::move(op));
-   PUSH_TX( db, trx, ~0);
-   generate_block();
-   trx.clear();
-}
-
-void database_fixture::force_global_settle( const asset_object& what, const price& p )
-{ try {
-   set_expiration( db, trx );
-   trx.operations.clear();
-   asset_global_settle_operation sop;
-   sop.issuer = what.issuer;
-   sop.asset_to_settle = what.id;
-   sop.settle_price = p;
-   trx.operations.push_back(sop);
-   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
-   trx.validate();
-   db.push_transaction(trx, ~0);
-   trx.operations.clear();
-   verify_asset_supplies(db);
-} FC_CAPTURE_AND_RETHROW( (what)(p) ) }
-
-operation_result database_fixture::force_settle( const account_object& who, asset what )
-{ try {
-   set_expiration( db, trx );
-   trx.operations.clear();
-   asset_settle_operation sop;
-   sop.account = who.id;
-   sop.amount = what;
-   trx.operations.push_back(sop);
-   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
-   trx.validate();
-   processed_transaction ptx = db.push_transaction(trx, ~0);
-   const operation_result& op_result = ptx.operation_results.front();
-   trx.operations.clear();
-   verify_asset_supplies(db);
-   return op_result;
-} FC_CAPTURE_AND_RETHROW( (who)(what) ) }
-
-const call_order_object* database_fixture::borrow( const account_object& who, asset what, asset collateral,
-                                                   optional<uint16_t> target_cr )
-{ try {
-   set_expiration( db, trx );
-   trx.operations.clear();
-   call_order_update_operation update;
-   update.funding_account = who.id;
-   update.delta_collateral = collateral;
-   update.delta_debt = what;
-   update.extensions.value.target_collateral_ratio = target_cr;
-   trx.operations.push_back(update);
-   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
-   trx.validate();
-   db.push_transaction(trx, ~0);
-   trx.operations.clear();
-   verify_asset_supplies(db);
-
-   auto& call_idx = db.get_index_type<call_order_index>().indices().get<by_account>();
-   auto itr = call_idx.find( boost::make_tuple(who.id, what.asset_id) );
-   const call_order_object* call_obj = nullptr;
-
-   if( itr != call_idx.end() )
-      call_obj = &*itr;
-   return call_obj;
-} FC_CAPTURE_AND_RETHROW( (who.name)(what)(collateral)(target_cr) ) }
-
-void database_fixture::cover(const account_object& who, asset what, asset collateral, optional<uint16_t> target_cr)
-{ try {
-   set_expiration( db, trx );
-   trx.operations.clear();
-   call_order_update_operation update;
-   update.funding_account = who.id;
-   update.delta_collateral = -collateral;
-   update.delta_debt = -what;
-   update.extensions.value.target_collateral_ratio = target_cr;
-   trx.operations.push_back(update);
-   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
-   trx.validate();
-   db.push_transaction(trx, ~0);
-   trx.operations.clear();
-   verify_asset_supplies(db);
-} FC_CAPTURE_AND_RETHROW( (who.name)(what)(collateral)(target_cr) ) }
-
-void database_fixture::bid_collateral(const account_object& who, const asset& to_bid, const asset& to_cover)
-{ try {
-   set_expiration( db, trx );
-   trx.operations.clear();
-   bid_collateral_operation bid;
-   bid.bidder = who.id;
-   bid.additional_collateral = to_bid;
-   bid.debt_covered = to_cover;
-   trx.operations.push_back(bid);
-   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
-   trx.validate();
-   db.push_transaction(trx, ~0);
-   trx.operations.clear();
-   verify_asset_supplies(db);
-} FC_CAPTURE_AND_RETHROW( (who.name)(to_bid)(to_cover) ) }
 
 void database_fixture::fund_fee_pool( const account_object& from, const asset_object& asset_to_fund, const share_type amount )
 {
@@ -1099,30 +890,30 @@ void database_fixture::upgrade_to_annual_member(const account_object& account)
 
 void database_fixture::print_market( const string& syma, const string& symb )const
 {
-   const auto& limit_idx = db.get_index_type<limit_order_index>();
-   const auto& price_idx = limit_idx.indices().get<by_price>();
+//   const auto& limit_idx = db.get_index_type<limit_order_index>();
+//   const auto& price_idx = limit_idx.indices().get<by_price>();
 
-   cerr << std::fixed;
-   cerr.precision(5);
-   cerr << std::setw(10) << std::left  << "NAME"      << " ";
-   cerr << std::setw(16) << std::right << "FOR SALE"  << " ";
-   cerr << std::setw(16) << std::right << "FOR WHAT"  << " ";
-   cerr << std::setw(10) << std::right << "PRICE (S/W)"   << " ";
-   cerr << std::setw(10) << std::right << "1/PRICE (W/S)" << "\n";
-   cerr << string(70, '=') << std::endl;
-   auto cur = price_idx.begin();
-   while( cur != price_idx.end() )
-   {
-      cerr << std::setw( 10 ) << std::left   << cur->seller(db).name << " ";
-      cerr << std::setw( 10 ) << std::right  << cur->for_sale.value << " ";
-      cerr << std::setw( 5 )  << std::left   << cur->amount_for_sale().asset_id(db).symbol << " ";
-      cerr << std::setw( 10 ) << std::right  << cur->amount_to_receive().amount.value << " ";
-      cerr << std::setw( 5 )  << std::left   << cur->amount_to_receive().asset_id(db).symbol << " ";
-      cerr << std::setw( 10 ) << std::right  << cur->sell_price.to_real() << " ";
-      cerr << std::setw( 10 ) << std::right  << (~cur->sell_price).to_real() << " ";
-      cerr << "\n";
-      ++cur;
-   }
+//   cerr << std::fixed;
+//   cerr.precision(5);
+//   cerr << std::setw(10) << std::left  << "NAME"      << " ";
+//   cerr << std::setw(16) << std::right << "FOR SALE"  << " ";
+//   cerr << std::setw(16) << std::right << "FOR WHAT"  << " ";
+//   cerr << std::setw(10) << std::right << "PRICE (S/W)"   << " ";
+//   cerr << std::setw(10) << std::right << "1/PRICE (W/S)" << "\n";
+//   cerr << string(70, '=') << std::endl;
+//   auto cur = price_idx.begin();
+//   while( cur != price_idx.end() )
+//   {
+//      cerr << std::setw( 10 ) << std::left   << cur->seller(db).name << " ";
+//      cerr << std::setw( 10 ) << std::right  << cur->for_sale.value << " ";
+//      cerr << std::setw( 5 )  << std::left   << cur->amount_for_sale().asset_id(db).symbol << " ";
+//      cerr << std::setw( 10 ) << std::right  << cur->amount_to_receive().amount.value << " ";
+//      cerr << std::setw( 5 )  << std::left   << cur->amount_to_receive().asset_id(db).symbol << " ";
+//      cerr << std::setw( 10 ) << std::right  << cur->sell_price.to_real() << " ";
+//      cerr << std::setw( 10 ) << std::right  << (~cur->sell_price).to_real() << " ";
+//      cerr << "\n";
+//      ++cur;
+//   }
 }
 
 string database_fixture::pretty( const asset& a )const
@@ -1131,15 +922,6 @@ string database_fixture::pretty( const asset& a )const
   ss << a.amount.value << " ";
   ss << a.asset_id(db).symbol;
   return ss.str();
-}
-
-void database_fixture::print_limit_order( const limit_order_object& cur )const
-{
-  std::cout << std::setw(10) << cur.seller(db).name << " ";
-  std::cout << std::setw(10) << "LIMIT" << " ";
-  std::cout << std::setw(16) << pretty( cur.amount_for_sale() ) << " ";
-  std::cout << std::setw(16) << pretty( cur.amount_to_receive() ) << " ";
-  std::cout << std::setw(16) << cur.sell_price.to_real() << " ";
 }
 
 void database_fixture::print_call_orders()const
@@ -1156,17 +938,17 @@ void database_fixture::print_call_orders()const
   cout << std::setw(16) << std::right << "SWAN(C/D)"     << "\n";
   cout << string(70, '=');
 
-  for( const call_order_object& o : db.get_index_type<call_order_index>().indices() )
-  {
-     std::cout << "\n";
-     cout << std::setw( 10 ) << std::left   << o.borrower(db).name << " ";
-     cout << std::setw( 16 ) << std::right  << pretty( o.get_debt() ) << " ";
-     cout << std::setw( 16 ) << std::right  << pretty( o.get_collateral() ) << " ";
-     cout << std::setw( 16 ) << std::right  << o.call_price.to_real() << " ";
-     cout << std::setw( 16 ) << std::right  << (~o.call_price).to_real() << " ";
-     cout << std::setw( 16 ) << std::right  << (o.get_debt()/o.get_collateral()).to_real() << " ";
-     cout << std::setw( 16 ) << std::right  << (~(o.get_debt()/o.get_collateral())).to_real() << " ";
-  }
+//  for( const call_order_object& o : db.get_index_type<call_order_index>().indices() )
+//  {
+//     std::cout << "\n";
+//     cout << std::setw( 10 ) << std::left   << o.borrower(db).name << " ";
+//     cout << std::setw( 16 ) << std::right  << pretty( o.get_debt() ) << " ";
+//     cout << std::setw( 16 ) << std::right  << pretty( o.get_collateral() ) << " ";
+//     cout << std::setw( 16 ) << std::right  << o.call_price.to_real() << " ";
+//     cout << std::setw( 16 ) << std::right  << (~o.call_price).to_real() << " ";
+//     cout << std::setw( 16 ) << std::right  << (o.get_debt()/o.get_collateral()).to_real() << " ";
+//     cout << std::setw( 16 ) << std::right  << (~(o.get_debt()/o.get_collateral())).to_real() << " ";
+//  }
      std::cout << "\n";
 }
 
@@ -1182,16 +964,16 @@ void database_fixture::print_joint_market( const string& syma, const string& sym
   cout << std::setw(16) << std::right << "PRICE (S/W)" << "\n";
   cout << string(70, '=');
 
-  const auto& limit_idx = db.get_index_type<limit_order_index>();
-  const auto& limit_price_idx = limit_idx.indices().get<by_price>();
+//  const auto& limit_idx = db.get_index_type<limit_order_index>();
+//  const auto& limit_price_idx = limit_idx.indices().get<by_price>();
 
-  auto limit_itr = limit_price_idx.begin();
-  while( limit_itr != limit_price_idx.end() )
-  {
-     std::cout << std::endl;
-     print_limit_order( *limit_itr );
-     ++limit_itr;
-  }
+//  auto limit_itr = limit_price_idx.begin();
+//  while( limit_itr != limit_price_idx.end() )
+//  {
+//     std::cout << std::endl;
+//     print_limit_order( *limit_itr );
+//     ++limit_itr;
+//  }
 }
 
 int64_t database_fixture::get_balance( account_id_type account, asset_id_type a )const
@@ -1222,28 +1004,6 @@ vector< operation_history_object > database_fixture::get_operation_history( acco
 
       atho_ptr = db.find_db(node->next);
       node = atho_ptr.get();
-   }
-   return result;
-}
-
-vector< graphene::market_history::order_history_object > database_fixture::get_market_order_history( asset_id_type a, asset_id_type b )const
-{
-   // const auto& history_idx = db.get_index_type<graphene::market_history::history_index>().indices().get<graphene::market_history::by_key>();
-   const auto& order_his_idx = dynamic_cast<const bdb_index<graphene::market_history::order_history_object>&>
-       (db.get_index(graphene::market_history::order_history_object::space_id, graphene::market_history::order_history_object::type_id));
-   const auto& history_idx = order_his_idx.get_bdb_secondary_index(0);
-
-   graphene::market_history::history_key hkey;
-   if( a > b ) std::swap(a,b);
-   hkey.base = a;
-   hkey.quote = b;
-   hkey.sequence = std::numeric_limits<int64_t>::min(); 
-   auto itr = history_idx.lower_bound( &hkey, sizeof(hkey));
-   vector<graphene::market_history::order_history_object> result;
-   while( itr != history_idx.end())
-   {
-       result.push_back( *itr );
-       ++itr;
    }
    return result;
 }

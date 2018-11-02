@@ -40,7 +40,6 @@ namespace graphene { namespace app {
       public:
          // TODO change default to false when GUI is ready
          bool enable_subscribe_to_all = true;
-         bool has_market_history_plugin = false;
    };
 
    class application

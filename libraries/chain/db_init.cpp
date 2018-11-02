@@ -95,20 +95,20 @@ const uint8_t asset_object::type_id;
 const uint8_t block_summary_object::space_id;
 const uint8_t block_summary_object::type_id;
 
-const uint8_t call_order_object::space_id;
-const uint8_t call_order_object::type_id;
+//const uint8_t call_order_object::space_id;
+//const uint8_t call_order_object::type_id;
 
 const uint8_t committee_member_object::space_id;
 const uint8_t committee_member_object::type_id;
-
-const uint8_t force_settlement_object::space_id;
-const uint8_t force_settlement_object::type_id;
+//
+//const uint8_t force_settlement_object::space_id;
+//const uint8_t force_settlement_object::type_id;
 
 const uint8_t global_property_object::space_id;
 const uint8_t global_property_object::type_id;
 
-const uint8_t limit_order_object::space_id;
-const uint8_t limit_order_object::type_id;
+//const uint8_t limit_order_object::space_id;
+//const uint8_t limit_order_object::type_id;
 
 const uint8_t operation_history_object::space_id;
 const uint8_t operation_history_object::type_id;
@@ -148,18 +148,18 @@ void database::initialize_evaluators()
    register_evaluator<asset_reserve_evaluator>();
    register_evaluator<asset_update_evaluator>();
    register_evaluator<asset_update_bitasset_evaluator>();
-   register_evaluator<asset_update_feed_producers_evaluator>();
-   register_evaluator<asset_settle_evaluator>();
-   register_evaluator<asset_global_settle_evaluator>();
+//   register_evaluator<asset_update_feed_producers_evaluator>();
+//   register_evaluator<asset_settle_evaluator>();
+//   register_evaluator<asset_global_settle_evaluator>();
    register_evaluator<assert_evaluator>();
-   register_evaluator<limit_order_create_evaluator>();
-   register_evaluator<limit_order_cancel_evaluator>();
-   register_evaluator<call_order_update_evaluator>();
-   register_evaluator<bid_collateral_evaluator>();
+//   register_evaluator<limit_order_create_evaluator>();
+//   register_evaluator<limit_order_cancel_evaluator>();
+//   register_evaluator<call_order_update_evaluator>();
+//   register_evaluator<bid_collateral_evaluator>();
    register_evaluator<transfer_evaluator>();
    register_evaluator<override_transfer_evaluator>();
    register_evaluator<asset_fund_fee_pool_evaluator>();
-   register_evaluator<asset_publish_feeds_evaluator>();
+//   register_evaluator<asset_publish_feeds_evaluator>();
    register_evaluator<proposal_create_evaluator>();
    register_evaluator<proposal_update_evaluator>();
    register_evaluator<proposal_delete_evaluator>();
@@ -193,7 +193,7 @@ void database::initialize_indexes()
 
    //Protocol object indexes
    add_index< primary_index<asset_index> >();
-   add_index< primary_index<force_settlement_index> >();
+//   add_index< primary_index<force_settlement_index> >();
 
    auto acnt_index = add_index< primary_index<account_index> >();
    acnt_index->add_secondary_index<account_member_index>();
@@ -201,8 +201,9 @@ void database::initialize_indexes()
 
    add_index< primary_index<committee_member_index> >();
    add_index< primary_index<witness_index> >();
-   add_index< primary_index<limit_order_index > >();
-   add_index< primary_index<call_order_index > >();
+//   add_index< primary_index<limit_order_index > >();
+//   add_index< primary_index<call_order_index > >();
+
     
    auto prop_index = add_index< primary_index<proposal_index > >();
    prop_index->add_secondary_index<required_approval_index>();
@@ -227,7 +228,7 @@ void database::initialize_indexes()
    add_index< primary_index<simple_index<budget_record_object           > > >();
    add_index< primary_index< special_authority_index                      > >();
    add_index< primary_index< buyback_index                                > >();
-   add_index< primary_index<collateral_bid_index                          > >();
+//   add_index< primary_index<collateral_bid_index                          > >();
 
    add_index< primary_index< simple_index< fba_accumulator_object       > > >();
    // contract object indexes
@@ -524,14 +525,14 @@ void database::init_genesis(const genesis_state_type& genesis_state)
                o.total_core_in_orders = collateral_rec.collateral;
             });
 
-            create<call_order_object>([&](call_order_object& c) {
-               c.borrower = owner_account_id;
-               c.collateral = collateral_rec.collateral;
-               c.debt = collateral_rec.debt;
-               c.call_price = price::call_price(chain::asset(c.debt, new_asset_id),
-                                                chain::asset(c.collateral, core_asset.id),
-                                                GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
-            });
+//            create<call_order_object>([&](call_order_object& c) {
+//               c.borrower = owner_account_id;
+//               c.collateral = collateral_rec.collateral;
+//               c.debt = collateral_rec.debt;
+//               c.call_price = price::call_price(chain::asset(c.debt, new_asset_id),
+//                                                chain::asset(c.collateral, core_asset.id),
+//                                                GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+//            });
 
             total_supplies[ asset_id_type(0) ] += collateral_rec.collateral;
             total_debts[ new_asset_id ] += collateral_rec.debt;

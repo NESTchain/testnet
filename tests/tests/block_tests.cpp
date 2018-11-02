@@ -789,33 +789,33 @@ BOOST_FIXTURE_TEST_CASE( limit_order_expiration, database_fixture )
 
    BOOST_CHECK_EQUAL( get_balance(*nathan, *core), 50000 );
 
-   limit_order_create_operation op;
-   op.seller = nathan->id;
-   op.amount_to_sell = core->amount(500);
-   op.min_to_receive = test->amount(500);
-   op.expiration = db.head_block_time() + fc::seconds(10);
-   trx.operations.push_back(op);
-   auto ptrx = PUSH_TX( db, trx, ~0 );
+//   limit_order_create_operation op;
+//   op.seller = nathan->id;
+//   op.amount_to_sell = core->amount(500);
+//   op.min_to_receive = test->amount(500);
+//   op.expiration = db.head_block_time() + fc::seconds(10);
+//   trx.operations.push_back(op);
+//   auto ptrx = PUSH_TX( db, trx, ~0 );
 
    BOOST_CHECK_EQUAL( get_balance(*nathan, *core), 49500 );
 
-   auto ptrx_id = ptrx.operation_results.back().get<object_id_type>();
-   auto limit_index = db.get_index_type<limit_order_index>().indices();
-   auto limit_itr = limit_index.begin();
-   BOOST_REQUIRE( limit_itr != limit_index.end() );
-   BOOST_REQUIRE( limit_itr->id == ptrx_id );
-   BOOST_REQUIRE( db.find_object(limit_itr->id) );
-   BOOST_CHECK_EQUAL( get_balance(*nathan, *core), 49500 );
-   auto id = limit_itr->id;
-
-   generate_blocks(op.expiration, false);
-   test = &get_asset("MIATEST");
-   core = &asset_id_type()(db);
-   nathan = &get_account("nathan");
-   committee = &account_id_type()(db);
-
-   BOOST_CHECK(db.find_object(id) == nullptr);
-   BOOST_CHECK_EQUAL( get_balance(*nathan, *core), 50000 );
+//   auto ptrx_id = ptrx.operation_results.back().get<object_id_type>();
+//   auto limit_index = db.get_index_type<limit_order_index>().indices();
+//   auto limit_itr = limit_index.begin();
+//   BOOST_REQUIRE( limit_itr != limit_index.end() );
+//   BOOST_REQUIRE( limit_itr->id == ptrx_id );
+//   BOOST_REQUIRE( db.find_object(limit_itr->id) );
+//   BOOST_CHECK_EQUAL( get_balance(*nathan, *core), 49500 );
+//   auto id = limit_itr->id;
+//
+//   generate_blocks(op.expiration, false);
+//   test = &get_asset("MIATEST");
+//   core = &asset_id_type()(db);
+//   nathan = &get_account("nathan");
+//   committee = &account_id_type()(db);
+//
+//   BOOST_CHECK(db.find_object(id) == nullptr);
+//   BOOST_CHECK_EQUAL( get_balance(*nathan, *core), 50000 );
 } FC_LOG_AND_RETHROW() }
 
 BOOST_FIXTURE_TEST_CASE( double_sign_check, database_fixture )
@@ -1701,15 +1701,15 @@ BOOST_FIXTURE_TEST_CASE( temp_account_balance, database_fixture )
    top.to   = GRAPHENE_TEMP_ACCOUNT;
    trx.operations.push_back( top );
 
-   limit_order_create_operation loc;
-   loc.amount_to_sell = top.amount;
-   loc.expiration = db.head_block_time() + 1;
-   loc.seller = GRAPHENE_TEMP_ACCOUNT;
-   loc.min_to_receive = asset( 1000, asset_id_type(1) );
-   trx.operations.push_back( loc );
-   sign( trx, alice_private_key );
-   PUSH_TX( db, trx );
-   trx.clear();
+//   limit_order_create_operation loc;
+//   loc.amount_to_sell = top.amount;
+//   loc.expiration = db.head_block_time() + 1;
+//   loc.seller = GRAPHENE_TEMP_ACCOUNT;
+//   loc.min_to_receive = asset( 1000, asset_id_type(1) );
+//   trx.operations.push_back( loc );
+//   sign( trx, alice_private_key );
+//   PUSH_TX( db, trx );
+//   trx.clear();
 
    generate_block();
    generate_block();

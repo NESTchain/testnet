@@ -45,12 +45,12 @@ struct proposal_operation_hardfork_visitor
 
    // TODO review and cleanup code below after hard fork
    // hf_834
-   void operator()(const graphene::chain::call_order_update_operation &v) const {
-      if (next_maintenance_time <= HARDFORK_CORE_834_TIME) {
-         FC_ASSERT( !v.extensions.value.target_collateral_ratio.valid(),
-                    "Can not set target_collateral_ratio in call_order_update_operation before hardfork 834." );
-      }
-   }
+//   void operator()(const graphene::chain::call_order_update_operation &v) const {
+//      if (next_maintenance_time <= HARDFORK_CORE_834_TIME) {
+//         FC_ASSERT( !v.extensions.value.target_collateral_ratio.valid(),
+//                    "Can not set target_collateral_ratio in call_order_update_operation before hardfork 834." );
+//      }
+//   }
    // hf_620
    void operator()(const graphene::chain::asset_create_operation &v) const {
       if (block_time < HARDFORK_CORE_620_TIME) {
@@ -89,11 +89,11 @@ struct proposal_operation_hardfork_visitor
    // operation, if not exists, we can harden the `validate()` method to deny
    // it in a earlier stage.
    //
-   void operator()(const graphene::chain::asset_settle_cancel_operation &v) const {
-      if (block_time > HARDFORK_CORE_588_TIME) {
-         FC_ASSERT(!"Virtual operation");
-      }
-   }
+//   void operator()(const graphene::chain::asset_settle_cancel_operation &v) const {
+//      if (block_time > HARDFORK_CORE_588_TIME) {
+//         FC_ASSERT(!"Virtual operation");
+//      }
+//   }
    // loop and self visit in proposals
    void operator()(const graphene::chain::proposal_create_operation &v) const {
       for (const op_wrapper &op : v.proposed_ops)

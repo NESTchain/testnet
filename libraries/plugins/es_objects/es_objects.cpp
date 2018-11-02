@@ -75,7 +75,7 @@ class es_objects_plugin_impl
       void PrepareAccount(const account_object& account_object, const fc::time_point_sec& block_time, const uint32_t& block_number);
       void PrepareAsset(const asset_object& asset_object, const fc::time_point_sec& block_time, const uint32_t& block_number);
       void PrepareBalance(const balance_object& balance_object, const fc::time_point_sec& block_time, const uint32_t& block_number);
-      void PrepareLimit(const limit_order_object& limit_object, const fc::time_point_sec& block_time, const uint32_t& block_number);
+//      void PrepareLimit(const limit_order_object& limit_object, const fc::time_point_sec& block_time, const uint32_t& block_number);
       void PrepareBitAsset(const asset_bitasset_data_object& bitasset_object, const fc::time_point_sec& block_time, const uint32_t& block_number);
 };
 
@@ -118,12 +118,12 @@ bool es_objects_plugin_impl::updateDatabase( const vector<object_id_type>& ids ,
          if(b != nullptr)
             PrepareBalance(*b, block_time, block_number);
       }
-      else if(value.is<limit_order_object>() && _es_objects_limit_orders) {
-         auto obj = db.find_object(value);
-         auto l = static_cast<const limit_order_object*>(obj);
-         if(l != nullptr)
-            PrepareLimit(*l, block_time, block_number);
-      }
+//      else if(value.is<limit_order_object>() && _es_objects_limit_orders) {
+//         auto obj = db.find_object(value);
+//         auto l = static_cast<const limit_order_object*>(obj);
+//         if(l != nullptr)
+//            PrepareLimit(*l, block_time, block_number);
+//      }
       else if(value.is<asset_bitasset_data_object>() && _es_objects_asset_bitasset) {
          auto obj = db.find_object(value);
          auto ba = static_cast<const asset_bitasset_data_object*>(obj);
@@ -287,37 +287,37 @@ void es_objects_plugin_impl::PrepareBalance(const balance_object& balance_object
    prepare.clear();
 }
 
-void es_objects_plugin_impl::PrepareLimit(const limit_order_object& limit_object,
-                                          const fc::time_point_sec& block_time, const uint32_t& block_number)
-{
-   limit_order_struct limit;
-   limit.object_id = limit_object.id;
-   limit.block_time = block_time;
-   limit.block_number = block_number;
-   limit.expiration = limit_object.expiration;
-   limit.seller = limit_object.seller;
-   limit.for_sale = limit_object.for_sale;
-   limit.sell_price = limit_object.sell_price;
-   limit.deferred_fee = limit_object.deferred_fee;
-
-   auto it = limit_orders.find(limit_object.id);
-   if(it == limit_orders.end())
-      limit_orders[limit_object.id] = limit;
-   else {
-      if(it->second == limit) return;
-      else limit_orders[limit_object.id] = limit;
-   }
-
-   std::string data = fc::json::to_string(limit);
-
-   fc::mutable_variant_object bulk_header;
-   bulk_header["_index"] = _es_objects_index_prefix + "limitorder";
-   bulk_header["_type"] = "data";
-
-   prepare = graphene::utilities::createBulk(bulk_header, std::move(data));
-   bulk.insert(bulk.end(), prepare.begin(), prepare.end());
-   prepare.clear();
-}
+//void es_objects_plugin_impl::PrepareLimit(const limit_order_object& limit_object,
+//                                          const fc::time_point_sec& block_time, const uint32_t& block_number)
+//{
+//   limit_order_struct limit;
+//   limit.object_id = limit_object.id;
+//   limit.block_time = block_time;
+//   limit.block_number = block_number;
+//   limit.expiration = limit_object.expiration;
+//   limit.seller = limit_object.seller;
+//   limit.for_sale = limit_object.for_sale;
+//   limit.sell_price = limit_object.sell_price;
+//   limit.deferred_fee = limit_object.deferred_fee;
+//
+//   auto it = limit_orders.find(limit_object.id);
+//   if(it == limit_orders.end())
+//      limit_orders[limit_object.id] = limit;
+//   else {
+//      if(it->second == limit) return;
+//      else limit_orders[limit_object.id] = limit;
+//   }
+//
+//   std::string data = fc::json::to_string(limit);
+//
+//   fc::mutable_variant_object bulk_header;
+//   bulk_header["_index"] = _es_objects_index_prefix + "limitorder";
+//   bulk_header["_type"] = "data";
+//
+//   prepare = graphene::utilities::createBulk(bulk_header, std::move(data));
+//   bulk.insert(bulk.end(), prepare.begin(), prepare.end());
+//   prepare.clear();
+//}
 
 void es_objects_plugin_impl::PrepareBitAsset(const asset_bitasset_data_object& bitasset_object,
                                              const fc::time_point_sec& block_time, const uint32_t& block_number)

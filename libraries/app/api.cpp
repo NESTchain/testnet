@@ -105,10 +105,10 @@ namespace graphene { namespace app {
        {
           _asset_api = std::make_shared< asset_api >( std::ref( *_app.chain_database() ) );
        }
-       else if( api_name == "orders_api" )
-       {
-          _orders_api = std::make_shared< orders_api >( std::ref( _app ) );
-       }
+//       else if( api_name == "orders_api" )
+//       {
+//          _orders_api = std::make_shared< orders_api >( std::ref( _app ) );
+//       }
        else if( api_name == "debug_api" )
        {
           // can only enable this API if the plugin was loaded
@@ -273,44 +273,16 @@ namespace graphene { namespace app {
        return *_asset_api;
     }
 
-    fc::api<orders_api> login_api::orders() const
-    {
-       FC_ASSERT(_orders_api);
-       return *_orders_api;
-    }
+//    fc::api<orders_api> login_api::orders() const
+//    {
+//       FC_ASSERT(_orders_api);
+//       return *_orders_api;
+//    }
 
     fc::api<graphene::debug_witness::debug_api> login_api::debug() const
     {
        FC_ASSERT(_debug_api);
        return *_debug_api;
-    }
-
-    vector<order_history_object> history_api::get_fill_order_history( asset_id_type a, asset_id_type b, uint32_t limit  )const
-    {
-       FC_ASSERT(_app.chain_database());
-       const auto& db = *_app.chain_database();
-       if( a > b ) std::swap(a,b);
-       // const auto& history_idx = db.get_index_type<graphene::market_history::history_index>().indices().get<by_key>();
-       const auto& order_his_idx = dynamic_cast<const bdb_index<order_history_object>&>(db.get_index(order_history_object::space_id, order_history_object::type_id));
-       const auto& history_idx = order_his_idx.get_bdb_secondary_index(0);
-
-       history_key hkey;
-       hkey.base = a;
-       hkey.quote = b;
-       hkey.sequence = std::numeric_limits<int64_t>::min();
-
-       uint32_t count = 0;
-       auto itr = history_idx.lower_bound( &hkey, sizeof(hkey));
-       vector<order_history_object> result;
-       while( itr != history_idx.end() && count < limit)
-       {
-          if(itr->key.base != a || itr->key.quote != b ) break;
-          result.push_back( *itr );
-          ++itr;
-          ++count;
-       }
-
-       return result;
     }
 
     vector<operation_history_object> history_api::get_account_history( const std::string account_id_or_name,
@@ -502,14 +474,6 @@ namespace graphene { namespace app {
        return result;
     }
 
-
-    flat_set<uint32_t> history_api::get_market_history_buckets()const
-    {
-       auto hist = _app.get_plugin<market_history_plugin>( "market_history" );
-       FC_ASSERT( hist );
-       return hist->tracked_buckets();
-    }
-
     history_operation_detail history_api::get_account_history_by_operations(const std::string account_id_or_name, vector<uint16_t> operation_types, uint32_t start, unsigned limit)
     {
        FC_ASSERT(limit <= 100);
@@ -520,32 +484,6 @@ namespace graphene { namespace app {
        result.total_count = total_count;
        return result;
     }
-
-    vector<bucket_object> history_api::get_market_history( asset_id_type a, asset_id_type b,
-                                                           uint32_t bucket_seconds, fc::time_point_sec start, fc::time_point_sec end )const
-    { try {
-       FC_ASSERT(_app.chain_database());
-       const auto& db = *_app.chain_database();
-       vector<bucket_object> result;
-       result.reserve(200);
-
-       if( a > b ) std::swap(a,b);
-
-       const auto& bidx = db.get_index_type<bucket_index>();
-       const auto& by_key_idx = bidx.indices().get<by_key>();
-
-       auto itr = by_key_idx.lower_bound( bucket_key( a, b, bucket_seconds, start ) );
-       while( itr != by_key_idx.end() && itr->key.open <= end && result.size() < 200 )
-       {
-          if( !(itr->key.base == a && itr->key.quote == b && itr->key.seconds == bucket_seconds) )
-          {
-            return result;
-          }
-          result.push_back(*itr);
-          ++itr;
-       }
-       return result;
-    } FC_CAPTURE_AND_RETHROW( (a)(b)(bucket_seconds)(start)(end) ) }
 
     crypto_api::crypto_api(){};
 
@@ -678,39 +616,39 @@ namespace graphene { namespace app {
     }
 
    // orders_api
-   flat_set<uint16_t> orders_api::get_tracked_groups()const
-   {
-      auto plugin = _app.get_plugin<grouped_orders_plugin>( "grouped_orders" );
-      FC_ASSERT( plugin );
-      return plugin->tracked_groups();
-   }
+//   flat_set<uint16_t> orders_api::get_tracked_groups()const
+//   {
+//      auto plugin = _app.get_plugin<grouped_orders_plugin>( "grouped_orders" );
+//      FC_ASSERT( plugin );
+//      return plugin->tracked_groups();
+//   }
 
-   vector< limit_order_group > orders_api::get_grouped_limit_orders( asset_id_type base_asset_id,
-                                                               asset_id_type quote_asset_id,
-                                                               uint16_t group,
-                                                               optional<price> start,
-                                                               uint32_t limit )const
-   {
-      FC_ASSERT( limit <= 101 );
-      auto plugin = _app.get_plugin<grouped_orders_plugin>( "grouped_orders" );
-      FC_ASSERT( plugin );
-      const auto& limit_groups = plugin->limit_order_groups();
-      vector< limit_order_group > result;
-
-      price max_price = price::max( base_asset_id, quote_asset_id );
-      price min_price = price::min( base_asset_id, quote_asset_id );
-      if( start.valid() && !start->is_null() )
-         max_price = std::max( std::min( max_price, *start ), min_price );
-
-      auto itr = limit_groups.lower_bound( limit_order_group_key( group, max_price ) );
-      // use an end itrator to try to avoid expensive price comparison
-      auto end = limit_groups.upper_bound( limit_order_group_key( group, min_price ) );
-      while( itr != end && result.size() < limit )
-      {
-         result.emplace_back( *itr );
-         ++itr;
-      }
-      return result;
-   }
+//   vector< limit_order_group > orders_api::get_grouped_limit_orders( asset_id_type base_asset_id,
+//                                                               asset_id_type quote_asset_id,
+//                                                               uint16_t group,
+//                                                               optional<price> start,
+//                                                               uint32_t limit )const
+//   {
+//      FC_ASSERT( limit <= 101 );
+//      auto plugin = _app.get_plugin<grouped_orders_plugin>( "grouped_orders" );
+//      FC_ASSERT( plugin );
+//      const auto& limit_groups = plugin->limit_order_groups();
+//      vector< limit_order_group > result;
+//
+//      price max_price = price::max( base_asset_id, quote_asset_id );
+//      price min_price = price::min( base_asset_id, quote_asset_id );
+//      if( start.valid() && !start->is_null() )
+//         max_price = std::max( std::min( max_price, *start ), min_price );
+//
+//      auto itr = limit_groups.lower_bound( limit_order_group_key( group, max_price ) );
+//      // use an end itrator to try to avoid expensive price comparison
+//      auto end = limit_groups.upper_bound( limit_order_group_key( group, min_price ) );
+//      while( itr != end && result.size() < limit )
+//      {
+//         result.emplace_back( *itr );
+//         ++itr;
+//      }
+//      return result;
+//   }
 
 } } // graphene::app

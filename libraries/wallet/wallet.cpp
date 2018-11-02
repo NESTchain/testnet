@@ -1405,52 +1405,6 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (symbol)(new_options)(broadcast) ) }
 
-   signed_transaction update_asset_feed_producers(string symbol,
-                                                  flat_set<string> new_feed_producers,
-                                                  bool broadcast /* = false */)
-   { try {
-      optional<asset_object> asset_to_update = find_asset(symbol);
-      if (!asset_to_update)
-        FC_THROW("No asset with that symbol exists!");
-
-      asset_update_feed_producers_operation update_op;
-      update_op.issuer = asset_to_update->issuer;
-      update_op.asset_to_update = asset_to_update->id;
-      update_op.new_feed_producers.reserve(new_feed_producers.size());
-      std::transform(new_feed_producers.begin(), new_feed_producers.end(),
-                     std::inserter(update_op.new_feed_producers, update_op.new_feed_producers.end()),
-                     [this](const std::string& account_name_or_id){ return get_account_id(account_name_or_id); });
-
-      signed_transaction tx;
-      tx.operations.push_back( update_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (symbol)(new_feed_producers)(broadcast) ) }
-
-   signed_transaction publish_asset_feed(string publishing_account,
-                                         string symbol,
-                                         price_feed feed,
-                                         bool broadcast /* = false */)
-   { try {
-      optional<asset_object> asset_to_update = find_asset(symbol);
-      if (!asset_to_update)
-        FC_THROW("No asset with that symbol exists!");
-
-      asset_publish_feed_operation publish_op;
-      publish_op.publisher = get_account_id(publishing_account);
-      publish_op.asset_id = asset_to_update->id;
-      publish_op.feed = feed;
-
-      signed_transaction tx;
-      tx.operations.push_back( publish_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (publishing_account)(symbol)(feed)(broadcast) ) }
-
    signed_transaction fund_asset_fee_pool(string from,
                                           string symbol,
                                           string amount,
@@ -1519,71 +1473,6 @@ public:
 
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (from)(amount)(symbol)(broadcast) ) }
-
-   signed_transaction global_settle_asset(string symbol,
-                                          price settle_price,
-                                          bool broadcast /* = false */)
-   { try {
-      optional<asset_object> asset_to_settle = find_asset(symbol);
-      if (!asset_to_settle)
-        FC_THROW("No asset with that symbol exists!");
-
-      asset_global_settle_operation settle_op;
-      settle_op.issuer = asset_to_settle->issuer;
-      settle_op.asset_to_settle = asset_to_settle->id;
-      settle_op.settle_price = settle_price;
-
-      signed_transaction tx;
-      tx.operations.push_back( settle_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (symbol)(settle_price)(broadcast) ) }
-
-   signed_transaction settle_asset(string account_to_settle,
-                                   string amount_to_settle,
-                                   string symbol,
-                                   bool broadcast /* = false */)
-   { try {
-      optional<asset_object> asset_to_settle = find_asset(symbol);
-      if (!asset_to_settle)
-        FC_THROW("No asset with that symbol exists!");
-
-      asset_settle_operation settle_op;
-      settle_op.account = get_account_id(account_to_settle);
-      settle_op.amount = asset_to_settle->amount_from_string(amount_to_settle);
-
-      signed_transaction tx;
-      tx.operations.push_back( settle_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (account_to_settle)(amount_to_settle)(symbol)(broadcast) ) }
-
-   signed_transaction bid_collateral(string bidder_name,
-                                     string debt_amount, string debt_symbol,
-                                     string additional_collateral,
-                                     bool broadcast )
-   { try {
-      optional<asset_object> debt_asset = find_asset(debt_symbol);
-      if (!debt_asset)
-        FC_THROW("No asset with that symbol exists!");
-      const asset_object& collateral = get_asset(get_object(*debt_asset->bitasset_data_id).options.short_backing_asset);
-
-      bid_collateral_operation op;
-      op.bidder = get_account_id(bidder_name);
-      op.debt_covered = debt_asset->amount_from_string(debt_amount);
-      op.additional_collateral = collateral.amount_from_string(additional_collateral);
-
-      signed_transaction tx;
-      tx.operations.push_back( op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (bidder_name)(debt_amount)(debt_symbol)(additional_collateral)(broadcast) ) }
 
    signed_transaction whitelist_account(string authorizing_account,
                                         string account_to_list,
@@ -2148,95 +2037,6 @@ public:
       return clear_text;
    }
 
-   signed_transaction sell_asset(string seller_account,
-                                 string amount_to_sell,
-                                 string symbol_to_sell,
-                                 string min_to_receive,
-                                 string symbol_to_receive,
-                                 uint32_t timeout_sec = 0,
-                                 bool   fill_or_kill = false,
-                                 bool   broadcast = false)
-   {
-      account_object seller   = get_account( seller_account );
-
-      limit_order_create_operation op;
-      op.seller = seller.id;
-      op.amount_to_sell = get_asset(symbol_to_sell).amount_from_string(amount_to_sell);
-      op.min_to_receive = get_asset(symbol_to_receive).amount_from_string(min_to_receive);
-      if( timeout_sec )
-         op.expiration = fc::time_point::now() + fc::seconds(timeout_sec);
-      op.fill_or_kill = fill_or_kill;
-
-      signed_transaction tx;
-      tx.operations.push_back(op);
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   }
-
-   signed_transaction borrow_asset(string seller_name, string amount_to_borrow, string asset_symbol,
-                                       string amount_of_collateral, bool broadcast = false)
-   {
-      account_object seller = get_account(seller_name);
-      asset_object mia = get_asset(asset_symbol);
-      FC_ASSERT(mia.is_market_issued());
-      asset_object collateral = get_asset(get_object(*mia.bitasset_data_id).options.short_backing_asset);
-
-      call_order_update_operation op;
-      op.funding_account = seller.id;
-      op.delta_debt   = mia.amount_from_string(amount_to_borrow);
-      op.delta_collateral = collateral.amount_from_string(amount_of_collateral);
-
-      signed_transaction trx;
-      trx.operations = {op};
-      set_operation_fees( trx, _remote_db->get_global_properties().parameters.current_fees);
-      trx.validate();
-      idump((broadcast));
-
-      return sign_transaction(trx, broadcast);
-   }
-
-   signed_transaction borrow_asset_ext( string seller_name, string amount_to_borrow, string asset_symbol,
-                                        string amount_of_collateral,
-                                        call_order_update_operation::extensions_type extensions,
-                                        bool broadcast = false)
-   {
-      account_object seller = get_account(seller_name);
-      asset_object mia = get_asset(asset_symbol);
-      FC_ASSERT(mia.is_market_issued());
-      asset_object collateral = get_asset(get_object(*mia.bitasset_data_id).options.short_backing_asset);
-
-      call_order_update_operation op;
-      op.funding_account = seller.id;
-      op.delta_debt   = mia.amount_from_string(amount_to_borrow);
-      op.delta_collateral = collateral.amount_from_string(amount_of_collateral);
-      op.extensions = extensions;
-
-      signed_transaction trx;
-      trx.operations = {op};
-      set_operation_fees( trx, _remote_db->get_global_properties().parameters.current_fees);
-      trx.validate();
-      idump((broadcast));
-
-      return sign_transaction(trx, broadcast);
-   }
-
-   signed_transaction cancel_order(object_id_type order_id, bool broadcast = false)
-   { try {
-         FC_ASSERT(!is_locked());
-         FC_ASSERT(order_id.space() == protocol_ids, "Invalid order ID ${id}", ("id", order_id));
-         signed_transaction trx;
-
-         limit_order_cancel_operation op;
-         op.fee_paying_account = get_object<limit_order_object>(order_id).seller;
-         op.order = order_id;
-         trx.operations = {op};
-         set_operation_fees( trx, _remote_db->get_global_properties().parameters.current_fees);
-
-         trx.validate();
-         return sign_transaction(trx, broadcast);
-   } FC_CAPTURE_AND_RETHROW((order_id)) }
 
    signed_transaction transfer(string from, string to, string amount,
                                string asset_symbol, string memo, bool broadcast = false)
@@ -2485,93 +2285,93 @@ public:
          }
          return ss.str();
       };
-      m["get_order_book"] = [](variant result, const fc::variants& a)
-      {
-         auto orders = result.as<order_book>( GRAPHENE_MAX_NESTED_OBJECTS );
-         auto bids = orders.bids;
-         auto asks = orders.asks;
-         std::stringstream ss;
-         std::stringstream sum_stream;
-         sum_stream << "Sum(" << orders.base << ')';
-         double bid_sum = 0;
-         double ask_sum = 0;
-         const int spacing = 20;
-
-         auto prettify_num = [&ss]( double n )
-         {
-            if (abs( round( n ) - n ) < 0.00000000001 )
-            {
-               ss << (int) n;
-            }
-            else if (n - floor(n) < 0.000001)
-            {
-               ss << setiosflags( ios::fixed ) << setprecision(10) << n;
-            }
-            else
-            {
-               ss << setiosflags( ios::fixed ) << setprecision(6) << n;
-            }
-         };
-         auto prettify_num_string = [&]( string& num_string )
-         {
-            double n = fc::to_double( num_string );
-            prettify_num( n );
-         };
-
-         ss << setprecision( 8 ) << setiosflags( ios::fixed ) << setiosflags( ios::left );
-
-         ss << ' ' << setw( (spacing * 4) + 6 ) << "BUY ORDERS" << "SELL ORDERS\n"
-            << ' ' << setw( spacing + 1 ) << "Price" << setw( spacing ) << orders.quote << ' ' << setw( spacing )
-            << orders.base << ' ' << setw( spacing ) << sum_stream.str()
-            << "   " << setw( spacing + 1 ) << "Price" << setw( spacing ) << orders.quote << ' ' << setw( spacing )
-            << orders.base << ' ' << setw( spacing ) << sum_stream.str()
-            << "\n====================================================================================="
-            << "|=====================================================================================\n";
-
-         for (unsigned int i = 0; i < bids.size() || i < asks.size() ; i++)
-         {
-            if ( i < bids.size() )
-            {
-                bid_sum += fc::to_double( bids[i].base );
-                ss << ' ' << setw( spacing );
-                prettify_num_string( bids[i].price );
-                ss << ' ' << setw( spacing );
-                prettify_num_string( bids[i].quote );
-                ss << ' ' << setw( spacing );
-                prettify_num_string( bids[i].base );
-                ss << ' ' << setw( spacing );
-                prettify_num( bid_sum );
-                ss << ' ';
-            }
-            else
-            {
-                ss << setw( (spacing * 4) + 5 ) << ' ';
-            }
-
-            ss << '|';
-
-            if ( i < asks.size() )
-            {
-               ask_sum += fc::to_double( asks[i].base );
-               ss << ' ' << setw( spacing );
-               prettify_num_string( asks[i].price );
-               ss << ' ' << setw( spacing );
-               prettify_num_string( asks[i].quote );
-               ss << ' ' << setw( spacing );
-               prettify_num_string( asks[i].base );
-               ss << ' ' << setw( spacing );
-               prettify_num( ask_sum );
-            }
-
-            ss << '\n';
-         }
-
-         ss << endl
-            << "Buy Total:  " << bid_sum << ' ' << orders.base << endl
-            << "Sell Total: " << ask_sum << ' ' << orders.base << endl;
-
-         return ss.str();
-      };
+//      m["get_order_book"] = [](variant result, const fc::variants& a)
+//      {
+//         auto orders = result.as<order_book>( GRAPHENE_MAX_NESTED_OBJECTS );
+//         auto bids = orders.bids;
+//         auto asks = orders.asks;
+//         std::stringstream ss;
+//         std::stringstream sum_stream;
+//         sum_stream << "Sum(" << orders.base << ')';
+//         double bid_sum = 0;
+//         double ask_sum = 0;
+//         const int spacing = 20;
+//
+//         auto prettify_num = [&ss]( double n )
+//         {
+//            if (abs( round( n ) - n ) < 0.00000000001 )
+//            {
+//               ss << (int) n;
+//            }
+//            else if (n - floor(n) < 0.000001)
+//            {
+//               ss << setiosflags( ios::fixed ) << setprecision(10) << n;
+//            }
+//            else
+//            {
+//               ss << setiosflags( ios::fixed ) << setprecision(6) << n;
+//            }
+//         };
+//         auto prettify_num_string = [&]( string& num_string )
+//         {
+//            double n = fc::to_double( num_string );
+//            prettify_num( n );
+//         };
+//
+//         ss << setprecision( 8 ) << setiosflags( ios::fixed ) << setiosflags( ios::left );
+//
+//         ss << ' ' << setw( (spacing * 4) + 6 ) << "BUY ORDERS" << "SELL ORDERS\n"
+//            << ' ' << setw( spacing + 1 ) << "Price" << setw( spacing ) << orders.quote << ' ' << setw( spacing )
+//            << orders.base << ' ' << setw( spacing ) << sum_stream.str()
+//            << "   " << setw( spacing + 1 ) << "Price" << setw( spacing ) << orders.quote << ' ' << setw( spacing )
+//            << orders.base << ' ' << setw( spacing ) << sum_stream.str()
+//            << "\n====================================================================================="
+//            << "|=====================================================================================\n";
+//
+//         for (unsigned int i = 0; i < bids.size() || i < asks.size() ; i++)
+//         {
+//            if ( i < bids.size() )
+//            {
+//                bid_sum += fc::to_double( bids[i].base );
+//                ss << ' ' << setw( spacing );
+//                prettify_num_string( bids[i].price );
+//                ss << ' ' << setw( spacing );
+//                prettify_num_string( bids[i].quote );
+//                ss << ' ' << setw( spacing );
+//                prettify_num_string( bids[i].base );
+//                ss << ' ' << setw( spacing );
+//                prettify_num( bid_sum );
+//                ss << ' ';
+//            }
+//            else
+//            {
+//                ss << setw( (spacing * 4) + 5 ) << ' ';
+//            }
+//
+//            ss << '|';
+//
+//            if ( i < asks.size() )
+//            {
+//               ask_sum += fc::to_double( asks[i].base );
+//               ss << ' ' << setw( spacing );
+//               prettify_num_string( asks[i].price );
+//               ss << ' ' << setw( spacing );
+//               prettify_num_string( asks[i].quote );
+//               ss << ' ' << setw( spacing );
+//               prettify_num_string( asks[i].base );
+//               ss << ' ' << setw( spacing );
+//               prettify_num( ask_sum );
+//            }
+//
+//            ss << '\n';
+//         }
+//
+//         ss << endl
+//            << "Buy Total:  " << bid_sum << ' ' << orders.base << endl
+//            << "Sell Total: " << ask_sum << ' ' << orders.base << endl;
+//
+//         return ss.str();
+//      };
 
       return m;
    }
@@ -3306,41 +3106,6 @@ full_account wallet_api::get_full_account( const string& name_or_id)
     return my->_remote_db->get_full_accounts({name_or_id}, false)[name_or_id];
 }
 
-vector<bucket_object> wallet_api::get_market_history( string symbol1, string symbol2, uint32_t bucket , fc::time_point_sec start, fc::time_point_sec end )const
-{
-   return my->_remote_hist->get_market_history( get_asset_id(symbol1), get_asset_id(symbol2), bucket, start, end );
-}
-
-vector<limit_order_object> wallet_api::get_account_limit_orders( const string& name_or_id,
-                                                                const string &base,
-                                                                const string &quote,
-                                                                uint32_t limit,
-                                                                optional<limit_order_id_type> ostart_id,
-                                                                optional<price> ostart_price)
-{
-   return my->_remote_db->get_account_limit_orders(name_or_id, base, quote, limit, ostart_id, ostart_price);
-}
-
-vector<limit_order_object> wallet_api::get_limit_orders(string a, string b, uint32_t limit)const
-{
-   return my->_remote_db->get_limit_orders(get_asset(a).id, get_asset(b).id, limit);
-}
-
-vector<call_order_object> wallet_api::get_call_orders(string a, uint32_t limit)const
-{
-   return my->_remote_db->get_call_orders(get_asset(a).id, limit);
-}
-
-vector<force_settlement_object> wallet_api::get_settle_orders(string a, uint32_t limit)const
-{
-   return my->_remote_db->get_settle_orders(get_asset(a).id, limit);
-}
-
-vector<collateral_bid_object> wallet_api::get_collateral_bids(string asset, uint32_t limit, uint32_t start)const
-{
-   return my->_remote_db->get_collateral_bids(get_asset(asset).id, limit, start);
-}
-
 brain_key_info wallet_api::suggest_brain_key()const
 {
    return graphene::wallet::utility::suggest_brain_key();
@@ -3718,20 +3483,6 @@ signed_transaction wallet_api::update_bitasset(string symbol,
    return my->update_bitasset(symbol, new_options, broadcast);
 }
 
-signed_transaction wallet_api::update_asset_feed_producers(string symbol,
-                                                           flat_set<string> new_feed_producers,
-                                                           bool broadcast /* = false */)
-{
-   return my->update_asset_feed_producers(symbol, new_feed_producers, broadcast);
-}
-
-signed_transaction wallet_api::publish_asset_feed(string publishing_account,
-                                                  string symbol,
-                                                  price_feed feed,
-                                                  bool broadcast /* = false */)
-{
-   return my->publish_asset_feed(publishing_account, symbol, feed, broadcast);
-}
 
 signed_transaction wallet_api::fund_asset_fee_pool(string from,
                                                    string symbol,
@@ -3754,29 +3505,6 @@ signed_transaction wallet_api::reserve_asset(string from,
                                           bool broadcast /* = false */)
 {
    return my->reserve_asset(from, amount, symbol, broadcast);
-}
-
-signed_transaction wallet_api::global_settle_asset(string symbol,
-                                                   price settle_price,
-                                                   bool broadcast /* = false */)
-{
-   return my->global_settle_asset(symbol, settle_price, broadcast);
-}
-
-signed_transaction wallet_api::settle_asset(string account_to_settle,
-                                            string amount_to_settle,
-                                            string symbol,
-                                            bool broadcast /* = false */)
-{
-   return my->settle_asset(account_to_settle, amount_to_settle, symbol, broadcast);
-}
-
-signed_transaction wallet_api::bid_collateral(string bidder_name,
-                                              string debt_amount, string debt_symbol,
-                                              string additional_collateral,
-                                              bool broadcast )
-{
-   return my->bid_collateral(bidder_name, debt_amount, debt_symbol, additional_collateral, broadcast);
 }
 
 signed_transaction wallet_api::whitelist_account(string authorizing_account,
@@ -4273,40 +4001,6 @@ signed_transaction wallet_api::upgrade_account( string name, bool broadcast )
    return my->upgrade_account(name,broadcast);
 }
 
-signed_transaction wallet_api::sell_asset(string seller_account,
-                                          string amount_to_sell,
-                                          string symbol_to_sell,
-                                          string min_to_receive,
-                                          string symbol_to_receive,
-                                          uint32_t expiration,
-                                          bool   fill_or_kill,
-                                          bool   broadcast)
-{
-   return my->sell_asset(seller_account, amount_to_sell, symbol_to_sell, min_to_receive,
-                         symbol_to_receive, expiration, fill_or_kill, broadcast);
-}
-
-signed_transaction wallet_api::borrow_asset(string seller_name, string amount_to_sell,
-                                                string asset_symbol, string amount_of_collateral, bool broadcast)
-{
-   FC_ASSERT(!is_locked());
-   return my->borrow_asset(seller_name, amount_to_sell, asset_symbol, amount_of_collateral, broadcast);
-}
-
-signed_transaction wallet_api::borrow_asset_ext( string seller_name, string amount_to_sell,
-                                                 string asset_symbol, string amount_of_collateral,
-                                                 call_order_update_operation::extensions_type extensions,
-                                                 bool broadcast)
-{
-   FC_ASSERT(!is_locked());
-   return my->borrow_asset_ext(seller_name, amount_to_sell, asset_symbol, amount_of_collateral, extensions, broadcast);
-}
-
-signed_transaction wallet_api::cancel_order(object_id_type order_id, bool broadcast)
-{
-   FC_ASSERT(!is_locked());
-   return my->cancel_order(order_id, broadcast);
-}
 
 memo_data wallet_api::sign_memo(string from, string to, string memo)
 {
@@ -4849,10 +4543,6 @@ vector<blind_receipt> wallet_api::blind_history( string key_or_account )
    return result;
 }
 
-order_book wallet_api::get_order_book( const string& base, const string& quote, unsigned limit )
-{
-   return( my->_remote_db->get_order_book( base, quote, limit ) );
-}
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )
    : signed_block( block )

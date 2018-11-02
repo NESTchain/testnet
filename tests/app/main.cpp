@@ -29,7 +29,6 @@
 #include <graphene/utilities/tempdir.hpp>
 
 #include <graphene/account_history/account_history_plugin.hpp>
-#include <graphene/market_history/market_history_plugin.hpp>
 #include <graphene/witness/witness.hpp>
 #include <graphene/grouped_orders/grouped_orders_plugin.hpp>
 
@@ -59,7 +58,6 @@ BOOST_AUTO_TEST_CASE( two_node_network )
 
       graphene::app::application app1;
       app1.register_plugin< graphene::account_history::account_history_plugin>();
-      app1.register_plugin< graphene::market_history::market_history_plugin >();
       app1.register_plugin< graphene::witness_plugin::witness_plugin >();
       app1.register_plugin< graphene::grouped_orders::grouped_orders_plugin>();
       app1.startup_plugins();
@@ -77,7 +75,6 @@ BOOST_AUTO_TEST_CASE( two_node_network )
       fc::temp_directory app2_dir( graphene::utilities::temp_directory_path() );
       graphene::app::application app2;
       app2.register_plugin<account_history::account_history_plugin>();
-      app2.register_plugin< graphene::market_history::market_history_plugin >();
       app2.register_plugin< graphene::witness_plugin::witness_plugin >();
       app2.register_plugin< graphene::grouped_orders::grouped_orders_plugin>();
       app2.startup_plugins();
