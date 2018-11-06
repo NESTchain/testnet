@@ -1,3 +1,4 @@
+#include <fc/smart_ref_impl.hpp>
 #include <graphene/chain/wasm_interface.hpp>
 #include <graphene/chain/apply_context.hpp>
 #include <graphene/chain/transaction_context.hpp>
