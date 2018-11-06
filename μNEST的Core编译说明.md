@@ -4,9 +4,9 @@
 
 
 
-目前只支持在Linux上编译。
+目前只支持在Linux、macOS上编译。
 
-## Ubuntu 16.04 LTS (64-bit)
+## Ubuntu 16.04/18.04 LTS (64-bit)
 
 ### 安装Clang 4.0
 
@@ -64,7 +64,7 @@ sudo make install
 
 ```
 cd ~ && git clone https://github.com/NESTchain/testnet.git
-cd testnet && git checkout develop
+cd testnet && git checkout XXX （其中XXX是要编译的分支的名称，比如master或develop等）
 git submodule update --init --recursive
 
 export WASM_ROOT=~/opt/wasm
@@ -78,7 +78,62 @@ cmake -DWASM_ROOT=${WASM_ROOT} -DOPENSSL_ROOT_DIR=/usr/include/openssl \
 make -j4
 ```
 
+## macOS
 
+### 安装XCode
+
+在macOS的App Store中安装。参考：<https://guide.macports.org/#installing.xcode>。
+
+如果XCode的命令行工具无法正常运行，请登录https://developer.apple.com/download/more下载XCode命令行工具的安装包重新安装。
+
+### 安装Homebrew包管理器
+
+在macOS的terminal窗口中执行如下命令安装。参考：[https://brew.sh/。](https://brew.sh/%E3%80%82)
+
+```
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+```
+
+### 安装依赖的包
+
+Boost只能用1.57~1.65.1版本，OpenSSL只能用1.0.1、1.0.2的版本。
+
+```
+brew update
+brew install boost@1.57 cmake git openssl autoconf automake berkeley-db libtool llvm@4 doxygen wget
+```
+
+安装后，在macOS的terminal窗口中执行命令ls -l /usr/local/opt/boost，能看到符号链接/usr/local/opt/boost具体指向的是Boost的哪个版本。符号链接/usr/local/opt/openssl也类似。如果这两个符号链接指向的不是我们所要求的版本，则可以在后续的CMake的命令行中不使用这两个符号链接，而是使用带具体版本号的的Boost、OpenSSL目录。
+
+### 安装带WASM组件的LLVM 4.0
+
+安装到~/opt/wasm目录下。
+
+```
+mkdir  ~/wasm-compiler && cd ~/wasm-compiler
+git clone --depth 1 --single-branch --branch release_40 https://github.com/llvm-mirror/llvm.git
+cd llvm/tools
+git clone --depth 1 --single-branch --branch release_40 https://github.com/llvm-mirror/clang.git
+cd .. && mkdir -p build && cd build
+cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DLLVM_TARGETS_TO_BUILD= -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly -DCMAKE_BUILD_TYPE=Release ..
+make -j4 install
+```
+
+### 编译μNEST Core的源码
+
+```
+cd ~ && git clone https://github.com/NESTchain/testnet.git
+cd testnet && git checkout XXX （其中XXX是要编译的分支的名称，比如master或develop等）
+git submodule update --init --recursive
+
+export WASM_ROOT=~/opt/wasm
+export C_COMPILER=/usr/local/Cellar/llvm@4/4.0.1/bin/clang-4.0
+export CXX_COMPILER=/usr/local/Cellar/llvm@4/4.0.1/bin/clang++
+
+mkdir -p build &&  cd build
+cmake -DWASM_ROOT=${WASM_ROOT} -DCMAKE_CXX_COMPILER="${CXX_COMPILER}" -DCMAKE_C_COMPILER="${C_COMPILER}" -DBOOST_ROOT=/usr/local/opt/boost@1.57 -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib -DCMAKE_BUILD_TYPE=Release ..
+make -j 4
+```
 
 ## 搭建testnet
 
