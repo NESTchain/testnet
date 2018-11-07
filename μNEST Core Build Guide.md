@@ -38,6 +38,8 @@ Close current terminal and reopen a new terminal, or CMake may report error "cou
 
 ### Install LLVM 4.0 with WASM feature
 
+Install it to ~/opt/wasm.
+
 ```
 mkdir  ~/wasm-compiler && cd ~/wasm-compiler
 git clone --depth 1 --single-branch --branch release_40 https://github.com/llvm-mirror/llvm.git
@@ -62,6 +64,23 @@ make
 sudo make install
 ```
 
+### Install Boost 1.67
+
+Install it to ~/opt/boost。Boost version >= 1.67.
+
+```
+sudo ln -s /usr/bin/clang-4.0   /usr/bin/clang
+sudo ln -s /usr/bin/clang++-4.0 /usr/bin/clang++
+
+export BOOST_ROOT=~/opt/boost
+
+cd ~ && wget https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.gz -O  boost_1_67_0.tar.gz
+tar -zxvf boost_1_67_0.tar.gz && cd boost_1_67_0 && chmod +x bootstrap.sh
+./bootstrap.sh --with-toolset=clang --prefix=${BOOST_ROOT}
+./b2 -j 4 stage release
+./b2 install --prefix=${BOOST_ROOT}
+```
+
 ### Build μNEST Core
 
 ```
@@ -70,6 +89,7 @@ cd testnet && git checkout XXX （XXX is desired branch name，e.g. master or de
 git submodule update --init --recursive
 
 export WASM_ROOT=~/opt/wasm
+export BOOST_ROOT=~/opt/boost
 export C_COMPILER=clang-4.0
 export CXX_COMPILER=clang++-4.0
 

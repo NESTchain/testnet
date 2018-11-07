@@ -36,6 +36,8 @@ sudo ln -sfT /opt/cmake/bin/cmake /usr/local/bin/cmake
 
 ### 安装带WASM组件的LLVM 4.0
 
+安装到~/opt/wasm。
+
 ```
 mkdir  ~/wasm-compiler && cd ~/wasm-compiler
 git clone --depth 1 --single-branch --branch release_40 https://github.com/llvm-mirror/llvm.git
@@ -60,6 +62,23 @@ make
 sudo make install
 ```
 
+### 安装Boost 1.67
+
+安装到~/opt/boost。Boost版本不能低于1.67。
+
+```
+sudo ln -s /usr/bin/clang-4.0   /usr/bin/clang
+sudo ln -s /usr/bin/clang++-4.0 /usr/bin/clang++
+
+export BOOST_ROOT=~/opt/boost
+
+cd ~ && wget https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.gz -O  boost_1_67_0.tar.gz
+tar -zxvf boost_1_67_0.tar.gz && cd boost_1_67_0 && chmod +x bootstrap.sh
+./bootstrap.sh --with-toolset=clang --prefix=${BOOST_ROOT}
+./b2 -j 4 stage release
+./b2 install --prefix=${BOOST_ROOT}
+```
+
 ### 编译μNEST的Core
 
 ```
@@ -68,13 +87,14 @@ cd testnet && git checkout XXX （其中XXX是要编译的分支的名称，比�
 git submodule update --init --recursive
 
 export WASM_ROOT=~/opt/wasm
+export BOOST_ROOT=~/opt/boost
 export C_COMPILER=clang-4.0
 export CXX_COMPILER=clang++-4.0
 
 mkdir -p build &&  cd build
 cmake -DWASM_ROOT=${WASM_ROOT} -DOPENSSL_ROOT_DIR=/usr/include/openssl \
      -DCMAKE_CXX_COMPILER="${CXX_COMPILER}" -DCMAKE_C_COMPILER="${C_COMPILER}" \
-     -DOPENSSL_INCLUDE_DIR=/usr/include/openssl -DOPENSSL_LIBRARIES=/usr/lib/openssh -DCMAKE_BUILD_TYPE=Release ..
+     -DOPENSSL_INCLUDE_DIR=/usr/include/openssl -DOPENSSL_LIBRARIES=/usr/lib/openssh -DBOOST_ROOT=${BOOST_ROOT} -DCMAKE_BUILD_TYPE=Release ..
 make -j4
 ```
 
