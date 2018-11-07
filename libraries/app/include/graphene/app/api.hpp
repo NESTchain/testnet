@@ -92,19 +92,19 @@ namespace graphene { namespace app {
    /**
     * @brief summary data of a group of limit orders
     */
-   struct limit_order_group
-   {
-      limit_order_group( const std::pair<limit_order_group_key,limit_order_group_data>& p )
-         :  min_price( p.first.min_price ),
-            max_price( p.second.max_price ),
-            total_for_sale( p.second.total_for_sale )
-            {}
-      limit_order_group() {}
-
-      price         min_price; ///< possible lowest price in the group
-      price         max_price; ///< possible highest price in the group
-      share_type    total_for_sale; ///< total amount of asset for sale, asset id is min_price.base.asset_id
-   };
+//   struct limit_order_group
+//   {
+//      limit_order_group( const std::pair<limit_order_group_key,limit_order_group_data>& p )
+//         :  min_price( p.first.min_price ),
+//            max_price( p.second.max_price ),
+//            total_for_sale( p.second.total_for_sale )
+//            {}
+//      limit_order_group() {}
+//
+//      price         min_price; ///< possible lowest price in the group
+//      price         max_price; ///< possible highest price in the group
+//      share_type    total_for_sale; ///< total amount of asset for sale, asset id is min_price.base.asset_id
+//   };
    
    /**
     * @brief The history_api class implements the RPC API for account history
@@ -451,8 +451,8 @@ FC_REFLECT( graphene::app::verify_range_proof_rewind_result,
         (success)(min_val)(max_val)(value_out)(blind_out)(message_out) )
 FC_REFLECT( graphene::app::history_operation_detail,
             (total_count)(operation_history_objs) )
-FC_REFLECT( graphene::app::limit_order_group,
-            (min_price)(max_price)(total_for_sale) )
+//FC_REFLECT( graphene::app::limit_order_group,
+//            (min_price)(max_price)(total_for_sale) )
 //FC_REFLECT_TYPENAME( fc::ecc::compact_signature );
 //FC_REFLECT_TYPENAME( fc::ecc::commitment_type );
 

@@ -88,9 +88,9 @@ namespace graphene { namespace chain {
          /// @return true if this is a market-issued asset; false otherwise.
          bool is_market_issued()const { return bitasset_data_id.valid(); }
          /// @return true if users may request force-settlement of this market-issued asset; false otherwise
-         bool can_force_settle()const { return !(options.flags & disable_force_settle); }
+//         bool can_force_settle()const { return !(options.flags & disable_force_settle); }
          /// @return true if the issuer of this market-issued asset may globally settle the asset; false otherwise
-         bool can_global_settle()const { return options.issuer_permissions & global_settle; }
+//         bool can_global_settle()const { return options.issuer_permissions & global_settle; }
          /// @return true if this asset charges a fee for the issuer on market operations; false otherwise
          bool charges_market_fees()const { return options.flags & charge_market_fee; }
          /// @return true if this asset may only be transferred to/from the issuer or market orders
@@ -134,15 +134,15 @@ namespace graphene { namespace chain {
 
          asset_id_type get_id()const { return id; }
 
-         void validate()const
-         {
-            // UIAs may not be prediction markets, have force settlement, or global settlements
-            if( !is_market_issued() )
-            {
-               FC_ASSERT(!(options.flags & disable_force_settle || options.flags & global_settle));
-               FC_ASSERT(!(options.issuer_permissions & disable_force_settle || options.issuer_permissions & global_settle));
-            }
-         }
+//         void validate()const
+//         {
+//            // UIAs may not be prediction markets, have force settlement, or global settlements
+//            if( !is_market_issued() )
+//            {
+//               FC_ASSERT(!(options.flags & disable_force_settle || options.flags & global_settle));
+//               FC_ASSERT(!(options.issuer_permissions & disable_force_settle || options.issuer_permissions & global_settle));
+//            }
+//         }
 
          template<class DB>
          const asset_bitasset_data_object& bitasset_data(const DB& db)const

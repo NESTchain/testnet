@@ -484,11 +484,11 @@ void database::update_expired_feeds()
                abdo.feed_cer_updated = false;
             }
          });
-         if( !b.current_feed.settlement_price.is_null() && !( b.current_feed == old_median_feed ) ) // `==` check is safe here
-         {
-            asset_ptr = &b.asset_id( *this );
-            check_call_orders( *asset_ptr, true, false, &b );
-         }
+//         if( !b.current_feed.settlement_price.is_null() && !( b.current_feed == old_median_feed ) ) // `==` check is safe here
+//         {
+//            asset_ptr = &b.asset_id( *this );
+//            check_call_orders( *asset_ptr, true, false, &b );
+//         }
       }
       // update CER
       if( update_cer )
@@ -506,13 +506,13 @@ void database::update_expired_feeds()
    } // for each asset whose feed is expired
 
    // process assets affected by bitshares-core issue 453 before hard fork 615
-   if( !after_hardfork_615 )
-   {
-      for( asset_id_type a : _issue_453_affected_assets )
-      {
-         check_call_orders( a(*this) );
-      }
-   }
+//   if( !after_hardfork_615 )
+//   {
+//      for( asset_id_type a : _issue_453_affected_assets )
+//      {
+//         check_call_orders( a(*this) );
+//      }
+//   }
 }
 
 void database::update_core_exchange_rates()

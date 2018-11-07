@@ -30,10 +30,10 @@
 
 #include "../common/database_fixture.hpp"
 
-using namespace graphene::chain;
-using namespace graphene::chain::test;
+//using namespace graphene::chain;
+//using namespace graphene::chain::test;
 
-BOOST_FIXTURE_TEST_SUITE( call_order_tests, database_fixture )
+//BOOST_FIXTURE_TEST_SUITE( call_order_tests, database_fixture )
 
 //BOOST_AUTO_TEST_CASE( call_order_object_test )
 //{ try {
@@ -345,4 +345,4 @@ BOOST_FIXTURE_TEST_SUITE( call_order_tests, database_fixture )
 //
 //} FC_CAPTURE_LOG_AND_RETHROW( (0) ) }
 
-BOOST_AUTO_TEST_SUITE_END()
+//BOOST_AUTO_TEST_SUITE_END()

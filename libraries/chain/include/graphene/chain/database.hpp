@@ -399,14 +399,14 @@ namespace graphene { namespace chain {
 //         bool fill_settle_order( const force_settlement_object& settle, const asset& pays, const asset& receives,
 //                                 const price& fill_price, const bool is_maker );
 
-         bool check_call_orders( const asset_object& mia, bool enable_black_swan = true, bool for_new_limit_order = false,
-                                 const asset_bitasset_data_object* bitasset_ptr = nullptr );
+//         bool check_call_orders( const asset_object& mia, bool enable_black_swan = true, bool for_new_limit_order = false,
+//                                 const asset_bitasset_data_object* bitasset_ptr = nullptr );
 
          // helpers to fill_order
-         void pay_order( const account_object& receiver, const asset& receives, const asset& pays );
+//         void pay_order( const account_object& receiver, const asset& receives, const asset& pays );
 
-         asset calculate_market_fee(const asset_object& recv_asset, const asset& trade_amount);
-         asset pay_market_fees( const asset_object& recv_asset, const asset& receives );
+//         asset calculate_market_fee(const asset_object& recv_asset, const asset& trade_amount);
+//         asset pay_market_fees( const asset_object& recv_asset, const asset& receives );
 
 
          ///@{

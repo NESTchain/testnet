@@ -269,7 +269,7 @@ void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
    const asset_object& a = o.asset_to_update(d);
    auto a_copy = a;
    a_copy.options = o.new_options;
-   a_copy.validate();
+//   a_copy.validate();
 
    if( o.new_issuer )
    {
@@ -730,8 +730,8 @@ void_result asset_update_bitasset_evaluator::do_apply(const asset_update_bitasse
          to_check_call_orders = update_bitasset_object_options( op, db_conn, bdo, asset_being_updated );
       });
 
-      if( to_check_call_orders )
-         db_conn.check_call_orders( asset_being_updated );
+//      if( to_check_call_orders )
+//         db_conn.check_call_orders( asset_being_updated );
 
       return void_result();
 

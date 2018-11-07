@@ -526,7 +526,8 @@ const asset_object& database_fixture::create_bitasset(
    if( issuer == GRAPHENE_WITNESS_ACCOUNT )
       flags |= witness_fed_asset;
    creator.common_options.issuer_permissions = flags;
-   creator.common_options.flags = flags & ~global_settle;
+//   creator.common_options.flags = flags & ~global_settle;
+   creator.common_options.flags = flags ;
    creator.common_options.core_exchange_rate = price(asset(1,asset_id_type(1)),asset(1));
    creator.bitasset_opts = bitasset_options();
    creator.bitasset_opts->short_backing_asset = backing_asset;
@@ -553,8 +554,10 @@ const asset_object& database_fixture::create_prediction_market(
    creator.common_options.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
    creator.precision = precision;
    creator.common_options.market_fee_percent = market_fee_percent;
-   creator.common_options.issuer_permissions = flags | global_settle;
-   creator.common_options.flags = flags & ~global_settle;
+//   creator.common_options.issuer_permissions = flags | global_settle;
+   creator.common_options.issuer_permissions = flags ;
+//   creator.common_options.flags = flags & ~global_settle;
+   creator.common_options.flags = flags ;
    if( issuer == GRAPHENE_WITNESS_ACCOUNT )
       creator.common_options.flags |= witness_fed_asset;
    creator.common_options.core_exchange_rate = price(asset(1,asset_id_type(1)),asset(1));

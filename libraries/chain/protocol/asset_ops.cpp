@@ -101,12 +101,14 @@ void  asset_create_operation::validate()const
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( is_valid_symbol(symbol) );
    common_options.validate();
-   if( common_options.issuer_permissions & (disable_force_settle|global_settle) )
+//   if( common_options.issuer_permissions & (disable_force_settle|global_settle) )
+   if( common_options.issuer_permissions)
       FC_ASSERT( bitasset_opts.valid() );
    if( is_prediction_market )
    {
       FC_ASSERT( bitasset_opts.valid(), "Cannot have a User-Issued Asset implement a prediction market." );
-      FC_ASSERT( common_options.issuer_permissions & global_settle );
+//      FC_ASSERT( common_options.issuer_permissions & global_settle );
+      FC_ASSERT( common_options.issuer_permissions  );
    }
    if( bitasset_opts ) bitasset_opts->validate();
 
@@ -219,7 +221,7 @@ void asset_options::validate()const
    // There must be no high bits in permissions whose meaning is not known.
    FC_ASSERT( !(issuer_permissions & ~ASSET_ISSUER_PERMISSION_MASK) );
    // The global_settle flag may never be set (this is a permission only)
-   FC_ASSERT( !(flags & global_settle) );
+//   FC_ASSERT( !(flags & global_settle) );
    // the witness_fed and committee_fed flags cannot be set simultaneously
    FC_ASSERT( (flags & (witness_fed_asset | committee_fed_asset)) != (witness_fed_asset | committee_fed_asset) );
    core_exchange_rate.validate();

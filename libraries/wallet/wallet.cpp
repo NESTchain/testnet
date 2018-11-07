@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017 Cryptonomex, Inc., and contributors.
- * Copyright (c) 2018- ¦ÌNEST Foundation, and contributors.
+ * Copyright (c) 2018- ï¿½ï¿½NEST Foundation, and contributors.
  *
  * The MIT License
  *
@@ -2528,7 +2528,8 @@ public:
    void dbg_make_uia(string creator, string symbol)
    {
       asset_options opts;
-      opts.flags &= ~(white_list | disable_force_settle | global_settle);
+//      opts.flags &= ~(white_list | disable_force_settle | global_settle);
+      opts.flags &= ~(white_list);
       opts.issuer_permissions = opts.flags;
       opts.core_exchange_rate = price(asset(1), asset(1,asset_id_type(1)));
       create_asset(get_account(creator).name, symbol, 2, opts, {}, true);

@@ -157,14 +157,16 @@ namespace graphene { namespace chain {
       white_list           = 0x02, /**< accounts must be whitelisted in order to hold this asset */
       override_authority   = 0x04, /**< issuer may transfer asset back to himself */
       transfer_restricted  = 0x08, /**< require the issuer to be one party to every transfer */
-      disable_force_settle = 0x10, /**< disable force settling */
-      global_settle        = 0x20, /**< allow the bitasset issuer to force a global settling -- this may be set in permissions, but not flags */
+//      disable_force_settle = 0x10, /**< disable force settling */
+//      global_settle        = 0x20, /**< allow the bitasset issuer to force a global settling -- this may be set in permissions, but not flags */
       disable_confidential = 0x40, /**< allow the asset to be used with confidential transactions */
       witness_fed_asset    = 0x80, /**< allow the asset to be fed by witnesses */
       committee_fed_asset  = 0x100 /**< allow the asset to be fed by the committee */
    };
-   const static uint32_t ASSET_ISSUER_PERMISSION_MASK = charge_market_fee|white_list|override_authority|transfer_restricted|disable_force_settle|global_settle|disable_confidential
-      |witness_fed_asset|committee_fed_asset;
+//   const static uint32_t ASSET_ISSUER_PERMISSION_MASK = charge_market_fee|white_list|override_authority|transfer_restricted|disable_force_settle|global_settle|disable_confidential
+//      |witness_fed_asset|committee_fed_asset;
+   const static uint32_t ASSET_ISSUER_PERMISSION_MASK = charge_market_fee|white_list|override_authority|transfer_restricted|disable_confidential
+                                                       |witness_fed_asset|committee_fed_asset;
    const static uint32_t UIA_ASSET_ISSUER_PERMISSION_MASK = charge_market_fee|white_list|override_authority|transfer_restricted|disable_confidential;
 
    enum reserved_spaces
@@ -232,7 +234,7 @@ namespace graphene { namespace chain {
       impl_special_authority_object_type,
       impl_buyback_object_type,
       impl_fba_accumulator_object_type,
-      impl_collateral_bid_object_type,
+//      impl_collateral_bid_object_type,
 
       impl_table_id_object_type,
       impl_key_value_object_type,
@@ -287,7 +289,7 @@ namespace graphene { namespace chain {
    class special_authority_object;
    class buyback_object;
    class fba_accumulator_object;
-   class collateral_bid_object;
+//   class collateral_bid_object;
 
    class table_id_object;
    class key_value_object;
@@ -311,7 +313,7 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_special_authority_object_type, special_authority_object >                special_authority_id_type;
    typedef object_id< implementation_ids, impl_buyback_object_type, buyback_object >                                    buyback_id_type;
    typedef object_id< implementation_ids, impl_fba_accumulator_object_type, fba_accumulator_object >                    fba_accumulator_id_type;
-   typedef object_id< implementation_ids, impl_collateral_bid_object_type, collateral_bid_object >                      collateral_bid_id_type;
+//   typedef object_id< implementation_ids, impl_collateral_bid_object_type, collateral_bid_object >                      collateral_bid_id_type;
 
    typedef object_id< implementation_ids, impl_table_id_object_type, table_id_object>        table_id_object_id_type;
    typedef object_id< implementation_ids, impl_key_value_object_type, key_value_object>      key_value_object_id_type;
@@ -443,7 +445,7 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_special_authority_object_type)
                  (impl_buyback_object_type)
                  (impl_fba_accumulator_object_type)
-                 (impl_collateral_bid_object_type)
+//                 (impl_collateral_bid_object_type)
 
                  (impl_table_id_object_type)
                  (impl_key_value_object_type)
@@ -482,7 +484,7 @@ FC_REFLECT_TYPENAME( graphene::chain::budget_record_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::special_authority_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::buyback_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::fba_accumulator_id_type )
-FC_REFLECT_TYPENAME( graphene::chain::collateral_bid_id_type )
+//FC_REFLECT_TYPENAME( graphene::chain::collateral_bid_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::table_id_object_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::key_value_object_id_type)
 
@@ -494,9 +496,9 @@ FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (white_list)
    (transfer_restricted)
    (override_authority)
-   (disable_force_settle)
-   (global_settle)
-   (disable_confidential)
+//   (disable_force_settle)
+//   (global_settle)
+//   (disable_confidential)
    (witness_fed_asset)
    (committee_fed_asset)
    )
