@@ -25,17 +25,18 @@
 #pragma once
 #include <graphene/chain/protocol/operations.hpp>
 #include <graphene/chain/evaluator.hpp>
-#include <graphene/chain/database.hpp>
 
 namespace graphene { namespace chain {
 
-   class pio_evaluator : public evaluator<pio_evaluator>
+   class pio_evaluator : public evaluator 
    {
       public:
          typedef pio_operation operation_type;
 
          void_result do_evaluate( const pio_operation& o );
          void_result do_apply( const pio_operation& o );
+
+         EVALUATOR_VIRTUAL_FUNCTIONS
    };
 
 } } // graphene::chain

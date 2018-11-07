@@ -31,7 +31,7 @@
 
 namespace graphene { namespace chain {
 
-   class asset_create_evaluator : public evaluator<asset_create_evaluator>
+   class asset_create_evaluator : public evaluator
    {
       public:
          typedef asset_create_operation operation_type;
@@ -45,9 +45,11 @@ namespace graphene { namespace chain {
          virtual void pay_fee() override;
       private:
          bool fee_is_odd;
+
+         EVALUATOR_VIRTUAL_FUNCTIONS
    };
 
-   class asset_issue_evaluator : public evaluator<asset_issue_evaluator>
+   class asset_issue_evaluator : public evaluator
    {
       public:
          typedef asset_issue_operation operation_type;
@@ -56,9 +58,11 @@ namespace graphene { namespace chain {
 
          const asset_dynamic_data_object* asset_dyn_data = nullptr;
          const account_object*            to_account = nullptr;
+
+         EVALUATOR_VIRTUAL_FUNCTIONS
    };
 
-   class asset_reserve_evaluator : public evaluator<asset_reserve_evaluator>
+   class asset_reserve_evaluator : public evaluator
    {
       public:
          typedef asset_reserve_operation operation_type;
@@ -67,10 +71,12 @@ namespace graphene { namespace chain {
 
          const asset_dynamic_data_object* asset_dyn_data = nullptr;
          const account_object*            from_account = nullptr;
+
+         EVALUATOR_VIRTUAL_FUNCTIONS
    };
 
 
-   class asset_update_evaluator : public evaluator<asset_update_evaluator>
+   class asset_update_evaluator : public evaluator
    {
       public:
          typedef asset_update_operation operation_type;
@@ -79,9 +85,11 @@ namespace graphene { namespace chain {
          void_result do_apply( const asset_update_operation& o );
 
          const asset_object* asset_to_update = nullptr;
+
+         EVALUATOR_VIRTUAL_FUNCTIONS
    };
 
-   class asset_update_issuer_evaluator : public evaluator<asset_update_issuer_evaluator>
+   class asset_update_issuer_evaluator : public evaluator
    {
       public:
          typedef asset_update_issuer_operation operation_type;
@@ -90,9 +98,11 @@ namespace graphene { namespace chain {
          void_result do_apply( const asset_update_issuer_operation& o );
 
          const asset_object* asset_to_update = nullptr;
+
+         EVALUATOR_VIRTUAL_FUNCTIONS
    };
 
-   class asset_update_bitasset_evaluator : public evaluator<asset_update_bitasset_evaluator>
+   class asset_update_bitasset_evaluator : public evaluator
    {
       public:
          typedef asset_update_bitasset_operation operation_type;
@@ -102,6 +112,8 @@ namespace graphene { namespace chain {
 
          const asset_bitasset_data_object* bitasset_to_update = nullptr;
          const asset_object* asset_to_update = nullptr;
+
+         EVALUATOR_VIRTUAL_FUNCTIONS
    };
 
 //   class asset_update_feed_producers_evaluator : public evaluator<asset_update_feed_producers_evaluator>
@@ -115,7 +127,7 @@ namespace graphene { namespace chain {
 //         const asset_bitasset_data_object* bitasset_to_update = nullptr;
 //   };
 
-   class asset_fund_fee_pool_evaluator : public evaluator<asset_fund_fee_pool_evaluator>
+   class asset_fund_fee_pool_evaluator : public evaluator
    {
       public:
          typedef asset_fund_fee_pool_operation operation_type;
@@ -124,6 +136,8 @@ namespace graphene { namespace chain {
          void_result do_apply(const asset_fund_fee_pool_operation& op);
 
          const asset_dynamic_data_object* asset_dyn_data = nullptr;
+
+         EVALUATOR_VIRTUAL_FUNCTIONS
    };
 
 //   class asset_global_settle_evaluator : public evaluator<asset_global_settle_evaluator>
@@ -158,22 +172,26 @@ namespace graphene { namespace chain {
 //         std::map<std::pair<asset_id_type,asset_id_type>,price_feed> median_feed_values;
 //   };
 
-   class asset_claim_fees_evaluator : public evaluator<asset_claim_fees_evaluator>
+   class asset_claim_fees_evaluator : public evaluator
    {
       public:
          typedef asset_claim_fees_operation operation_type;
 
          void_result do_evaluate( const asset_claim_fees_operation& o );
          void_result do_apply( const asset_claim_fees_operation& o );
+
+         EVALUATOR_VIRTUAL_FUNCTIONS
    };
 
-   class asset_claim_pool_evaluator : public evaluator<asset_claim_pool_evaluator>
+   class asset_claim_pool_evaluator : public evaluator
    {
       public:
          typedef asset_claim_pool_operation operation_type;
 
          void_result do_evaluate( const asset_claim_pool_operation& o );
          void_result do_apply( const asset_claim_pool_operation& o );
+
+         EVALUATOR_VIRTUAL_FUNCTIONS
    };
 
 } } // graphene::chain

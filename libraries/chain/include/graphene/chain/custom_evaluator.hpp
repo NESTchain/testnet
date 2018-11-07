@@ -28,12 +28,14 @@
 
 namespace graphene { namespace chain {
 
-   class custom_evaluator : public evaluator<custom_evaluator>
+   class custom_evaluator : public evaluator
    {
       public:
          typedef custom_operation operation_type;
 
          void_result do_evaluate( const custom_operation& o ){ return void_result(); }
          void_result do_apply( const custom_operation& o ){ return void_result(); }
+
+         EVALUATOR_VIRTUAL_FUNCTIONS
    };
 } }

@@ -28,27 +28,31 @@
 
 namespace graphene { namespace chain {
 
-class account_create_evaluator : public evaluator<account_create_evaluator>
+class account_create_evaluator : public evaluator 
 {
 public:
    typedef account_create_operation operation_type;
 
-   void_result do_evaluate( const account_create_operation& o );
-   object_id_type do_apply( const account_create_operation& o ) ;
+   EVALUATOR_VIRTUAL_FUNCTIONS
+
+   void_result do_evaluate( const operation_type& o );
+   object_id_type do_apply( const operation_type& o ) ;
 };
 
-class account_update_evaluator : public evaluator<account_update_evaluator>
+class account_update_evaluator : public evaluator
 {
 public:
    typedef account_update_operation operation_type;
 
-   void_result do_evaluate( const account_update_operation& o );
-   void_result do_apply( const account_update_operation& o );
+   void_result do_evaluate( const operation_type& o );
+   void_result do_apply( const operation_type& o );
 
    const account_object* acnt;
+
+   EVALUATOR_VIRTUAL_FUNCTIONS
 };
 
-class account_upgrade_evaluator : public evaluator<account_upgrade_evaluator>
+class account_upgrade_evaluator : public evaluator
 {
 public:
    typedef account_upgrade_operation operation_type;
@@ -57,18 +61,89 @@ public:
    void_result do_apply(const operation_type& o);
 
    const account_object* account;
+
+   EVALUATOR_VIRTUAL_FUNCTIONS
 };
 
-class account_whitelist_evaluator : public evaluator<account_whitelist_evaluator>
+class account_whitelist_evaluator : public evaluator
 {
 public:
    typedef account_whitelist_operation operation_type;
 
-   void_result do_evaluate( const account_whitelist_operation& o);
-   void_result do_apply( const account_whitelist_operation& o);
+   void_result do_evaluate( const operation_type& o);
+   void_result do_apply( const operation_type& o);
 
    const account_object* listed_account;
+
+   EVALUATOR_VIRTUAL_FUNCTIONS
 };
 
+class smart_contract_deploy_evaluator : public evaluator 
+{
+public:
+   typedef smart_contract_deploy_operation operation_type;
+
+   void_result do_evaluate(const operation_type& o);
+   object_id_type do_apply(const operation_type& o);
+
+   EVALUATOR_VIRTUAL_FUNCTIONS
+
+private:
+    string construct_smart_contract(const string &bytecode,
+                                    const contract_addr_type &contract_addr,
+                                    const string &construct_data,
+                                    const string &abi_json);
+};
+
+class smart_contract_activate_evaluator : public evaluator 
+{
+public:
+   typedef smart_contract_activate_operation operation_type;
+
+   void_result do_evaluate(const operation_type& o);
+   void_result do_apply(const operation_type& o);
+
+   EVALUATOR_VIRTUAL_FUNCTIONS
+};
+
+class smart_contract_deactivate_evaluator : public evaluator 
+{
+public:
+    typedef smart_contract_deactivate_operation operation_type;
+
+    void_result do_evaluate(const operation_type& o);
+    void_result do_apply(const operation_type& o);
+
+    EVALUATOR_VIRTUAL_FUNCTIONS
+};
+
+class smart_contract_kill_evaluator : public evaluator
+{
+public:
+    typedef smart_contract_kill_operation operation_type;
+
+    void_result do_evaluate(const operation_type& o);
+    void_result do_apply(const operation_type& o);
+
+    EVALUATOR_VIRTUAL_FUNCTIONS
+};
+
+class smart_contract_call_evaluator : public evaluator
+{
+public:
+   typedef smart_contract_call_operation operation_type;
+
+   void_result do_evaluate(const operation_type& o);
+   void_result do_apply(const operation_type& o);
+
+   EVALUATOR_VIRTUAL_FUNCTIONS
+
+private:
+    string call_smart_contract(const string &bytecode,
+                                 const contract_addr_type &contract_addr,
+                                 const string &call_data,
+                                 const string &abi_json,
+                                 const string &starting_state);
+};
 
 } } // graphene::chain

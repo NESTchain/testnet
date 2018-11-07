@@ -31,7 +31,7 @@
 
 namespace graphene { namespace chain {
 
-class balance_claim_evaluator : public evaluator<balance_claim_evaluator>
+class balance_claim_evaluator : public evaluator 
 {
 public:
    typedef balance_claim_operation operation_type;
@@ -45,6 +45,8 @@ public:
     * balance is claimed it frees up memory and it cannot be used to spam the network
     */
    void_result do_apply(const balance_claim_operation& op);
+
+   EVALUATOR_VIRTUAL_FUNCTIONS
 };
 
 } } // graphene::chain

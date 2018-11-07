@@ -24,16 +24,14 @@
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/evaluator.hpp>
 #include <graphene/chain/exceptions.hpp>
-#include <graphene/chain/hardfork.hpp>
 #include <graphene/chain/is_authorized_asset.hpp>
 #include <graphene/chain/transaction_evaluation_state.hpp>
 
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/fba_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
-#include <graphene/chain/market_evaluator.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/chain/protocol/operations.hpp>
 
 #include <fc/uint128.hpp>
 
@@ -61,11 +59,8 @@ database& generic_evaluator::db()const { return trx_state->db(); }
       fee_asset = &fee.asset_id(d);
       fee_asset_dyn_data = &fee_asset->dynamic_asset_data_id(d);
 
-      if( d.head_block_time() > HARDFORK_419_TIME )
-      {
-         FC_ASSERT( is_authorized_asset( d, *fee_paying_account, *fee_asset ), "Account ${acct} '${name}' attempted to pay fee by using asset ${a} '${sym}', which is unauthorized due to whitelist / blacklist",
-            ("acct", fee_paying_account->id)("name", fee_paying_account->name)("a", fee_asset->id)("sym", fee_asset->symbol) );
-      }
+      FC_ASSERT( is_authorized_asset( d, *fee_paying_account, *fee_asset ), "Account ${acct} '${name}' attempted to pay fee by using asset ${a} '${sym}', which is unauthorized due to whitelist / blacklist",
+        ("acct", fee_paying_account->id)("name", fee_paying_account->name)("a", fee_asset->id)("sym", fee_asset->symbol) );
 
       if( fee_from_account.asset_id == asset_id_type() )
          core_fee_paid = fee_from_account.amount;
@@ -126,6 +121,41 @@ database& generic_evaluator::db()const { return trx_state->db(); }
    void generic_evaluator::db_adjust_balance(const account_id_type& fee_payer, asset fee_from_account)
    {
      db().adjust_balance(fee_payer, fee_from_account);
+   }
+
+   operation_result evaluator::evaluate(const operation& o) 
+   {
+      account_id_type payer;
+      asset fee;
+      get_fee_payer(o, payer, fee);
+
+      prepare_fee(payer, fee);
+      if (!trx_state->skip_fee_schedule_check)
+      {
+         share_type required_fee = calculate_fee_for_operation(o);
+         GRAPHENE_ASSERT(core_fee_paid >= required_fee,
+            insufficient_fee,
+            "Insufficient Fee Paid",
+            ("core_fee_paid", core_fee_paid)("required", required_fee));
+      }
+
+      return do_evaluate(o);
+   }
+
+   operation_result evaluator::apply(const operation& o) 
+   {
+      account_id_type payer;
+      asset fee;
+      get_fee_payer(o, payer, fee);
+
+      convert_fee();
+      pay_fee();
+
+      auto result = do_apply(o);
+
+      db_adjust_balance(payer, -fee_from_account);
+
+      return result;
    }
 
 } }

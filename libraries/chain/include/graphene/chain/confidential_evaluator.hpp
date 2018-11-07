@@ -30,7 +30,7 @@ struct transfer_to_blind_operation;
 struct transfer_from_blind_operation;
 struct blind_transfer_operation;
 
-class transfer_to_blind_evaluator : public evaluator<transfer_to_blind_evaluator>
+class transfer_to_blind_evaluator : public evaluator
 {
    public:
       typedef transfer_to_blind_operation operation_type;
@@ -39,9 +39,11 @@ class transfer_to_blind_evaluator : public evaluator<transfer_to_blind_evaluator
       void_result do_apply( const transfer_to_blind_operation& o ) ;
 
       virtual void pay_fee() override;
+
+      EVALUATOR_VIRTUAL_FUNCTIONS
 };
 
-class transfer_from_blind_evaluator : public evaluator<transfer_from_blind_evaluator>
+class transfer_from_blind_evaluator : public evaluator
 {
    public:
       typedef transfer_from_blind_operation operation_type;
@@ -50,9 +52,11 @@ class transfer_from_blind_evaluator : public evaluator<transfer_from_blind_evalu
       void_result do_apply( const transfer_from_blind_operation& o ) ;
 
       virtual void pay_fee() override;
+
+      EVALUATOR_VIRTUAL_FUNCTIONS
 };
 
-class blind_transfer_evaluator : public evaluator<blind_transfer_evaluator>
+class blind_transfer_evaluator : public evaluator
 {
    public:
       typedef blind_transfer_operation operation_type;
@@ -61,6 +65,8 @@ class blind_transfer_evaluator : public evaluator<blind_transfer_evaluator>
       void_result do_apply( const blind_transfer_operation& o ) ;
 
       virtual void pay_fee() override;
+
+      EVALUATOR_VIRTUAL_FUNCTIONS
 };
 
 } } // namespace graphene::chain

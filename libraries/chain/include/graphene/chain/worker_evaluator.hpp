@@ -26,13 +26,15 @@
 
 namespace graphene { namespace chain {
 
-   class worker_create_evaluator : public evaluator<worker_create_evaluator>
+   class worker_create_evaluator : public evaluator
    {
       public:
          typedef worker_create_operation operation_type;
 
          void_result do_evaluate( const operation_type& o );
          object_id_type do_apply( const operation_type& o );
+
+         EVALUATOR_VIRTUAL_FUNCTIONS
    };
 
 } } // graphene::chain
