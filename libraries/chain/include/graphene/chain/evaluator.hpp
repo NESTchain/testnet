@@ -24,10 +24,10 @@
 #pragma once
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/transaction_evaluation_state.hpp>
-#include <graphene/chain/protocol/operations.hpp>
 
 namespace graphene { namespace chain {
 
+   typename operation;
    class database;
    struct signed_transaction;
    class generic_evaluator;
@@ -135,43 +135,22 @@ namespace graphene { namespace chain {
       }
    };
 
-   template<typename DerivedEvaluator>
+#define EVALUATOR_VIRTUAL_FUNCTIONS public: \
+  virtual void get_fee_payer(const operation& o, account_id_type& payer, asset& fee) const override { const auto& op = o.get<operation_type>(); payer = op.fee_payer(); fee = op.fee; } \
+  virtual int get_type()const override { return operation::tag<operation_type>::value; } \
+  virtual operation_result do_evaluate(const operation& o) { const auto& op = o.get<operation_type>(); return do_evaluate(op); } \
+  virtual operation_result do_apply(const operation& o)    { const auto& op = o.get<operation_type>(); return do_apply(op); }; 
+
    class evaluator : public generic_evaluator
    {
    public:
-      virtual int get_type()const override { return operation::tag<typename DerivedEvaluator::operation_type>::value; }
+      // virtual int get_type()const override { return operation::tag<typename DerivedEvaluator::operation_type>::value; }
 
-      virtual operation_result evaluate(const operation& o) final override
-      {
-         auto* eval = static_cast<DerivedEvaluator*>(this);
-         const auto& op = o.get<typename DerivedEvaluator::operation_type>();
+      virtual operation_result evaluate(const operation& o) final override;
+      virtual operation_result apply(const operation& o) final override;
 
-         prepare_fee(op.fee_payer(), op.fee);
-         if( !trx_state->skip_fee_schedule_check )
-         {
-            share_type required_fee = calculate_fee_for_operation(op);
-            GRAPHENE_ASSERT( core_fee_paid >= required_fee,
-                       insufficient_fee,
-                       "Insufficient Fee Paid",
-                       ("core_fee_paid",core_fee_paid)("required", required_fee) );
-         }
-
-         return eval->do_evaluate(op);
-      }
-
-      virtual operation_result apply(const operation& o) final override
-      {
-         auto* eval = static_cast<DerivedEvaluator*>(this);
-         const auto& op = o.get<typename DerivedEvaluator::operation_type>();
-
-         convert_fee();
-         pay_fee();
-
-         auto result = eval->do_apply(op);
-
-         db_adjust_balance(op.fee_payer(), -fee_from_account);
-
-         return result;
-      }
+      virtual void get_fee_payer(const operation& o, account_id_type& account_id, asset& fee) const = 0;
+      virtual operation_result do_evaluate(const operation& o) = 0;
+      virtual operation_result do_apply(const operation& o) = 0;
    };
 } }

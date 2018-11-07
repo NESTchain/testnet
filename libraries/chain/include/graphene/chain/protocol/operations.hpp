@@ -32,7 +32,6 @@
 #include <graphene/chain/protocol/committee_member.hpp>
 #include <graphene/chain/protocol/confidential.hpp>
 #include <graphene/chain/protocol/fba.hpp>
-#include <graphene/chain/protocol/market.hpp>
 #include <graphene/chain/protocol/proposal.hpp>
 #include <graphene/chain/protocol/transfer.hpp>
 #include <graphene/chain/protocol/pio.hpp>

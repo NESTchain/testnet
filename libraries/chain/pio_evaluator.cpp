@@ -24,9 +24,7 @@
  */
 #include <graphene/chain/pio_evaluator.hpp>
 #include <graphene/chain/account_object.hpp>
-#include <graphene/chain/exceptions.hpp>
-#include <graphene/chain/hardfork.hpp>
-#include <graphene/chain/is_authorized_asset.hpp>
+#include <graphene/chain/database.hpp>
 
 namespace graphene { namespace chain {
 void_result pio_evaluator::do_evaluate( const pio_operation& op )

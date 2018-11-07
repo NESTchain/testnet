@@ -28,31 +28,37 @@
 
 namespace graphene { namespace chain {
 
-   class transfer_evaluator : public evaluator<transfer_evaluator>
+   class transfer_evaluator : public evaluator 
    {
       public:
          typedef transfer_operation operation_type;
 
          void_result do_evaluate( const transfer_operation& o );
          void_result do_apply( const transfer_operation& o );
+
+         EVALUATOR_VIRTUAL_FUNCTIONS
    };
 
-   class override_transfer_evaluator : public evaluator<override_transfer_evaluator>
+   class override_transfer_evaluator : public evaluator
    {
       public:
          typedef override_transfer_operation operation_type;
 
          void_result do_evaluate( const override_transfer_operation& o );
          void_result do_apply( const override_transfer_operation& o );
+
+         EVALUATOR_VIRTUAL_FUNCTIONS
    };
 
-   class send_message_evaluator : public evaluator<send_message_evaluator>
+   class send_message_evaluator : public evaluator
    {
    public:
       typedef send_message_operation operation_type;
 
       void_result do_evaluate(const send_message_operation& o);
       void_result do_apply(const send_message_operation& o);
+
+      EVALUATOR_VIRTUAL_FUNCTIONS
    };
 
 } } // graphene::chain
