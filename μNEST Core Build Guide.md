@@ -96,9 +96,11 @@ export CXX_COMPILER=clang++-4.0
 mkdir -p build &&  cd build
 cmake -DWASM_ROOT=${WASM_ROOT} -DOPENSSL_ROOT_DIR=/usr/include/openssl \
      -DCMAKE_CXX_COMPILER="${CXX_COMPILER}" -DCMAKE_C_COMPILER="${C_COMPILER}" \
-     -DOPENSSL_INCLUDE_DIR=/usr/include/openssl -DOPENSSL_LIBRARIES=/usr/lib/openssh -DCMAKE_BUILD_TYPE=Release ..
+     -DOPENSSL_INCLUDE_DIR=/usr/include/openssl -DBOOST_ROOT=${BOOST_ROOT} -DCMAKE_BUILD_TYPE=Release ..
 make -j4
 ```
+
+
 
 ## macOS
 
@@ -106,7 +108,7 @@ make -j4
 
 Install in macOS App Store. Refer to <https://guide.macports.org/#installing.xcode>.
 
-If XCode command line tools can't run, please login to https://developer.apple.com/download/more to download XCode command line tools package and re-install it.
+If XCode command line tools(e.g. xcrun etc.) can't run, please login to https://developer.apple.com/download/more to download XCode command line tools *.dmg package and re-install it.
 
 ### Install Homebrew
 
@@ -118,14 +120,14 @@ Run the following command in macOS terminal. Refer to <https://brew.sh/>.
 
 ### Install Dependencies
 
-Supported Boost version: 1.57~1.65.1, supported OpenSSL version: 1.0.1, 1.0.2.
+Supported OpenSSL version: 1.0.1, 1.0.2.
 
 ```
 brew update
-brew install boost@1.57 cmake git openssl autoconf automake berkeley-db libtool llvm@4 doxygen wget
+brew install cmake git openssl autoconf automake berkeley-db libtool llvm@4 doxygen wget
 ```
 
-After installation, run "ls -la /usr/local/opt/boost" in macOS terminal  to see which Boost version  the symbolic link /usr/local/opt/boost is linked to. Do the same with "ls -la "/usr/local/opt/openssl". In case they are not the desired versions, we can specify desired Boost/OpenSSL directory with specific version number in the following CMake command line. For example,  we specify "/usr/local/opt/boost@1.57" instead of "/usr/local/opt/boost".
+After installation, run "ls -la /usr/local/opt/openssl" in macOS terminal  to see which OpenSSL version  the symbolic link /usr/local/opt/openssl is linked to. In case it is not the desired version, we can specify desired OpenSSL directory with specific version number in the following CMake command line. For example,  we specify "/usr/local/opt/openssl@1.0" instead of "/usr/local/opt/openssl".
 
 ### Install LLVM 4.0 with WASM feature
 
@@ -141,6 +143,20 @@ cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DLLVM_TARGETS_TO_BU
 make -j4 install
 ```
 
+### Install Boost 1.67
+
+Install it to ~/opt/boost.
+
+```
+export BOOST_ROOT=~/opt/boost
+
+cd ~ && wget https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.gz -O  boost_1_67_0.tar.gz
+tar -zxvf boost_1_67_0.tar.gz && cd boost_1_67_0 && chmod +x bootstrap.sh
+
+./bootstrap.sh --prefix=${BOOST_ROOT}
+./b2 -j 4 --buildtype=complete install --prefix=${BOOST_ROOT} toolset=clang cxxflags="-arch x86_64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/opt/llvm@4/include" linkflags="-arch x86_64  -L/usr/local/opt/llvm@4/lib"
+```
+
 ### Build μNEST Core
 
 ```
@@ -149,11 +165,17 @@ cd testnet && git checkout XXX （XXX is desired branch name，e.g. master or de
 git submodule update --init --recursive
 
 export WASM_ROOT=~/opt/wasm
+export BOOST_ROOT=~/opt/boost
 export C_COMPILER=/usr/local/Cellar/llvm@4/4.0.1/bin/clang-4.0
 export CXX_COMPILER=/usr/local/Cellar/llvm@4/4.0.1/bin/clang++
 
 mkdir -p build &&  cd build
-cmake -DWASM_ROOT=${WASM_ROOT} -DCMAKE_CXX_COMPILER="${CXX_COMPILER}" -DCMAKE_C_COMPILER="${C_COMPILER}" -DBOOST_ROOT=/usr/local/opt/boost@1.57 -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib -DCMAKE_BUILD_TYPE=Release ..
+cmake -DWASM_ROOT=${WASM_ROOT} -DCMAKE_CXX_COMPILER="${CXX_COMPILER}" \
+	-DCMAKE_C_COMPILER="${C_COMPILER}" -DBOOST_ROOT=${BOOST_ROOT} \
+	-DOPENSSL_ROOT_DIR=/usr/local/opt/openssl \
+	-DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include \
+	-DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib \
+	-DCMAKE_BUILD_TYPE=Release ..
 make -j 4
 ```
 

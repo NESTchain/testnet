@@ -94,9 +94,11 @@ export CXX_COMPILER=clang++-4.0
 mkdir -p build &&  cd build
 cmake -DWASM_ROOT=${WASM_ROOT} -DOPENSSL_ROOT_DIR=/usr/include/openssl \
      -DCMAKE_CXX_COMPILER="${CXX_COMPILER}" -DCMAKE_C_COMPILER="${C_COMPILER}" \
-     -DOPENSSL_INCLUDE_DIR=/usr/include/openssl -DOPENSSL_LIBRARIES=/usr/lib/openssh -DBOOST_ROOT=${BOOST_ROOT} -DCMAKE_BUILD_TYPE=Release ..
+     -DOPENSSL_INCLUDE_DIR=/usr/include/openssl -DBOOST_ROOT=${BOOST_ROOT} -DCMAKE_BUILD_TYPE=Release ..
 make -j4
 ```
+
+
 
 ## macOS
 
@@ -104,7 +106,7 @@ make -j4
 
 在macOS的App Store中安装。参考：<https://guide.macports.org/#installing.xcode>。
 
-如果XCode的命令行工具无法正常运行，请登录https://developer.apple.com/download/more下载XCode命令行工具的安装包重新安装。
+如果XCode的命令行工具比如xcrun无法正常运行，请登录https://developer.apple.com/download/more下载XCode命令行工具的dmg安装包重新安装。
 
 ### 安装Homebrew包管理器
 
@@ -116,14 +118,14 @@ make -j4
 
 ### 安装依赖的包
 
-Boost只能用1.57~1.65.1版本，OpenSSL只能用1.0.1、1.0.2的版本。
+OpenSSL版本为1.0.1, 1.0.2。
 
 ```
 brew update
-brew install boost@1.57 cmake git openssl autoconf automake berkeley-db libtool llvm@4 doxygen wget
+brew install cmake git openssl autoconf automake berkeley-db libtool llvm@4 doxygen wget
 ```
 
-安装后，在macOS的terminal窗口中执行命令ls -l /usr/local/opt/boost，能看到符号链接/usr/local/opt/boost具体指向的是Boost的哪个版本。符号链接/usr/local/opt/openssl也类似。如果这两个符号链接指向的不是我们所要求的版本，则可以在后续的CMake的命令行中不使用这两个符号链接，而是使用带具体版本号的的Boost、OpenSSL目录。
+安装后，在macOS的terminal窗口中执行命令ls -l /usr/local/opt/openssl，能看到符号链接/usr/local/opt/openssl具体指向的是OpenSSL的哪个版本。如果这个符号链接指向的不是我们所要求的版本，则可以在后续传给CMake的命令行中不使用这个符号链接，而是使用带具体版本号的的OpenSSL目录。
 
 ### 安装带WASM组件的LLVM 4.0
 
@@ -139,6 +141,20 @@ cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DLLVM_TARGETS_TO_BU
 make -j4 install
 ```
 
+### 安装Boost 1.67
+
+安装到~/opt/boost目录下。
+
+```
+export BOOST_ROOT=~/opt/boost
+
+cd ~ && wget https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.gz -O  boost_1_67_0.tar.gz
+tar -zxvf boost_1_67_0.tar.gz && cd boost_1_67_0 && chmod +x bootstrap.sh
+
+./bootstrap.sh --prefix=${BOOST_ROOT}
+./b2 -j 4 --buildtype=complete install --prefix=${BOOST_ROOT} toolset=clang cxxflags="-arch x86_64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/opt/llvm@4/include" linkflags="-arch x86_64  -L/usr/local/opt/llvm@4/lib"
+```
+
 ### 编译μNEST Core的源码
 
 ```
@@ -147,11 +163,16 @@ cd testnet && git checkout XXX （其中XXX是要编译的分支的名称，比�
 git submodule update --init --recursive
 
 export WASM_ROOT=~/opt/wasm
+export BOOST_ROOT=~/opt/boost
 export C_COMPILER=/usr/local/Cellar/llvm@4/4.0.1/bin/clang-4.0
 export CXX_COMPILER=/usr/local/Cellar/llvm@4/4.0.1/bin/clang++
 
 mkdir -p build &&  cd build
-cmake -DWASM_ROOT=${WASM_ROOT} -DCMAKE_CXX_COMPILER="${CXX_COMPILER}" -DCMAKE_C_COMPILER="${C_COMPILER}" -DBOOST_ROOT=/usr/local/opt/boost@1.57 -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib -DCMAKE_BUILD_TYPE=Release ..
+cmake -DWASM_ROOT=${WASM_ROOT} -DCMAKE_CXX_COMPILER="${CXX_COMPILER}" \
+	-DCMAKE_C_COMPILER="${C_COMPILER}"  -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl \
+	-DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include \
+	-DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib -DBOOST_ROOT=${BOOST_ROOT} \
+	-DCMAKE_BUILD_TYPE=Release ..
 make -j 4
 ```
 
