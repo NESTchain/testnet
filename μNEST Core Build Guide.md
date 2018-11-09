@@ -23,8 +23,6 @@ sudo apt-get install clang-4.0 lldb-4.0 libclang-4.0-dev
 sudo apt-get install libboost-all-dev python-dev libbz2-dev  libssl-dev openssl libreadline-dev autoconf libtool git ntp doxygen libc++-dev libcurl4-openssl-dev
 ```
 
-The Boost which ships with 了Ubuntu 16.04 LTS (64-bit) is version 1.58, so it is not necessary to build Boost by yourself and not necessary to set Boost environment variable.
-
 ### Install CMake 3.12
 
 ```
