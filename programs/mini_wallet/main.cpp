@@ -29,20 +29,14 @@
 
 #include <fc/io/json.hpp>
 #include <fc/io/stdio.hpp>
-#include <fc/network/http/server.hpp>
-#include <fc/network/http/websocket.hpp>
 #include <fc/rpc/cli.hpp>
-#include <fc/rpc/http_api.hpp>
 #include <fc/rpc/websocket_api.hpp>
-#include <fc/smart_ref_impl.hpp>
 
 #include <graphene/app/api.hpp>
 #include <graphene/chain/config.hpp>
 #include <graphene/egenesis/egenesis.hpp>
-#include <graphene/utilities/key_conversion.hpp>
-#include <graphene/wallet/wallet.hpp>
+#include <graphene/mini_wallet/wallet.hpp>
 
-#include <fc/interprocess/signals.hpp>
 #include <boost/program_options.hpp>
 
 #include <fc/log/console_appender.hpp>
@@ -80,8 +74,18 @@ int main( int argc, char** argv )
          ("server-rpc-password,p", bpo::value<string>(), "Server Password")
          ("daemon,d", "Run the wallet in daemon mode" )
          ("wallet-file,w", bpo::value<string>()->implicit_value("wallet.json"), "wallet to load")
+         ("wallet-password", bpo::value<string>(), "Password to lock the wallet file")
          ("chain-id", bpo::value<string>(), "chain ID to connect to")
          ("suggest-brain-key", "Suggest a safe brain key to use for creating your account")
+         ("create-account,c", bpo::value<string>(), "Create an account")
+         ("account-name", bpo::value<string>(), "Account name to create or for action")
+         ("hash-sha256", bpo::value<string>(), "Generate SHA 256 hash from a string")
+         ("generate-keys", bpo::value<int>()->implicit_value(3), "Generate a brain key and its derived public/private key pairs")
+         ("import-key", bpo::value<string>(), "Import a private key for an account")
+         ("send-message", bpo::value<string>(), "Send an SHA256 hash of message from an account to another")
+         ("from-account,f", bpo::value<string>(), "Account name to act and pay")
+         ("to-account,t", bpo::value<string>(), "Account name to receive")
+         // ("memo", bpo::value<string>(), "The content which SHA256 hash will be sent")
          ("version,v", "Display version information");
 
       bpo::variables_map options;
@@ -90,24 +94,53 @@ int main( int argc, char** argv )
 
       if( options.count("help") )
       {
-         std::cout << opts << "\n";
+         cout << opts << "\n";
          return 0;
       }
       if( options.count("version") )
       {
-         std::cout << "Version: " << graphene::utilities::git_revision_description << "\n";
-         std::cout << "SHA: " << graphene::utilities::git_revision_sha << "\n";
-         std::cout << "Timestamp: " << fc::get_approximate_relative_time_string(fc::time_point_sec(graphene::utilities::git_revision_unix_timestamp)) << "\n";
-         std::cout << "SSL: " << OPENSSL_VERSION_TEXT << "\n";
-         std::cout << "Boost: " << boost::replace_all_copy(std::string(BOOST_LIB_VERSION), "_", ".") << "\n";
-         std::cout << "Websocket++: " << websocketpp::major_version << "." << websocketpp::minor_version << "." << websocketpp::patch_version << "\n";
+         cout << "Version: " << git_revision_description << "\n";
+         cout << "SHA: " << git_revision_sha << "\n";
+         cout << "Timestamp: " << fc::get_approximate_relative_time_string(fc::time_point_sec(git_revision_unix_timestamp)) << "\n";
+         cout << "SSL: " << OPENSSL_VERSION_TEXT << "\n";
+         cout << "Boost: " << boost::replace_all_copy(std::string(BOOST_LIB_VERSION), "_", ".") << "\n";
+         cout << "Websocket++: " << websocketpp::major_version << "." << websocketpp::minor_version << "." << websocketpp::patch_version << "\n";
          return 0;
       }
       if( options.count("suggest-brain-key") )
       {
-         auto keyinfo = graphene::wallet::utility::suggest_brain_key();
+         auto keyinfo = utility::suggest_brain_key();
          string data = fc::json::to_pretty_string( keyinfo );
          std::cout << data.c_str() << std::endl;
+         return 0;
+      }
+      if(options.count("hash-sha256"))
+      {
+         string txt = options.at("hash-sha256").as<string>();
+         auto hash = fc::sha256::hash(txt); 
+         string data = hash.str();
+         cout << data.c_str() << endl;
+
+         return 0;
+      }
+      if (options.count("generate-keys"))
+      {
+         auto keyinfo = utility::suggest_brain_key();
+
+         int num = options.at("generate-keys").as<int>();
+         if (num < 3)
+            num = 3;
+         auto keys = utility::derive_owner_keys_from_brain_key(keyinfo.brain_priv_key, num);
+
+         cout << "brain_priv_key: \"" << keys[0].brain_priv_key << "\"" << endl;
+
+         for (int ii = 0; ii < num; ++ii)
+         {
+            const char* key_name = ii == 0 ? "      owner_key:\"" : "  wif_priv_key: \"";
+            cout << key_name << keys[ii].wif_priv_key << "\"" << endl;
+            cout << "       pub_key: \"" << std::string(keys[ii].pub_key) << "\"" << endl;
+            cout << endl;
+         } 
          return 0;
       }
 
@@ -197,20 +230,78 @@ int main( int argc, char** argv )
 
       boost::signals2::scoped_connection closed_connection(con->closed.connect([wallet_cli]{
          cerr << "Server has disconnected us.\n";
-         wallet_cli->stop();
+         exit(0);
       }));
-      (void)(closed_connection);
+
+      string pwd = "miuNESTcore";
+      if (options.count("wallet-password"))
+         pwd = options.at("wallet-password").as<string>();
 
       if( wapiptr->is_new() )
       {
-         std::cout << "Please use the set_password method to initialize a new wallet before continuing\n";
-         wallet_cli->set_prompt( "new >>> " );
+         wapiptr->set_password(pwd);
+         //std::cout << "Please use the set_password method to initialize a new wallet before continuing\n";
+         //wallet_cli->set_prompt( "new >>> " );
       } else
          wallet_cli->set_prompt( "locked >>> " );
 
       boost::signals2::scoped_connection locked_connection(wapiptr->lock_changed.connect([&](bool locked) {
          wallet_cli->set_prompt(  locked ? "locked >>> " : "unlocked >>> " );
       }));
+
+      wapiptr->unlock(pwd);
+
+      if (options.count("import-key"))
+      {
+         string privKey = options.at("import-key").as<string>();
+         string account = options.at("account-name").as<string>();
+         auto res = wapiptr->import_key(account, privKey);
+         const char* output = res ? "Import private key succeeded!" : "Import private key failed!";
+         cout << output << endl;
+         return 0;
+      }
+
+      if (options.count("create-account"))
+      {
+         if (wapiptr->is_locked())
+            return 1;
+
+         auto keyinfo = utility::suggest_brain_key();
+         string data = fc::json::to_pretty_string(keyinfo);
+         cout << data.c_str() << endl;
+
+         string name;
+         string registrar="nathan";
+         string referrer = "nathan";
+         if (options.count("create-account"))
+            name = options.at("create-account").as<string>();
+
+         signed_transaction trans = wapiptr->create_account_with_brain_key(keyinfo.brain_priv_key, name, registrar, referrer, true);
+         return 1;
+      }
+      if (options.count("send-message"))
+      {
+         if (wapiptr->is_locked())
+         {
+            cout << "Wallet is locked, please specifie wallet-password in the command line." << endl;
+            return 1;
+         }
+
+         string from;
+         string to;
+         string memo; 
+
+         if (options.count("from-account"))
+            from = options.at("from-account").as<string>();
+         if (options.count("to-account"))
+            to = options.at("to-account").as<string>();
+
+         memo = options.at("send-message").as<string>();
+         memo = fc::sha256::hash(memo).str();
+
+         signed_transaction trans = wapiptr->send_message(from, to, memo, true);
+         return 1;
+      }
 
       if( !options.count( "daemon" ) )
       {
@@ -220,18 +311,9 @@ int main( int argc, char** argv )
       }
       else
       {
-        fc::promise<int>::ptr exit_promise = new fc::promise<int>("UNIX Signal Handler");
-        fc::set_signal_handler([&exit_promise](int signal) {
-           exit_promise->set_value(signal);
-        }, SIGINT);
-
-        ilog( "Entering Daemon Mode, ^C to exit" );
-        exit_promise->wait();
       }
 
       wapi->save_wallet_file(wallet_file.generic_string());
-      locked_connection.disconnect();
-      closed_connection.disconnect();
    }
    catch ( const fc::exception& e )
    {
