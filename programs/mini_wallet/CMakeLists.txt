@@ -1,4 +1,6 @@
-add_executable( mini_wallet main.cpp )
+file(GLOB HEADERS "include/graphene/mini_wallet/*.hpp")
+
+add_executable( mini_wallet main.cpp wallet.cpp )
 if( UNIX AND NOT APPLE )
   set(rt_library rt )
 endif()
@@ -10,10 +12,12 @@ if( GPERFTOOLS_FOUND )
 endif()
 
 target_link_libraries( mini_wallet
-      PRIVATE graphene_app graphene_net graphene_chain graphene_egenesis_brief graphene_utilities graphene_wallet fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
+      PRIVATE graphene_app graphene_net graphene_chain graphene_egenesis_brief graphene_utilities fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
+target_include_directories( mini_wallet
+                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 if(MSVC)
-  set_source_files_properties( main.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
+  set_source_files_properties( main.cpp wallet.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)
 
 install( TARGETS
