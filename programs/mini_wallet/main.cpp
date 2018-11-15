@@ -67,12 +67,12 @@ int main( int argc, char** argv )
    try {
 
       boost::program_options::options_description opts;
-         opts.add_options()
+      opts.add_options()
          ("help,h", "Print this help message and exit.")
          ("server-rpc-endpoint,s", bpo::value<string>()->implicit_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
          ("server-rpc-user,u", bpo::value<string>(), "Server Username")
          ("server-rpc-password,p", bpo::value<string>(), "Server Password")
-         ("daemon,d", "Run the wallet in daemon mode" )
+         ("daemon,d", "Run the wallet in daemon mode")
          ("wallet-file,w", bpo::value<string>()->implicit_value("wallet.json"), "wallet to load")
          ("wallet-password", bpo::value<string>(), "Password to lock the wallet file")
          ("chain-id", bpo::value<string>(), "chain ID to connect to")
@@ -82,6 +82,7 @@ int main( int argc, char** argv )
          ("hash-sha256", bpo::value<string>(), "Generate SHA 256 hash from a string")
          ("generate-keys", bpo::value<int>()->implicit_value(3), "Generate a brain key and its derived public/private key pairs")
          ("import-key", bpo::value<string>(), "Import a private key for an account")
+         ("import-keys", bpo::value<string>()->composing(), "Import private keys for an account; i.e. import_keys [\"key1\",\"key2\"] ...")
          ("send-message", bpo::value<string>(), "Send an SHA256 hash of message from an account to another")
          ("from-account,f", bpo::value<string>(), "Account name to act and pay")
          ("to-account,t", bpo::value<string>(), "Account name to receive")
@@ -258,6 +259,19 @@ int main( int argc, char** argv )
          auto res = wapiptr->import_key(account, privKey);
          const char* output = res ? "Import private key succeeded!" : "Import private key failed!";
          cout << output << endl;
+         return 0;
+      }
+      if (options.count("import-keys"))
+      {
+         string keystr = options.at("import-keys").as<string>();
+         auto keys = fc::json::from_string(keystr).as<vector<string>>(2);
+         string account = options.at("account-name").as<string>();
+         for (auto k : keys)
+         {
+            auto res = wapiptr->import_key(account, k);
+            const char* output = res ? "successfully imported!" : "failed to import!";
+            cout << "Private key: \"" << k << "\" " << endl;
+         }
          return 0;
       }
 
