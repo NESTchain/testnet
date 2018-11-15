@@ -129,7 +129,7 @@ database& generic_evaluator::db()const { return trx_state->db(); }
       asset fee;
       get_fee_payer(o, payer, fee);
 
-      prepare_fee(payer, fee);
+      prepare_fee(payer, fee, o);
       if (!trx_state->skip_fee_schedule_check)
       {
          share_type required_fee = calculate_fee_for_operation(o);
@@ -141,6 +141,8 @@ database& generic_evaluator::db()const { return trx_state->db(); }
 
       return do_evaluate(o);
    }
+   
+   
 
    operation_result evaluator::apply(const operation& o) 
    {
