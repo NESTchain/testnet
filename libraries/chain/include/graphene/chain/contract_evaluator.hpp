@@ -22,16 +22,18 @@
 
 namespace graphene { namespace chain {
 
-class contract_deploy_evaluator : public evaluator<contract_deploy_evaluator>
+class contract_deploy_evaluator : public evaluator
 {
   public:
     typedef contract_deploy_operation operation_type;
 
     void_result do_evaluate(const contract_deploy_operation &op);
     object_id_type do_apply(const contract_deploy_operation &op, uint32_t billed_cpu_time_us = 0);
+
+    EVALUATOR_VIRTUAL_FUNCTIONS
 };
 
-class contract_call_evaluator : public evaluator<contract_call_evaluator>
+class contract_call_evaluator : public evaluator
 {
   public:
     typedef contract_call_operation operation_type;
@@ -43,5 +45,7 @@ class contract_call_evaluator : public evaluator<contract_call_evaluator>
 
     virtual void convert_fee() override;
     virtual void pay_fee() override;
+
+    EVALUATOR_VIRTUAL_FUNCTIONS
 };
 } }

@@ -42,14 +42,19 @@
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/mem_fun.hpp>
 #include <boost/multi_index/member.hpp>
+#include <boost/multi_index/random_access_index.hpp>
 #include <boost/multi_index/tag.hpp>
+#include <boost/multi_index/sequenced_index.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 
 #include <fc/git_revision.hpp>
 #include <fc/io/fstream.hpp>
 #include <fc/io/json.hpp>
+#include <fc/io/stdio.hpp>
 #include <fc/network/http/websocket.hpp>
+#include <fc/rpc/cli.hpp>
 #include <fc/rpc/websocket_api.hpp>
 #include <fc/crypto/aes.hpp>
 #include <fc/crypto/hex.hpp>
@@ -67,6 +72,9 @@
 #include <graphene/mini_wallet/wallet.hpp>
 #include <graphene/wallet/reflect_util.hpp>
 #include <graphene/debug_witness/debug_api.hpp>
+#include <graphene/chain/wast_to_wasm.hpp>
+#include <graphene/chain/abi_serializer.hpp>
+#include <graphene/chain/protocol/name.hpp>
 #include <fc/smart_ref_impl.hpp>
 
 #ifndef WIN32
@@ -100,20 +108,21 @@ public:
    std::string operator()(const void_result& x) const;
    std::string operator()(const object_id_type& oid);
    std::string operator()(const asset& a);
+   std::string operator()(const contract_receipt& r);
 };
 
 // BLOCK  TRX  OP  VOP
 struct operation_printer
 {
 private:
-   ostream& out;
+   std::ostream& out;
    const wallet_api_impl& wallet;
    operation_result result;
 
    std::string fee(const asset& a) const;
 
 public:
-   operation_printer( ostream& out, const wallet_api_impl& wallet, const operation_result& r = operation_result() )
+   operation_printer( std::ostream& out, const wallet_api_impl& wallet, const operation_result& r = operation_result() )
       : out(out),
         wallet(wallet),
         result(r)
@@ -470,7 +479,7 @@ public:
       while( fc::exists(dest_path) )
       {
          ++suffix;
-         dest_path = destination_filename + "-" + to_string( suffix ) + _wallet_filename_extension;
+         dest_path = destination_filename + "-" + fc::to_string( suffix ) + _wallet_filename_extension;
       }
       wlog( "backing up wallet ${src} to ${dest}",
             ("src", src_path)
@@ -606,22 +615,6 @@ public:
       }
    }
 
-//   contract_object get_contract(string contract_id) const
-//   {
-//      FC_ASSERT( contract_id.size() > 0 );
- //     //这里需要再加强，添加些一些判断条件。
- //     auto rec = _remote_db->find(contract_id);
- //     FC_ASSERT(rec);
- //     return *rec;
- //  }
-
-   contract_object get_contract(const contract_addr_type &contract_addr) const
-   {
-      auto rec = _remote_db->lookup_contracts({contract_addr}).front();
-      FC_ASSERT(rec);
-      return *rec;
-   }
-   
    account_id_type get_account_id(string account_name_or_id) const
    {
       return get_account(account_name_or_id).get_id();
@@ -1169,133 +1162,7 @@ public:
       } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account)(referrer_account) )
    }
 
-   //bytecode must be base64-encoded.
-   signed_transaction deploy_contract(string bytecode,
-                                      string abi_json,
-                                      string construct_data,
-                                      string contract_name,
-                                      bool broadcast /* = true */)
-    {
-        try
-        {
-            FC_ASSERT(!self.is_locked());
-            FC_ASSERT(fc::base64_decode(bytecode).size() > 0, "currently byte code must be base64-encoded");
 
-            smart_contract_deploy_operation deploy_op;      
-            deploy_op.owner          = get_wallet_account_id();
-            deploy_op.bytecode       = bytecode;
-            deploy_op.abi_json       = abi_json;
-            deploy_op.construct_data = construct_data;
-            deploy_op.contract_name  = contract_name;
-            deploy_op.contract_addr  = fc::sha256::hash(bytecode + abi_json + construct_data);
-
-            ilog("deploy smart contract, addr: ${a}, name: ${n}", ("a", deploy_op.contract_addr)("n", deploy_op.contract_name));
-
-            signed_transaction tx;
-            tx.operations.push_back(deploy_op);
-            set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-            tx.validate();
-            return sign_transaction(tx, broadcast);
-        } FC_CAPTURE_AND_RETHROW((bytecode)(abi_json)(construct_data)(contract_name)(broadcast))
-    }
-
-
-    signed_transaction upload_contract(string bytecode_file,
-                                       string abi_json,
-                                       string construct_data,
-                                       string contract_name,
-                                       bool broadcast /* = true */)
-    {
-        try
-        {
-            FC_ASSERT( !self.is_locked());
-
-            std::ifstream input(bytecode_file, std::fstream::binary | std::fstream::in);
-            std::vector<char> buffer((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
-            FC_ASSERT(!buffer.empty());
-
-            return deploy_contract(fc::base64_encode(&buffer[0], buffer.size()), 
-                                   abi_json, construct_data, contract_name, broadcast);
-        } FC_CAPTURE_AND_RETHROW((bytecode_file)(abi_json)(construct_data)(contract_name)(broadcast))
-    }
-
-    signed_transaction activate_contract(contract_addr_type contract_addr,
-                                         bool broadcast /* = true */)
-    {
-        try
-        {
-            FC_ASSERT( !self.is_locked() );
-
-            smart_contract_activate_operation activate_op;                       
-            activate_op.activator     = get_wallet_account_id();
-            activate_op.contract_addr = contract_addr;
-
-            signed_transaction tx;
-            tx.operations.push_back(activate_op);
-            set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-            tx.validate();
-            return sign_transaction(tx, broadcast);
-        } FC_CAPTURE_AND_RETHROW((contract_addr)(broadcast))
-    }
-
-    signed_transaction deactivate_contract(contract_addr_type contract_addr,
-                                           bool broadcast /* = true */)
-    {
-        try
-        {
-            FC_ASSERT(!self.is_locked());
-
-            smart_contract_deactivate_operation deactivate_op;
-            deactivate_op.deactivator   = get_wallet_account_id();
-            deactivate_op.contract_addr = contract_addr;
-
-            signed_transaction tx;
-            tx.operations.push_back(deactivate_op);
-            set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-            tx.validate();
-            return sign_transaction(tx, broadcast);
-        } FC_CAPTURE_AND_RETHROW((contract_addr)(broadcast))
-    }
-
-    signed_transaction kill_contract(contract_addr_type contract_addr,
-                                     bool broadcast /* = true */)
-    {
-        try
-        {
-            FC_ASSERT(!self.is_locked());
-
-            smart_contract_kill_operation kill_op;
-            kill_op.killer        = get_wallet_account_id();
-            kill_op.contract_addr = contract_addr;
-
-            signed_transaction tx;
-            tx.operations.push_back(kill_op);
-            set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-            tx.validate();
-            return sign_transaction(tx, broadcast);
-        } FC_CAPTURE_AND_RETHROW((contract_addr)(broadcast))
-    }
-
-    signed_transaction call_contract(contract_addr_type contract_addr,
-                                     string call_data,
-                                     bool broadcast = true)
-    {
-        try
-        {
-            FC_ASSERT( !self.is_locked() );
-
-            smart_contract_call_operation call_op;     
-            call_op.caller                    = get_wallet_account_id();
-            call_op.contract_addr             = contract_addr;
-            call_op.call_data                 = call_data;
-
-            signed_transaction tx;
-            tx.operations.push_back(call_op);
-            set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-            tx.validate();
-            return sign_transaction(tx, broadcast);
-        } FC_CAPTURE_AND_RETHROW((contract_addr)(call_data)(broadcast))
-    }
 
    signed_transaction create_asset(string issuer,
                                    string symbol,
@@ -2367,21 +2234,10 @@ public:
 
    void dbg_make_uia(string creator, string symbol)
    {
-      asset_options opts;
-      opts.flags &= ~(white_list | disable_force_settle | global_settle);
-      opts.issuer_permissions = opts.flags;
-      opts.core_exchange_rate = price(asset(1), asset(1,asset_id_type(1)));
-      create_asset(get_account(creator).name, symbol, 2, opts, {}, true);
    }
 
    void dbg_make_mia(string creator, string symbol)
    {
-      asset_options opts;
-      opts.flags &= ~white_list;
-      opts.issuer_permissions = opts.flags;
-      opts.core_exchange_rate = price(asset(1), asset(1,asset_id_type(1)));
-      bitasset_options bopts;
-      create_asset(get_account(creator).name, symbol, 2, opts, bopts, true);
    }
 
    void dbg_push_blocks( const std::string& src_filename, uint32_t count )
@@ -2686,6 +2542,11 @@ std::string operation_result_printer::operator()(const object_id_type& oid)
 std::string operation_result_printer::operator()(const asset& a)
 {
    return _wallet.get_asset(a.asset_id).amount_to_pretty_string(a);
+}
+
+std::string operation_result_printer::operator()(const contract_receipt& r)
+{
+  return std::string(r);
 }
 
 }}}
@@ -3030,11 +2891,6 @@ asset_bitasset_data_object wallet_api::get_bitasset_data(string asset_name_or_id
    auto asset = get_asset(asset_name_or_id);
    FC_ASSERT(asset.is_market_issued() && asset.bitasset_data_id);
    return my->get_object<asset_bitasset_data_object>(*asset.bitasset_data_id);
-}
-
-contract_object wallet_api::list_contract_addrs(const string &addr)
-{
-   return my->get_contract(addr);
 }
 
 account_id_type wallet_api::get_account_id(string account_name_or_id) const

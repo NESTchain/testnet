@@ -31,6 +31,7 @@
 #include <fc/io/stdio.hpp>
 #include <fc/rpc/cli.hpp>
 #include <fc/rpc/websocket_api.hpp>
+#include <fc/smart_ref_impl.hpp>
 
 #include <graphene/app/api.hpp>
 #include <graphene/chain/config.hpp>
@@ -270,7 +271,7 @@ int main( int argc, char** argv )
          {
             auto res = wapiptr->import_key(account, k);
             const char* output = res ? "successfully imported!" : "failed to import!";
-            cout << "Private key: \"" << k << "\" " << endl;
+            cout << "Private key: \"" << k << "\" " << output << endl;
          }
          return 0;
       }

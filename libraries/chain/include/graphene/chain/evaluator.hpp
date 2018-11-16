@@ -27,7 +27,6 @@
 
 namespace graphene { namespace chain {
 
-   typename operation;
    class database;
    struct signed_transaction;
    class generic_evaluator;
@@ -138,8 +137,8 @@ namespace graphene { namespace chain {
 #define EVALUATOR_VIRTUAL_FUNCTIONS public: \
   virtual void get_fee_payer(const operation& o, account_id_type& payer, asset& fee) const override { const auto& op = o.get<operation_type>(); payer = op.fee_payer(); fee = op.fee; } \
   virtual int get_type()const override { return operation::tag<operation_type>::value; } \
-  virtual operation_result do_evaluate(const operation& o) { const auto& op = o.get<operation_type>(); return do_evaluate(op); } \
-  virtual operation_result do_apply(const operation& o)    { const auto& op = o.get<operation_type>(); return do_apply(op); }; 
+  virtual operation_result do_evaluate(const operation& o) override { const auto& op = o.get<operation_type>(); return do_evaluate(op); } \
+  virtual operation_result do_apply(const operation& o) override   { const auto& op = o.get<operation_type>(); return do_apply(op); }; 
 
    class evaluator : public generic_evaluator
    {
