@@ -271,6 +271,27 @@ struct get_impacted_account_visitor
        _impacted.insert(op.account);
        _impacted.insert(op.contract_id);
    }
+   
+   void operator()(const htlc_prepare_operation& op)
+   {
+	   _impacted.insert(op.fee_payer());
+	   _impacted.insert(op.depositor);
+	   _impacted.insert(op.recipient);
+   }
+   void operator()(const htlc_redeem_operation& op)
+   {
+	   _impacted.insert(op.fee_payer());
+	   _impacted.insert(op.depositor);
+	   _impacted.insert(op.recipient);
+   }
+   void operator()(const htlc_extend_expiry_operation& op)
+   {
+	   _impacted.insert(op.fee_payer());
+   }
+   void operator()(const htlc_refund_operation& op)
+   {
+	   _impacted.insert(op.depositor);
+   }
 };
 
 void graphene::chain::operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

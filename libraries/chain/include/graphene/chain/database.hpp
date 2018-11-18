@@ -32,6 +32,7 @@
 #include <graphene/chain/genesis_state.hpp>
 #include <graphene/chain/evaluator.hpp>
 #include <graphene/chain/wasm_interface.hpp>
+#include <graphene/chain/htlc_object.hpp>
 
 #include <graphene/db/object_database.hpp>
 #include <graphene/db/object.hpp>
@@ -282,6 +283,13 @@ namespace graphene { namespace chain {
 
 
          uint32_t last_non_undoable_block_num() const;
+		 
+		 const htlc_object& get_htlc(htlc_id_type htlc_id) const;
+		 vector<htlc_id_type> get_htlc_for_account(account_id_type account_id) const;
+		 vector<htlc_id_type> get_expired_htlc() const;
+		 void refund_expired_htlc(htlc_id_type htlc_id);
+		 void refund_all_expired_htlc();
+		 
          //////////////////// db_init.cpp ////////////////////
 
          void initialize_evaluators();

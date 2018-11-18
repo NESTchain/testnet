@@ -144,6 +144,10 @@ public:
    std::string operator()(const account_update_operation& op)const;
    std::string operator()(const asset_create_operation& op)const;
    std::string operator()(const send_message_operation& op)const;
+   std::string operator()(const htlc_prepare_operation& op) const;
+   std::string operator()(const htlc_redeem_operation& op) const;
+   std::string operator()(const htlc_extend_expiry_operation& op) const;
+   std::string operator()(const htlc_refund_operation& op) const;
 };
 
 template<class T>
@@ -2524,6 +2528,81 @@ public:
       tx.validate();
       return sign_transaction(tx, broadcast);
    }
+   
+   signed_transaction htlc_prepare(const string& depositor, const string& recipient, const string& count, const string& symbol,
+	   const string& hash_algo, const string& preimage_hash, const string& preimage_length, fc::time_point_sec timeout_threshold)
+   { try {
+	   FC_ASSERT(!self.is_locked());
+
+	   fc::optional<asset_object> asset_obj = get_asset(symbol);
+	   FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", symbol));
+
+	   account_id_type depositor_id = get_account_id(depositor);
+	   account_id_type recipient_id = get_account_id(recipient);
+
+	   htlc_prepare_operation htlc_prepare_op;
+	   htlc_prepare_op.depositor = depositor_id;
+	   htlc_prepare_op.recipient = recipient_id;
+	   htlc_prepare_op.amount = asset_obj->amount_from_string(count);
+	   htlc_prepare_op.hash_algorithm = hash_algo;
+
+	   if ("sha256" == hash_algo || "sha1" == hash_algo || "ripemd160" == hash_algo)
+		   htlc_prepare_op.hash_algorithm = hash_algo;
+	   else
+		   FC_ASSERT(false, "Hash algorithm ${algo} is not supported", ("algo", hash_algo));
+
+	   htlc_prepare_op.preimage_hash = preimage_hash;
+	   htlc_prepare_op.preimage_length = static_cast<uint16_t>(std::stoi(preimage_length));
+	   htlc_prepare_op.timeout_threshold = timeout_threshold;
+
+	   signed_transaction tx;
+	   tx.operations.push_back(htlc_prepare_op);
+	   set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+	   tx.validate();
+
+	   return sign_transaction(tx, true);
+   } FC_CAPTURE_AND_RETHROW( (depositor)(recipient)(count)(symbol)(hash_algo)(preimage_hash)(preimage_length)(timeout_threshold) ) }
+
+   signed_transaction htlc_redeem(const string& fee_paying_account, object_id_type htlc_id, const string& preimage)
+   { try {
+	   FC_ASSERT(!self.is_locked());
+
+	   account_id_type fee_paying_account_id = get_account_id(fee_paying_account);
+	   htlc_object htlc_obj = _remote_db->get_htlc(htlc_id);
+
+	   htlc_redeem_operation htlc_redeem_op;
+	   htlc_redeem_op.fee_paying_account = fee_paying_account_id;
+	   htlc_redeem_op.depositor = htlc_obj.depositor;
+	   htlc_redeem_op.recipient = htlc_obj.recipient;
+	   htlc_redeem_op.htlc_id = htlc_id;
+	   htlc_redeem_op.preimage = preimage;
+
+	   signed_transaction tx;
+	   tx.operations.push_back(htlc_redeem_op);
+	   set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+	   tx.validate();
+
+	   return sign_transaction(tx, true);
+   } FC_CAPTURE_AND_RETHROW((fee_paying_account)(htlc_id)(preimage)) }
+
+   signed_transaction htlc_extend_expiry(const string& depositor, object_id_type htlc_id, fc::time_point_sec timeout_threshold)
+   { try {
+	   FC_ASSERT(!self.is_locked());
+
+	   account_id_type depositor_id = get_account_id(depositor);
+
+	   htlc_extend_expiry_operation htlc_extend_op;
+	   htlc_extend_op.depositor = depositor_id;
+	   htlc_extend_op.htlc_id = htlc_id;
+	   htlc_extend_op.timeout_threshold = timeout_threshold;
+
+	   signed_transaction tx;
+	   tx.operations.push_back(htlc_extend_op);
+	   set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+	   tx.validate();
+
+	   return sign_transaction(tx, true);
+   } FC_CAPTURE_AND_RETHROW((depositor)(htlc_id)(timeout_threshold)) }
 
    void dbg_make_uia(string creator, string symbol)
    {
@@ -2851,6 +2930,36 @@ std::string operation_printer::operator()(const asset_create_operation& op) cons
       out << "User-Issue Asset ";
    out << "'" << op.symbol << "' with issuer " << wallet.get_account(op.issuer).name;
    return fee(op.fee);
+}
+
+std::string operation_printer::operator()(const htlc_prepare_operation& op) const
+{
+	out << "Create a HTLC of " << wallet.get_asset(op.amount.asset_id).amount_to_pretty_string(op.amount)
+		<< " from " << wallet.get_account(op.depositor).name << " to " << wallet.get_account(op.recipient).name
+		<< ", expiry time is " << op.timeout_threshold.to_iso_string();
+	return fee(op.fee);
+}
+
+std::string operation_printer::operator()(const htlc_redeem_operation& op) const
+{
+	out << "HTLC " << std::string(object_id_type(op.htlc_id)) << " has been redeemed by "
+		<< wallet.get_account(op.recipient).name << ", the preimage is " << op.preimage;
+	return fee(op.fee);
+}
+
+std::string operation_printer::operator()(const htlc_extend_expiry_operation& op) const
+{
+	out << wallet.get_account(op.depositor).name << " extends expiry of HTLC " << std::string(object_id_type(op.htlc_id))
+		<< " to " << op.timeout_threshold.to_iso_string();
+	return fee(op.fee);
+}
+
+std::string operation_printer::operator()(const htlc_refund_operation& op) const
+{
+	out << "HTLC " << std::string(object_id_type(op.htlc_id)) << " is expired, and the asset("
+		<< wallet.get_asset(op.amount.asset_id).amount_to_pretty_string(op.amount) << ") has been refunded to "
+		<< wallet.get_account(op.depositor).name;
+	return fee(op.fee);
 }
 
 std::string operation_result_printer::operator()(const void_result& x) const
@@ -4544,6 +4653,21 @@ vector<blind_receipt> wallet_api::blind_history( string key_or_account )
    return result;
 }
 
+signed_transaction wallet_api::htlc_prepare(const string& depositor, const string& recipient, const string& count, const string& symbol,
+	const string& hash_algo, const string& preimage_hash, const string& preimage_length, fc::time_point_sec timeout_threshold)
+{
+	return my->htlc_prepare(depositor, recipient, count, symbol, hash_algo, preimage_hash, preimage_length, timeout_threshold);
+}
+
+signed_transaction wallet_api::htlc_redeem(const string& fee_paying_account, object_id_type htlc_id, const string& preimage)
+{
+	return my->htlc_redeem(fee_paying_account, htlc_id, preimage);
+}
+
+signed_transaction wallet_api::htlc_extend_expiry(const string& depositor, object_id_type htlc_id, fc::time_point_sec timeout_threshold)
+{
+	return my->htlc_extend_expiry(depositor, htlc_id, timeout_threshold);
+}
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )
    : signed_block( block )

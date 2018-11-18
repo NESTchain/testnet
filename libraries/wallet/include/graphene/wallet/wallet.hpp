@@ -1672,6 +1672,13 @@ class wallet_api
          const approval_delta& delta,
          bool broadcast /* = false */
          );
+		 
+		 /** apis of htlc
+	   */
+	  signed_transaction htlc_prepare(const string& depositor, const string& recipient, const string& count, const string& symbol,
+		  const string& hash_algo, const string& preimage_hash, const string& preimage_length, fc::time_point_sec timeout_threshold);
+	  signed_transaction htlc_redeem(const string& fee_paying_account, object_id_type htlc_id, const string& preimage);
+	  signed_transaction htlc_extend_expiry(const string& depositor, object_id_type htlc_id, fc::time_point_sec timeout_threshold);
          
 //      order_book get_order_book( const string& base, const string& quote, unsigned limit = 50);
 
@@ -1901,4 +1908,7 @@ FC_API( graphene::wallet::wallet_api,
 //        (get_order_book)
         (quit)
         (send_message)
+		(htlc_prepare)
+		(htlc_redeem)
+		(htlc_extend_expiry)
       )

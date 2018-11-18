@@ -127,4 +127,54 @@ const witness_schedule_object& database::get_witness_schedule_object()const
    return *_p_witness_schedule_obj;
 }
 
+const htlc_object& database::get_htlc(htlc_id_type htlc_id) const
+{
+	auto& index = get_index_type<htlc_index>().indices().get<by_id>();
+	auto iter = index.find(htlc_id);
+	FC_ASSERT(iter != index.end(), "Can not find htlc object for htlc_id ${h}", ("h", htlc_id));
+	return *iter;
+}
+
+vector<htlc_id_type> database::get_htlc_for_account(account_id_type account_id) const
+{
+	vector<htlc_id_type> vec;
+	auto& index = get_index_type<htlc_index>().indices().get<by_id>();
+	std::for_each(index.begin(), index.end(), [&](const htlc_object& obj)
+	{
+		if (obj.depositor == account_id)
+			vec.push_back(obj.id);
+	});
+	return vec;
+}
+
+vector<htlc_id_type> database::get_expired_htlc() const
+{
+	vector<htlc_id_type> vec;
+	auto& index = get_index_type<htlc_index>().indices().get<by_id>();
+	std::for_each(index.begin(), index.end(), [&](const htlc_object& obj)
+	{
+		if (fc::time_point::now() > obj.expiration)
+			vec.push_back(obj.id);
+	});
+	return vec;
+}
+
+void database::refund_expired_htlc(htlc_id_type htlc_id)
+{
+	auto& index = get_index_type<htlc_index>().indices().get<by_id>();
+	auto iter = index.find(htlc_id);
+	if (iter != index.end())
+	{
+		adjust_balance(iter->depositor, iter->amount);
+		remove(htlc_id);
+	}
+}
+
+void database::refund_all_expired_htlc()
+{
+	vector<htlc_id_type> vec = get_expired_htlc();
+	for (const auto& htlc_id : vec)
+		refund_expired_htlc(htlc_id);
+}
+
 } }

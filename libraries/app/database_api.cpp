@@ -149,6 +149,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Withdrawals
       vector<withdraw_permission_object> get_withdraw_permissions_by_giver(const std::string account_id_or_name, withdraw_permission_id_type start, uint32_t limit)const;
       vector<withdraw_permission_object> get_withdraw_permissions_by_recipient(const std::string account_id_or_name, withdraw_permission_id_type start, uint32_t limit)const;
+	  
+	  htlc_object get_htlc(htlc_id_type htlc_id);
 
    //private:
       static string price_to_string( const price& _price, const asset_object& _base, const asset_object& _quote );
@@ -1693,6 +1695,16 @@ vector<withdraw_permission_object> database_api_impl::get_withdraw_permissions_b
       ++withdraw_itr;
    }
    return result;
+}
+
+htlc_object database_api::get_htlc(htlc_id_type htlc_id)
+{
+	return my->get_htlc(htlc_id);
+}
+
+htlc_object database_api_impl::get_htlc(htlc_id_type htlc_id)
+{
+	return _db.get_htlc(htlc_id);
 }
 
 //////////////////////////////////////////////////////////////////////

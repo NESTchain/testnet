@@ -722,6 +722,8 @@ class database_api
        *  @return Withdraw permission objects for the account
        */
       vector<withdraw_permission_object> get_withdraw_permissions_by_recipient(const std::string account_id_or_name, withdraw_permission_id_type start, uint32_t limit)const;
+	  
+	  htlc_object get_htlc(htlc_id_type htlc_id);
 
    private:
       std::shared_ptr< database_api_impl > my;
@@ -824,5 +826,8 @@ FC_API(graphene::app::database_api,
    // Withdrawals
    (get_withdraw_permissions_by_giver)
    (get_withdraw_permissions_by_recipient)
+   
+   // HTLC
+   (get_htlc)
 
 )

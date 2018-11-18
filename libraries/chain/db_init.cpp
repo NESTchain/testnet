@@ -47,6 +47,7 @@
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/witness_schedule_object.hpp>
 #include <graphene/chain/worker_object.hpp>
+#include <graphene/chain/htlc_object.hpp>
 
 #include <graphene/chain/contract_table_objects.hpp>
 
@@ -66,6 +67,7 @@
 #include <graphene/chain/worker_evaluator.hpp>
 #include <graphene/chain/pio_evaluator.hpp>
 #include <graphene/chain/contract_evaluator.hpp>
+#include <graphene/chain/htlc_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -184,6 +186,11 @@ void database::initialize_evaluators()
    
    register_evaluator<contract_deploy_evaluator>();
    register_evaluator<contract_call_evaluator>();
+   
+   register_evaluator<htlc_prepare_evaluator>();
+   register_evaluator<htlc_redeem_evaluator>();
+   register_evaluator<htlc_extend_expiry_evaluator>();
+   register_evaluator<htlc_refund_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -235,6 +242,8 @@ void database::initialize_indexes()
    add_index< primary_index< table_id_multi_index> >();
    add_index< primary_index< key_value_index> >();
    add_index< primary_index< index64_index> >();
+   
+   add_index< primary_index< htlc_index > >();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)

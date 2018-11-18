@@ -336,6 +336,35 @@ block_production_condition::block_production_condition_enum witness_plugin::mayb
       db.push_transaction(trx);
       p2p_node().broadcast(graphene::net::trx_message(trx));
    }
+   
+   // check whether there is any htlc expired
+   auto expired_htlc_vec = db.get_expired_htlc();
+   if (!expired_htlc_vec.empty())
+   {
+	   fc::ecc::private_key nathan_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
+	   chain::account_id_type nathan_account =
+		   db.get_index_type<chain::account_index>().indices().get<chain::by_name>().find("nathan")->id;
+
+	   chain::signed_transaction tx;
+
+	   for (const auto& htlc_id : expired_htlc_vec)
+	   {
+		   auto htlc_obj = db.get_htlc(htlc_id);
+
+		   chain::htlc_refund_operation refund_op;
+		   refund_op.depositor = htlc_obj.depositor;
+		   refund_op.nathan_account = nathan_account;
+		   refund_op.amount = htlc_obj.amount;
+		   refund_op.htlc_id = htlc_id;
+		   tx.operations.push_back(refund_op);
+	   }
+
+	   tx.set_expiration(db.head_block_time() + fc::seconds(60));
+	   tx.sign(nathan_key, db.get_chain_id());
+	   tx.validate();
+	   db.push_transaction(tx);
+	   p2p_node().broadcast(graphene::net::trx_message(tx));
+   }
 
    return block_production_condition::produced;
 }

@@ -40,6 +40,7 @@
 #include <graphene/chain/protocol/witness.hpp>
 #include <graphene/chain/protocol/worker.hpp>
 #include <graphene/chain/protocol/contract_ops.hpp>
+#include <graphene/chain/protocol/htlc.hpp>
 
 namespace graphene { namespace chain {
 
@@ -103,7 +104,11 @@ namespace graphene { namespace chain {
             pio_operation,
             send_message_operation,
             asset_claim_pool_operation,
-            asset_update_issuer_operation
+            asset_update_issuer_operation,
+			htlc_prepare_operation,
+            htlc_redeem_operation,
+            htlc_extend_expiry_operation,
+			htlc_refund_operation
          > operation;
 
    /// @} // operations group
