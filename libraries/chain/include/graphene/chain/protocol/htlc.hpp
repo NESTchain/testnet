@@ -107,7 +107,7 @@ namespace graphene { namespace chain {
 
 	struct htlc_refund_operation : public base_operation
 	{
-		struct fee_parameters_type {};
+		struct fee_parameters_type { uint64_t fee = 0; };
 
 		asset           fee;
 		account_id_type depositor;
@@ -125,8 +125,8 @@ namespace graphene { namespace chain {
 
 FC_REFLECT(graphene::chain::htlc_prepare_operation::fee_parameters_type, (fee)(daily_fee))
 FC_REFLECT(graphene::chain::htlc_redeem_operation::fee_parameters_type, (fee)(kb_fee))
-FC_REFLECT(graphene::chain::htlc_extend_expiry_operation::fee_parameters_type, (daily_fee))
-FC_REFLECT(graphene::chain::htlc_refund_operation::fee_parameters_type)
+FC_REFLECT(graphene::chain::htlc_extend_expiry_operation::fee_parameters_type, (fee)(daily_fee))
+FC_REFLECT(graphene::chain::htlc_refund_operation::fee_parameters_type, (fee))
 
 FC_REFLECT(graphene::chain::htlc_prepare_operation, (fee)(depositor)(recipient)(amount)(hash_algorithm)(preimage_hash)(preimage_length)(timeout_threshold)(extensions))
 FC_REFLECT(graphene::chain::htlc_redeem_operation, (fee)(fee_paying_account)(depositor)(recipient)(htlc_id)(preimage)(extensions))

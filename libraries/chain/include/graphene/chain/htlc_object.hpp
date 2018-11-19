@@ -67,4 +67,5 @@ namespace graphene { namespace chain {
 
 } } // graphene::chain
 
-FC_REFLECT(graphene::chain::htlc_object, (depositor)(recipient)(amount)(expiration)(pending_fee)(hash_algorithm)(preimage_hash)(preimage_size)(preimage_tx_id))
+FC_REFLECT_DERIVED(graphene::chain::htlc_object, (graphene::db::object),
+                   (depositor)(recipient)(amount)(expiration)(pending_fee)(hash_algorithm)(preimage_hash)(preimage_size)(preimage_tx_id))
