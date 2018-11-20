@@ -461,6 +461,8 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (index_double_object_type)
                  (index_long_double_object_type)
 
+                 (impl_htlc_object_type)
+
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -492,6 +494,7 @@ FC_REFLECT_TYPENAME( graphene::chain::fba_accumulator_id_type )
 //FC_REFLECT_TYPENAME( graphene::chain::collateral_bid_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::table_id_object_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::key_value_object_id_type)
+FC_REFLECT_TYPENAME( graphene::chain::htlc_id_type)
 
 FC_REFLECT( graphene::chain::void_t, )
 FC_REFLECT(graphene::chain::vm_cpu_limit_t, (trx_cpu_limit)(block_cpu_limit))
