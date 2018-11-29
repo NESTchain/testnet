@@ -11,6 +11,7 @@ add_library( graphene_app
              util.cpp
              database_api.cpp
              plugin.cpp
+			 sync_ntp.cpp
              ${HEADERS}
              ${EGENESIS_HEADERS}
            )

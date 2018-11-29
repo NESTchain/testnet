@@ -439,6 +439,10 @@ void application_impl::startup()
    reset_p2p_node(_data_dir);
    reset_websocket_server();
    reset_websocket_tls_server();
+
+   // sync ntp server time
+   _sync_ntp_manager.startup();
+
 } FC_LOG_AND_RETHROW() }
 
 optional< api_access_info > application_impl::get_api_access_info(const string& username)const

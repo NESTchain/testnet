@@ -3,6 +3,7 @@
 #include <fc/network/http/websocket.hpp>
 #include <graphene/app/application.hpp>
 #include <graphene/app/api_access.hpp>
+#include <graphene/app/sync_ntp.hpp>
 #include <graphene/chain/genesis_state.hpp>
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/net/message.hpp>
@@ -189,6 +190,7 @@ class application_impl : public net::node_delegate
       std::shared_ptr<graphene::net::node>                  _p2p_network;
       std::shared_ptr<fc::http::websocket_server>      _websocket_server;
       std::shared_ptr<fc::http::websocket_tls_server>  _websocket_tls_server;
+	  sync_ntp_manager                                 _sync_ntp_manager;
 
       std::map<string, std::shared_ptr<abstract_plugin>> _active_plugins;
       std::map<string, std::shared_ptr<abstract_plugin>> _available_plugins;
