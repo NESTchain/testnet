@@ -9,63 +9,303 @@
 #include "contract_asset.hpp"
 
 namespace graphene {
+   /**
+    * @defgroup actioncppapi Action C++ API
+    * @ingroup actionapi
+    * @brief Defines type-safe C++ wrapers for querying action and sending action
+    *
+    * @note There are some methods from the @ref actioncapi that can be used directly from C++
+    *
+    * @{
+    */
 
+   /**
+    *
+    *  This method unpacks the current action at type T.
+    *
+    *  @brief Interpret the action body as type T.
+    *  @return Unpacked action data casted as T.
+    *
+    *  Example:
+    *
+    *  @code
+    *  struct dummy_action {
+    *    char a; //1
+    *    unsigned long long b; //8
+    *    int  c; //4
+    *
+    *    GRAPHENE_SERIALIZE( dummy_action, (a)(b)(c) )
+    *  };
+    *  dummy_action msg = unpack_action_data<dummy_action>();
+    *  @endcode
+    */
    template<typename T>
    T unpack_action_data() {
       constexpr size_t max_stack_buffer_size = 512;
       size_t size = action_data_size();
       const bool heap_allocation = max_stack_buffer_size < size;
-      char *buffer = (char *) (heap_allocation ? malloc(size) : alloca(size));
-      read_action_data(buffer, size);
+      char* buffer = (char*)( heap_allocation ? malloc(size) : alloca(size) );
+      read_action_data( buffer, size );
       auto res = unpack<T>( buffer, size );
-      // free allocated memory
-      if (heap_allocation) {
-          free(buffer);
+      // Free allocated memory 
+      if ( heap_allocation ) {
+         free(buffer);
       }
       return res;
    }
 
    /**
+    * Packed representation of a permission level (Authorization)
+    *
+    * @brief Packed representation of a permission level (Authorization)
+    */
+   struct permission_level {
+      /**
+       * Construct a new permission level object with actor name and permission name
+       *
+       * @brief Construct a new permission level object
+       * @param a - Name of the account who owns this authorization
+       * @param p - Name of the permission
+       */
+      permission_level( account_name a, permission_name p ):actor(a),permission(p){}
+
+      /**
+       * Default Constructor
+       *
+       * @brief Construct a new permission level object
+       */
+      permission_level(){}
+
+      /**
+       * Name of the account who owns this permission
+       *
+       * @brief Name of the account who owns this permission
+       */
+      account_name    actor;
+      /**
+       * Name of the permission
+       *
+       * @brief Name of the permission
+       */
+      permission_name permission;
+
+      /**
+       * Check equality of two permissions
+       *
+       * @brief Check equality of two permissions
+       * @param a - first permission to compare
+       * @param b - second permission to compare
+       * @return true if equal
+       * @return false if unequal
+       */
+      friend bool operator == ( const permission_level& a, const permission_level& b ) {
+         return std::tie( a.actor, a.permission ) == std::tie( b.actor, b.permission );
+      }
+
+      GRAPHENE_SERIALIZE( permission_level, (actor)(permission) )
+   };
+   /**
     * This is the packed representation of an action along with
     * meta-data about the authorization levels.
+    *
+    * @brief Packed representation of an action
     */
    struct action {
-      uint64_t                   account;
+      /**
+       * Name of the account the action is intended for
+       *
+       * @brief Name of the account the action is intended for
+       */
+      account_name               account;
+
+      /**
+       * Name of the action
+       *
+       * @brief Name of the action
+       */
       action_name                name;
+
+      /**
+       * List of permissions that authorize this action
+       *
+       * @brief List of permissions that authorize this action
+       */
+      vector<permission_level>   authorization;
+
+      /**
+       * Payload data
+       *
+       * @brief Payload data
+       */
       bytes                      data;
 
+      /**
+       * Default Constructor
+       *
+       * @brief Construct a new action object
+       */
       action() = default;
 
       /**
-       *  @tparam T - the type of the action data
-       *  @param a - name of the contract account
-       *  @param n - name of the action
-       *  @param value - will be serialized via pack into data
+       * Construct a new action object with the given permission and action struct
+       *
+       * @brief Construct a new action object with the given permission and action struct
+       * @tparam Action  - Type of action struct
+       * @param auth - The permission that authorizes this action
+       * @param value - The action struct that will be serialized via pack into data
        */
-      template <typename T>
-      action(uint64_t a, action_name n, T &&value)
-          : account(a)
-          , name(n)
-          , data(pack(std::forward<T>(value)))
-      {
+      template<typename Action>
+      action( vector<permission_level>&& auth, const Action& value ) {
+         account       = Action::get_account();
+         name          = Action::get_name();
+         authorization = move(auth);
+         data          = pack(value);
       }
 
-      GRAPHENE_SERIALIZE(action, (account)(name)(data))
-
-      /*
-      void send() const
-      {
-          auto serialize = pack(*this);
-          ::send_inline(serialize.data(), serialize.size());
+      /**
+       * Construct a new action object with the given list of permissions and action struct
+       *
+       * @brief Construct a new action object with the given list of permissions and action struct
+       * @tparam Action  - Type of action struct
+       * @param auth - The list of permissions that authorizes this action
+       * @param value - The action struct that will be serialized via pack into data
+       */
+      template<typename Action>
+      action( const permission_level& auth, const Action& value )
+      :authorization(1,auth) {
+         account       = Action::get_account();
+         name          = Action::get_name();
+         data          = pack(value);
       }
-      */
 
+
+      /**
+       * Construct a new action object with the given action struct
+       *
+       * @brief Construct a new action object with the given action struct
+       * @tparam Action  - Type of action struct
+       * @param value - The action struct that will be serialized via pack into data
+       */
+      template<typename Action>
+      action( const Action& value ) {
+         account       = Action::get_account();
+         name          = Action::get_name();
+         data          = pack(value);
+      }
+
+      /**
+       * Construct a new action object with the given action struct
+       *
+       * @brief Construct a new action object with the given permission, action receiver, action name, action struct
+       * @tparam T  - Type of action struct, must be serializable by `pack(...)`
+       * @param auth - The permissions that authorizes this action
+       * @param a -  The name of the account this action is intended for (action receiver)
+       * @param n - The name of the action
+       * @param value - The action struct that will be serialized via pack into data
+       */
+      template<typename T>
+      action( const permission_level& auth, account_name a, action_name n, T&& value )
+      :account(a), name(n), authorization(1,auth), data(pack(std::forward<T>(value))) {}
+
+      /**
+       * Construct a new action object with the given action struct
+       *
+       * @brief Construct a new action object with the given list of permissions, action receiver, action name, action struct
+       * @tparam T  - Type of action struct, must be serializable by `pack(...)`
+       * @param auths - The list of permissions that authorize this action
+       * @param a -  The name of the account this action is intended for (action receiver)
+       * @param n - The name of the action
+       * @param value - The action struct that will be serialized via pack into data
+       */
+      template<typename T>
+      action( vector<permission_level> auths, account_name a, action_name n, T&& value )
+      :account(a), name(n), authorization(std::move(auths)), data(pack(std::forward<T>(value))) {}
+
+      GRAPHENE_SERIALIZE( action, (account)(name)(authorization)(data) )
+
+      /**
+       * Send the action as inline action
+       *
+       * @brief Send the action as inline action
+       */
+      void send() const {
+         auto serialize = pack(*this);
+         ::send_inline(serialize.data(), serialize.size());
+      }
+
+
+      /**
+       * Retrieve the unpacked data as T
+       *
+       * @brief Retrieve the unpacked data as T
+       * @tparam T expected type of data
+       * @return the action data
+       */
+      template<typename T>
+      T data_as() {
+         graphene_assert( name == T::get_name(), "Invalid name" );
+         graphene_assert( account == T::get_account(), "Invalid account" );
+         return unpack<T>( &data[0], data.size() );
+      }
+
+   };
+
+   /**
+    * Base class to derive a new defined action from so it can take advantage of the dispatcher
+    *
+    * @brief Base class to derive a new defined action from
+    * @tparam Account - The account this action is intended for
+    * @tparam Name - The name of the action
+    */
+   template<uint64_t Account, uint64_t Name>
+   struct action_meta {
+      /**
+       * Get the account this action is intended for
+       *
+       * @brief Get the account this action is intended for
+       * @return uint64_t The account this action is intended for
+       */
+      static uint64_t get_account() { return Account; }
+      /**
+       * Get the name of this action
+       *
+       * @brief Get the name of this action
+       * @return uint64_t Name of the action
+       */
+      static uint64_t get_name()  { return Name; }
+   };
+
+   ///@} actioncpp api
+
+   template<typename... Args>
+   void dispatch_inline( account_name code, action_name act,
+                         vector<permission_level> perms,
+                         std::tuple<Args...> args ) {
+      action( perms, code, act, std::move(args) ).send();
+   }
+
+
+   template<typename, uint64_t>
+   struct inline_dispatcher;
+
+
+   template<typename T, uint64_t Name, typename... Args>
+   struct inline_dispatcher<void(T::*)(Args...), Name> {
+      static void call(account_name code, const permission_level& perm, std::tuple<Args...> args) {
+         dispatch_inline(code, Name, vector<permission_level>(1, perm), std::move(args));
+      }
+      static void call(account_name code, vector<permission_level> perms, std::tuple<Args...> args) {
+         dispatch_inline(code, Name, std::move(perms), std::move(args));
+      }
    };
 
 } // namespace graphene
 
+#define INLINE_ACTION_SENDER3( CONTRACT_CLASS, FUNCTION_NAME, ACTION_NAME  )\
+::graphene::inline_dispatcher<decltype(&CONTRACT_CLASS::FUNCTION_NAME), ACTION_NAME>::call
+
 #define INLINE_ACTION_SENDER2( CONTRACT_CLASS, NAME )\
-INLINE_ACTION_SENDER3( CONTRACT_CLASS, NAME, ::graphene::string_to_name(#NAME) )
+INLINE_ACTION_SENDER3( CONTRACT_CLASS, NAME, ::graphenelib::string_to_name(#NAME) )
 
 #define INLINE_ACTION_SENDER(...) BOOST_PP_OVERLOAD(INLINE_ACTION_SENDER,__VA_ARGS__)(__VA_ARGS__)
 
