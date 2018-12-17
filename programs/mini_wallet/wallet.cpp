@@ -3047,7 +3047,7 @@ asset_id_type wallet_api::get_asset_id(string asset_symbol_or_id) const
    return my->get_asset_id(asset_symbol_or_id);
 }
 
-bool wallet_api::import_key(string account_name_or_id, string wif_key)
+bool wallet_api::import_key(string account_name_or_id,fc::string wif_key)
 {
    FC_ASSERT(!is_locked());
    // backup wallet
