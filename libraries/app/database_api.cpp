@@ -79,6 +79,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       fc::variant_object get_config()const;
       chain_id_type get_chain_id()const;
       dynamic_global_property_object get_dynamic_global_properties()const;
+      fc::variant_object get_dynamic_properties()const;
 
       // Keys
       vector<vector<account_id_type>> get_key_references( vector<public_key_type> key )const;
@@ -544,6 +545,22 @@ fc::variant_object database_api::get_config()const
 fc::variant_object database_api_impl::get_config()const
 {
    return graphene::chain::get_config();
+}
+
+fc::variant_object database_api::get_dynamic_properties()const
+{
+   return my->get_dynamic_properties();
+}
+
+fc::variant_object database_api_impl::get_dynamic_properties()const
+{
+   fc::mutable_variant_object result;
+   dynamic_global_property_object dgpo = _db.get(dynamic_global_property_id_type());
+   result["head_block_number"] = fc::variant(dgpo.head_block_number);
+   result["head_block_id"] = dgpo.head_block_id.str();
+   result["now"] = fc::variant(time(nullptr));
+
+   return result;
 }
 
 chain_id_type database_api::get_chain_id()const

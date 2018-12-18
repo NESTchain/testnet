@@ -245,6 +245,11 @@ class database_api
        */
       dynamic_global_property_object get_dynamic_global_properties()const;
 
+      /**
+      * @brief Retrieve dynamic properties that are only necessary for miuWallet
+      */
+      fc::variant_object get_dynamic_properties()const;
+
       //////////
       // Keys //
       //////////
@@ -758,6 +763,7 @@ FC_API(graphene::app::database_api,
    (get_config)
    (get_chain_id)
    (get_dynamic_global_properties)
+   (get_dynamic_properties)
 
    // Keys
    (get_key_references)
