@@ -104,7 +104,7 @@ graphene::db::bdb_env::bdb_env()
 	//
 	_dbenv = new DbEnv((u_int32_t)0);
 	_dbenv->set_error_stream(&std::cerr);
-	_dbenv->set_errpfx("BTS::BDB");
+	_dbenv->set_errpfx("NEST::BDB");
 
 }
 
