@@ -53,9 +53,9 @@
 #define GRAPHENE_MAX_UNDO_HISTORY 30000 //TODO: tmp change to 30000, TOOD: change back to 10000
 
 #define GRAPHENE_MIN_BLOCK_SIZE_LIMIT (GRAPHENE_MIN_TRANSACTION_SIZE_LIMIT*5) // 5 transactions per block
-#define GRAPHENE_BLOCKCHAIN_PRECISION                           uint64_t( 100000 )
+#define GRAPHENE_BLOCKCHAIN_PRECISION                           uint64_t( 1000000 )
 
-#define GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS                    5
+#define GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS                    6
 /** percentage fields are fixed point with a denominator of 10,000 */
 #define GRAPHENE_100_PERCENT                                    10000
 #define GRAPHENE_1_PERCENT                                      (GRAPHENE_100_PERCENT/100)
