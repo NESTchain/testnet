@@ -199,9 +199,6 @@ namespace graphene { namespace app {
 						    server_trans_frac + offset;
 		int64_t ntp_sec = server_trans_sec + carry_bit - 2208988800L;
 
-		//time_t recv_secs = recv_data.recv_ts_sec - 2208988800L;
-		//tm* ntp_time = localtime(&recv_secs);
-
 		tm* ntp_time = localtime(&ntp_sec);
 
 		std::stringstream ss;
@@ -217,37 +214,20 @@ namespace graphene { namespace app {
 			("index", index)("server", ntp_server_ip)("ntp_time", recv_data.trans_ts_sec)
 			("offset", offset)
 			("local_time", ss.str()));
-		
+
 		// update system time
 #ifdef linux
-		//tm _tm;
-		//_tm.tm_year = ntp_time->tm_year;
-		//_tm.tm_mon = ntp_time->tm_mon;
-		//_tm.tm_mday = ntp_time->tm_mday;
-		//_tm.tm_hour = ntp_time->tm_hour;
-		//_tm.tm_min = ntp_time->tm_min;
-		//_tm.tm_sec = ntp_time->tm_sec;
-
 		timeval tv;
-		//tv.tv_sec = mktime(ntp_time);
 		tv.tv_sec  = ntp_sec;
 		tv.tv_usec = ntp_frac;
 
-		int error_code = settimeofday(&tv, (struct timezone*)0);
-		switch (error_code)
+		if (settimeofday(&tv, (struct timezone*)0) < 0)
 		{
-		case EFAULT:
-			elog("One of tv or tz pointed outside the accessible address space");
-			break;
-		case EINVAL:
-			elog("Timezone (or something else) is invalid");
-			break;
-		case EPERM:
-			elog("The process has insufficient privilege to set system time");
-			break;
-		default:
-			ilog("Update system time successfully");
-			break;
+            elog("Update system time failed, the process may have insufficient privilege to set system time");
+		}
+		else
+		{
+            ilog("Update system time successfully");
 		}
 #endif // linux
 	}
