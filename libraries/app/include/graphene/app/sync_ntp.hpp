@@ -39,6 +39,7 @@ namespace graphene { namespace app {
 
 	private:
 		void sync_ntp_loop();
+		void sync_ntp_run();
 		void get_ntp_server_time();
 		unsigned int endian_swap(unsigned int data);
 		size_t get_random_index();
