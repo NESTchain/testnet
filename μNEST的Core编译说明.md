@@ -8,13 +8,16 @@
 
 ## Ubuntu 16.04/18.04 LTS (64-bit)
 
-### 安装Clang 4.0
+### 安装Clang 7.0.1+
+
+从Clang官网http://releases.llvm.org下载预编译的对应平台的包，解压，然后将解压后得到的bin目录设置到PATH环境变量的最前面。
 
 ```
-sudo apt-get install software-properties-common
-sudo apt-add-repository "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-4.0 main"
-sudo apt-get update
-sudo apt-get install clang-4.0 lldb-4.0 libclang-4.0-dev
+cd ~
+wget http://releases.llvm.org/7.0.1/clang+llvm-7.0.1-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+tar zxvf clang+llvm-7.0.1-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+
+export PATH=~/clang+llvm-7.0.1-x86_64-linux-gnu-ubuntu-16.04/bin:$PATH
 ```
 
 ### 安装依赖的包
@@ -34,17 +37,17 @@ sudo ln -sfT /opt/cmake/bin/cmake /usr/local/bin/cmake
 
 装完后，需要关掉并重新打开Ubuntu终端窗口，否则CMake可能会报错“could not find CMAKE_ROOT”。
 
-### 安装带WASM组件的LLVM 4.0
+### 安装带WASM组件的LLVM 7.0.1+
 
 安装到~/opt/wasm。
 
 ```
 mkdir  ~/wasm-compiler && cd ~/wasm-compiler
-git clone --depth 1 --single-branch --branch release_40 https://github.com/llvm-mirror/llvm.git
+git clone --depth 1 --single-branch --branch release_70 https://github.com/llvm-mirror/llvm.git
 cd llvm/tools
-git clone --depth 1 --single-branch --branch release_40 https://github.com/llvm-mirror/clang.git
+git clone --depth 1 --single-branch --branch release_70 https://github.com/llvm-mirror/clang.git
 cd .. && mkdir -p build && cd build
-cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DLLVM_TARGETS_TO_BUILD= -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly -DCMAKE_BUILD_TYPE=Release ..
+cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DLLVM_TARGETS_TO_BUILD= -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly -DCMAKE_BUILD_TYPE=Release ..
 make -j4 install
 ```
 
@@ -62,18 +65,15 @@ make
 sudo make install
 ```
 
-### 安装Boost 1.67
+### 安装Boost 1.69
 
-安装到~/opt/boost。Boost版本不能低于1.67。
+安装到~/opt/boost。Boost版本不能低于1.69。
 
 ```
-sudo ln -s /usr/bin/clang-4.0   /usr/bin/clang
-sudo ln -s /usr/bin/clang++-4.0 /usr/bin/clang++
-
 export BOOST_ROOT=~/opt/boost
 
-cd ~ && wget https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.gz -O  boost_1_67_0.tar.gz
-tar -zxvf boost_1_67_0.tar.gz && cd boost_1_67_0 && chmod +x bootstrap.sh
+cd ~ && wget https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.gz -O  boost_1_69_0.tar.gz
+tar -zxvf boost_1_69_0.tar.gz && cd boost_1_69_0 && chmod +x bootstrap.sh
 ./bootstrap.sh --with-toolset=clang --prefix=${BOOST_ROOT}
 ./b2 -j 4 stage release
 ./b2 install --prefix=${BOOST_ROOT}
@@ -85,13 +85,14 @@ tar -zxvf boost_1_67_0.tar.gz && cd boost_1_67_0 && chmod +x bootstrap.sh
 cd ~ && git clone https://github.com/NESTchain/testnet.git
 cd testnet && git checkout XXX （其中XXX是要编译的分支的名称，比如master或develop等）
 git submodule update --init --recursive
+cd contracts/musl/upstream && git checkout eosio
 
 export WASM_ROOT=~/opt/wasm
 export BOOST_ROOT=~/opt/boost
-export C_COMPILER=clang-4.0
-export CXX_COMPILER=clang++-4.0
+export C_COMPILER=clang
+export CXX_COMPILER=clang++
 
-mkdir -p build &&  cd build
+cd ~/testnet && mkdir -p build &&  cd build
 cmake -DWASM_ROOT=${WASM_ROOT} -DOPENSSL_ROOT_DIR=/usr/include/openssl \
      -DCMAKE_CXX_COMPILER="${CXX_COMPILER}" -DCMAKE_C_COMPILER="${C_COMPILER}" \
      -DOPENSSL_INCLUDE_DIR=/usr/include/openssl -DBOOST_ROOT=${BOOST_ROOT} -DCMAKE_BUILD_TYPE=Release ..
@@ -118,41 +119,43 @@ make -j4
 
 ### 安装依赖的包
 
-OpenSSL版本为1.0.1, 1.0.2。
+OpenSSL版本为1.0.1, 1.0.2。目前通过参数"llvm@7"下载到的LLVM版本为7.0.1，将其bin目录设置到PATH环境变量的最前面。
 
 ```
 brew update
-brew install cmake git openssl autoconf automake berkeley-db libtool llvm@4 doxygen wget
+brew install cmake git openssl autoconf automake berkeley-db libtool llvm@7 doxygen wget
+
+export PATH=/usr/local/Cellar/llvm/7.0.1/bin:$PATH
 ```
 
 安装后，在macOS的terminal窗口中执行命令ls -l /usr/local/opt/openssl，能看到符号链接/usr/local/opt/openssl具体指向的是OpenSSL的哪个版本。如果这个符号链接指向的不是我们所要求的版本，则可以在后续传给CMake的命令行中不使用这个符号链接，而是使用带具体版本号的的OpenSSL目录。
 
-### 安装带WASM组件的LLVM 4.0
+### 安装带WASM组件的LLVM 7.0.1+
 
 安装到~/opt/wasm目录下。
 
 ```
 mkdir  ~/wasm-compiler && cd ~/wasm-compiler
-git clone --depth 1 --single-branch --branch release_40 https://github.com/llvm-mirror/llvm.git
+git clone --depth 1 --single-branch --branch release_70 https://github.com/llvm-mirror/llvm.git
 cd llvm/tools
-git clone --depth 1 --single-branch --branch release_40 https://github.com/llvm-mirror/clang.git
+git clone --depth 1 --single-branch --branch release_70 https://github.com/llvm-mirror/clang.git
 cd .. && mkdir -p build && cd build
-cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DLLVM_TARGETS_TO_BUILD= -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly -DCMAKE_BUILD_TYPE=Release ..
+cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DLLVM_TARGETS_TO_BUILD= -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly -DCMAKE_BUILD_TYPE=Release ..
 make -j4 install
 ```
 
-### 安装Boost 1.67
+### 安装Boost 1.69
 
 安装到~/opt/boost目录下。
 
 ```
 export BOOST_ROOT=~/opt/boost
 
-cd ~ && wget https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.gz -O  boost_1_67_0.tar.gz
-tar -zxvf boost_1_67_0.tar.gz && cd boost_1_67_0 && chmod +x bootstrap.sh
+cd ~ && wget https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.gz -O  boost_1_69_0.tar.gz
+tar -zxvf boost_1_69_0.tar.gz && cd boost_1_69_0 && chmod +x bootstrap.sh
 
 ./bootstrap.sh --prefix=${BOOST_ROOT}
-./b2 -j 4 --buildtype=complete install --prefix=${BOOST_ROOT} toolset=clang cxxflags="-arch x86_64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/opt/llvm@4/include" linkflags="-arch x86_64  -L/usr/local/opt/llvm@4/lib"
+./b2 -j 4 --buildtype=complete install --prefix=${BOOST_ROOT} toolset=clang cxxflags="-arch x86_64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/opt/llvm@7/include" linkflags="-arch x86_64  -L/usr/local/opt/llvm@7/lib"
 ```
 
 ### 编译μNEST Core的源码
@@ -161,13 +164,14 @@ tar -zxvf boost_1_67_0.tar.gz && cd boost_1_67_0 && chmod +x bootstrap.sh
 cd ~ && git clone https://github.com/NESTchain/testnet.git
 cd testnet && git checkout XXX （其中XXX是要编译的分支的名称，比如master或develop等）
 git submodule update --init --recursive
+cd contracts/musl/upstream && git checkout eosio
 
 export WASM_ROOT=~/opt/wasm
 export BOOST_ROOT=~/opt/boost
-export C_COMPILER=/usr/local/Cellar/llvm@4/4.0.1/bin/clang-4.0
-export CXX_COMPILER=/usr/local/Cellar/llvm@4/4.0.1/bin/clang++
+export C_COMPILER=clang
+export CXX_COMPILER=clang++
 
-mkdir -p build &&  cd build
+cd ~/testnet && mkdir -p build &&  cd build
 cmake -DWASM_ROOT=${WASM_ROOT} -DCMAKE_CXX_COMPILER="${CXX_COMPILER}" \
 	-DCMAKE_C_COMPILER="${C_COMPILER}"  -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl \
 	-DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include \
