@@ -34,6 +34,8 @@
 
 #ifdef linux
 #include <sys/time.h>
+#elif defined(__APPLE__)
+#include <time.h>
 #endif
 
 namespace graphene { namespace app {
@@ -199,7 +201,7 @@ namespace graphene { namespace app {
 						    server_trans_frac + offset;
 		int64_t ntp_sec = server_trans_sec + carry_bit - 2208988800L;
 
-		tm* ntp_time = localtime(&ntp_sec);
+		tm* ntp_time = localtime((const time_t *)&ntp_sec);
 
 		std::stringstream ss;
 		ss << std::setfill('0') << std::right;

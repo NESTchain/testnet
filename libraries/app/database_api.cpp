@@ -558,7 +558,7 @@ fc::variant_object database_api_impl::get_dynamic_properties()const
    dynamic_global_property_object dgpo = _db.get(dynamic_global_property_id_type());
    result["head_block_number"] = fc::variant(dgpo.head_block_number);
    result["head_block_id"] = dgpo.head_block_id.str();
-   result["now"] = fc::variant(time(nullptr));
+   result["now"] = fc::variant((uint64_t)time(nullptr));
 
    return result;
 }
