@@ -1,6 +1,6 @@
 cmake_minimum_required( VERSION 2.8.12 )
 set(SOURCES main.cpp)
-find_package(LLVM 4.0 REQUIRED CONFIG)
+find_package(LLVM 7.0 REQUIRED CONFIG)
 
 link_directories(${LLVM_LIBRARY_DIR})
 
