@@ -8,9 +8,9 @@
 
 ## Ubuntu 16.04/18.04 LTS (64-bit)
 
-### 安装Clang 7.0.1+
+### 下载LLVM官方预编译的Clang/LLVM 7.0.1+
 
-从Clang官网http://releases.llvm.org下载预编译的对应平台的包，解压，然后将解压后得到的bin目录设置到PATH环境变量的最前面。
+从Clang官网http://releases.llvm.org下载预编译的对应平台的包，解压，然后将解压后得到的bin目录设置到PATH环境变量的最前面。（这个步骤是可选的，因为后面也可以使用GCC、LLVM4等别的版本的编译器来编译LLVM源码，但要调整后续步骤中编译LLVM源码的参数）
 
 ```
 cd ~
@@ -37,9 +37,9 @@ sudo ln -sfT /opt/cmake/bin/cmake /usr/local/bin/cmake
 
 装完后，需要关掉并重新打开Ubuntu终端窗口，否则CMake可能会报错“could not find CMAKE_ROOT”。
 
-### 安装带WASM组件的LLVM 7.0.1+
+### 从源码编译安装带WASM组件的LLVM 7.0.1+
 
-安装到~/opt/wasm。
+安装到~/opt/wasm。此处要编译其WASM组件，并打开RTTI。LLVM官方预编译的版本没有我们需要的这两个特性。
 
 ```
 mkdir  ~/wasm-compiler && cd ~/wasm-compiler
@@ -47,8 +47,14 @@ git clone --depth 1 --single-branch --branch release_70 https://github.com/llvm-
 cd llvm/tools
 git clone --depth 1 --single-branch --branch release_70 https://github.com/llvm-mirror/clang.git
 cd .. && mkdir -p build && cd build
-cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DLLVM_TARGETS_TO_BUILD= -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly -DCMAKE_BUILD_TYPE=Release ..
+cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DLLVM_ENABLE_RTTI=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly -DCMAKE_BUILD_TYPE=Release ..
 make -j4 install
+```
+
+然后将产物的路径设置到PATH环境变量的最前面（这点很重要）。自此，我们不再使用官方预编译的LLVM版本，而是始终使用我们自己编译的LLVM版本。
+
+```
+export PATH=~/opt/wasm/bin:$PATH
 ```
 
 ### 安装Berkeley DB
@@ -67,7 +73,7 @@ sudo make install
 
 ### 安装Boost 1.69
 
-安装到~/opt/boost。Boost版本不能低于1.69。
+安装到~/opt/boost。Boost版本不低于1.69。
 
 ```
 export BOOST_ROOT=~/opt/boost
@@ -140,8 +146,14 @@ git clone --depth 1 --single-branch --branch release_70 https://github.com/llvm-
 cd llvm/tools
 git clone --depth 1 --single-branch --branch release_70 https://github.com/llvm-mirror/clang.git
 cd .. && mkdir -p build && cd build
-cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DLLVM_TARGETS_TO_BUILD= -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly -DCMAKE_BUILD_TYPE=Release ..
+cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DLLVM_ENABLE_RTTI=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly -DCMAKE_BUILD_TYPE=Release ..
 make -j4 install
+```
+
+然后将产物的路径设置到PATH环境变量的最前面（这点很重要）。自此，我们不再使用官方预编译的LLVM版本，而是始终使用我们自己编译的LLVM版本。
+
+```
+export PATH=~/opt/wasm/bin:$PATH
 ```
 
 ### 安装Boost 1.69
