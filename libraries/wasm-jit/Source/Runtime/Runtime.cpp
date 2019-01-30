@@ -10,7 +10,7 @@ namespace Runtime
 {
 	void init()
 	{
-		LLVMJIT::init();
+		//LLVMJIT::init();
 		initWAVMIntrinsics();
 	}
 	
@@ -24,7 +24,7 @@ namespace Runtime
 		for(auto frame : callStack.stackFrames)
 		{
 			std::string frameDescription;
-			if(	LLVMJIT::describeInstructionPointer(frame.ip,frameDescription)
+			if(false	//LLVMJIT::describeInstructionPointer(frame.ip,frameDescription)
 			||	Platform::describeInstructionPointer(frame.ip,frameDescription))
 			{
 				frameDescriptions.push_back(frameDescription);
@@ -105,7 +105,7 @@ namespace Runtime
 		}
 		
 		// Get the invoke thunk for this function type.
-		LLVMJIT::InvokeFunctionPointer invokeFunctionPointer = LLVMJIT::getInvokeThunk(functionType);
+		//LLVMJIT::InvokeFunctionPointer invokeFunctionPointer = LLVMJIT::getInvokeThunk(functionType);
 
 		// Catch platform-specific runtime exceptions and turn them into Runtime::Values.
 		Result result;
@@ -116,7 +116,7 @@ namespace Runtime
 			[&]
 			{
 				// Call the invoke thunk.
-				(*invokeFunctionPointer)(function->nativeFunction,thunkMemory);
+				//(*invokeFunctionPointer)(function->nativeFunction,thunkMemory);
 
 				// Read the return value out of the thunk memory block.
 				if(functionType->ret != ResultType::none)

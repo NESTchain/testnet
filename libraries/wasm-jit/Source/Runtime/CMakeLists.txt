@@ -1,9 +1,6 @@
 set(Sources
 	Intrinsics.cpp
 	Linker.cpp
-	LLVMEmitIR.cpp
-	LLVMJIT.cpp
-	LLVMJIT.h
 	Memory.cpp
 	ModuleInstance.cpp
 	ObjectGC.cpp

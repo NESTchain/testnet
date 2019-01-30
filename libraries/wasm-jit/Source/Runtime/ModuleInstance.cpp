@@ -130,7 +130,7 @@ namespace Runtime
 		}
 
 		// Generate machine code for the module.
-		LLVMJIT::instantiateModule(module,moduleInstance);
+		//LLVMJIT::instantiateModule(module,moduleInstance);
 
 		// Set up the instance's exports.
 		for(const Export& exportIt : module.exports)

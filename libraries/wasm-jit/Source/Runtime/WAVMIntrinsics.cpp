@@ -145,7 +145,7 @@ namespace Runtime
 		const FunctionType* actualSignature = table->baseAddress[index].type;
 		const FunctionType* expectedSignature = reinterpret_cast<const FunctionType*>((Uptr)expectedSignatureBits);
 		std::string ipDescription = "<unknown>";
-		LLVMJIT::describeInstructionPointer(reinterpret_cast<Uptr>(elementValue),ipDescription);
+		//LLVMJIT::describeInstructionPointer(reinterpret_cast<Uptr>(elementValue),ipDescription);
 		Log::printf(Log::Category::debug,"call_indirect signature mismatch: expected %s at index %u but got %s (%s)\n",
 			asString(expectedSignature).c_str(),
 			index,

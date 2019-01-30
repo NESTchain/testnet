@@ -477,7 +477,10 @@ string abi_generator::get_vector_element_type(const string& type_name) {
 }
 
 string abi_generator::get_type_name(const clang::QualType& qt, bool with_namespace=false) {
-  auto name = clang::TypeName::getFullyQualifiedName(qt, *ast_context);
+  clang::LangOptions LangOpts;
+  LangOpts.CPlusPlus = true;
+  clang::PrintingPolicy Policy(LangOpts);
+  auto name = clang::TypeName::getFullyQualifiedName(qt, *ast_context, Policy);
   if(!with_namespace)
     name = remove_namespace(name);
   return name;
