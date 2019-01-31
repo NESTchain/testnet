@@ -10,7 +10,7 @@
 
 ### 下载LLVM官方预编译的Clang/LLVM 7.0.1+
 
-从Clang官网http://releases.llvm.org下载预编译的对应平台的包，解压，然后将解压后得到的bin目录设置到PATH环境变量的最前面。（这个步骤是可选的，因为后面也可以使用GCC、LLVM4等别的版本的编译器来编译LLVM源码，但要调整后续步骤中编译LLVM源码的参数）
+从Clang官网http://releases.llvm.org下载预编译的对应平台的包，解压，然后将解压后得到的bin目录设置到PATH环境变量的最前面。
 
 ```
 cd ~
@@ -146,14 +146,8 @@ git clone --depth 1 --single-branch --branch release_70 https://github.com/llvm-
 cd llvm/tools
 git clone --depth 1 --single-branch --branch release_70 https://github.com/llvm-mirror/clang.git
 cd .. && mkdir -p build && cd build
-cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DLLVM_ENABLE_RTTI=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly -DCMAKE_BUILD_TYPE=Release ..
+cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DLLVM_ENABLE_RTTI=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DLLVM_TARGETS_TO_BUILD= -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly -DCMAKE_BUILD_TYPE=Release ..
 make -j4 install
-```
-
-然后将产物的路径设置到PATH环境变量的最前面（这点很重要）。自此，我们不再使用官方预编译的LLVM版本，而是始终使用我们自己编译的LLVM版本。
-
-```
-export PATH=~/opt/wasm/bin:$PATH
 ```
 
 ### 安装Boost 1.69

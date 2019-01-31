@@ -145,14 +145,8 @@ git clone --depth 1 --single-branch --branch release_70 https://github.com/llvm-
 cd llvm/tools
 git clone --depth 1 --single-branch --branch release_70 https://github.com/llvm-mirror/clang.git
 cd .. && mkdir -p build && cd build
-cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DLLVM_ENABLE_RTTI=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly -DCMAKE_BUILD_TYPE=Release ..
+cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DLLVM_ENABLE_RTTI=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DLLVM_TARGETS_TO_BUILD= -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly -DCMAKE_BUILD_TYPE=Release ..
 make -j4 install
-```
-
-Add ~/opt/wasm/bin to the front of PATH. From now on we will use our customized LLVM, instead of official pre-built LLVM.
-
-```
-export PATH=~/opt/wasm/bin:$PATH
 ```
 
 ### Install Boost 1.69
