@@ -178,10 +178,12 @@ export C_COMPILER=clang
 export CXX_COMPILER=clang++
 
 cd ~/testnet && mkdir -p build &&  cd build
-cmake -DWASM_ROOT=${WASM_ROOT} -DCMAKE_CXX_COMPILER="${CXX_COMPILER}" \
-	-DCMAKE_C_COMPILER="${C_COMPILER}"  -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl \
+cmake -DWASM_ROOT=${WASM_ROOT} -DLLVM_DIR="${WASM_ROOT}/lib/cmake/llvm" \
+    -DCMAKE_CXX_COMPILER="${CXX_COMPILER}" -DCMAKE_C_COMPILER="${C_COMPILER}" \
+    -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl \
 	-DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include \
-	-DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib -DBOOST_ROOT=${BOOST_ROOT} \
+	-DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib \
+    -DBOOST_ROOT=${BOOST_ROOT} \
 	-DCMAKE_BUILD_TYPE=Release ..
 make -j 4
 ```
