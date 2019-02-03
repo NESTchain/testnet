@@ -26,7 +26,7 @@
 
 namespace graphene { namespace chain {
 
-void memo_data::set_message(const fc::ecc::private_key& priv, const fc::ecc::public_key& pub,
+void memo_data::set_message(const private_key_type& priv, const public_key_type& pub,
                             const string& msg, uint64_t custom_nonce)
 {
    if( priv != fc::ecc::private_key() && public_key_type(pub) != public_key_type() )
@@ -48,7 +48,7 @@ void memo_data::set_message(const fc::ecc::private_key& priv, const fc::ecc::pub
    }
    else
    {
-      auto text = memo_message(0, msg).serialize();
+      auto text = msg; // memo_message(0, msg).serialize();
       message = vector<char>(text.begin(), text.end());
    }
 }
@@ -56,7 +56,7 @@ void memo_data::set_message(const fc::ecc::private_key& priv, const fc::ecc::pub
 string memo_data::get_message(const fc::ecc::private_key& priv,
                               const fc::ecc::public_key& pub)const
 {
-   if( from != public_key_type() )
+   if( from != public_key_type() && nonce != 0 && to != public_key_type() )
    {
       auto secret = priv.get_shared_secret(pub);
       auto nonce_plus_secret = fc::sha512::hash(fc::to_string(nonce) + secret.str());
@@ -67,7 +67,8 @@ string memo_data::get_message(const fc::ecc::private_key& priv,
    }
    else
    {
-      return memo_message::deserialize(string(message.begin(), message.end())).text;
+      //return memo_message::deserialize(string(message.begin(), message.end())).text;
+      return string(message.begin(), message.end());
    }
 }
 

@@ -2019,8 +2019,14 @@ public:
    string read_memo(const memo_data& md)
    {
       FC_ASSERT(!is_locked());
-      std::string clear_text;
 
+      // we put a clear message if nonce is 0
+      if(md.nonce == 0 && md.message.size())
+      {
+         return std::string(md.message.data(), md.message.size());
+      }
+
+      std::string clear_text;
       const memo_data *memo = &md;
 
       try {
@@ -2096,9 +2102,9 @@ public:
          if (memo.size())
          {
             msg_op.memo.from = from_account.options.memo_key;
-            msg_op.memo.to = to_account.options.memo_key;
+            msg_op.memo.to = public_key_type();//to_account.options.memo_key;
             msg_op.memo.set_message(get_private_key(from_account.options.memo_key),
-               to_account.options.memo_key, memo);
+               /*to_account.options.memo_key*/ public_key_type(), memo);
          }
 
          signed_transaction tx;
@@ -2848,7 +2854,11 @@ string operation_printer::operator()(const transfer_operation& op) const
    std::string memo;
    if( op.memo )
    {
-      if( wallet.is_locked() )
+      if(op.memo->nonce == 0)
+      {
+         out << " -- Memo clear: " << op.memo->get_message(private_key_type(), op.memo->from) ;
+      }
+      else if( wallet.is_locked() )
       {
          out << " -- Unlock wallet to see memo.";
       } else {
@@ -2880,7 +2890,11 @@ string operation_printer::operator()(const send_message_operation& op) const
    std::string memo;
    if (op.memo.message.size()>0)
    {
-      if (wallet.is_locked())
+      if (op.memo.nonce == 0)
+      {
+         out << " -- Memo clear: " << op.memo.get_message(private_key_type(), op.memo.from) ;
+      }
+      else if (wallet.is_locked())
       {
          out << " -- Unlock wallet to see message.";
       }
