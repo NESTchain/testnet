@@ -38,7 +38,7 @@ add_custom_command(
       "${CMAKE_CURRENT_BINARY_DIR}/egenesis_brief.cpp"
       "${CMAKE_CURRENT_BINARY_DIR}/egenesis_full.cpp"
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-   COMMAND embed_genesis ${embed_genesis_args}
+   COMMAND ${CMAKE_BINARY_DIR}/libraries/egenesis/embed_genesis ${embed_genesis_args}
    DEPENDS
       "${GRAPHENE_EGENESIS_JSON}"
       "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_brief.cpp.tmpl"
