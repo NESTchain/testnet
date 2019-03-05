@@ -18,7 +18,7 @@ script:
 - cd $TRAVIS_BUILD_DIR/contracts/musl/upstream && git checkout eosio
 - cd $TRAVIS_BUILD_DIR && mkdir -p build && cd build
 - export PATH=~/opt/wasm/bin:$PATH
-- ./build_linux.sh
+- ../build_linux.sh
 after_success:
 branches:
 only:
