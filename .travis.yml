@@ -7,7 +7,7 @@ os:
 - linux
 before_install:
 install:
-- git clone https://github.com/NESTchain/BerkeleyDB.git ~
+- git clone https://github.com/NESTchain/BerkeleyDB.git ~/BerkeleyDB
 - cd ~/BerkeleyDB/build_unix && ../dist/configure --prefix=/usr --enable-cxx
 - make && sudo make install
 - mkdir  ~/wasm-compiler && cd ~/wasm-compiler
