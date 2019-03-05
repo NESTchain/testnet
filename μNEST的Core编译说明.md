@@ -15,7 +15,7 @@
 ```
 cd ~
 wget http://releases.llvm.org/7.0.1/clang+llvm-7.0.1-x86_64-linux-gnu-ubuntu-16.04.tar.xz
-tar zxvf clang+llvm-7.0.1-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+tar Jxvf clang+llvm-7.0.1-x86_64-linux-gnu-ubuntu-16.04.tar.xz
 
 export PATH=~/clang+llvm-7.0.1-x86_64-linux-gnu-ubuntu-16.04/bin:$PATH
 ```
