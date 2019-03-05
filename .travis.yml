@@ -18,6 +18,8 @@ script:
 - cd $TRAVIS_BUILD_DIR/contracts/musl/upstream && git checkout eosio
 - cd $TRAVIS_BUILD_DIR && mkdir -p build && cd build
 - export PATH=~/opt/wasm/bin:$PATH
+- apt list --installed | grep clang
+- apt list --installed | grep llvm
 - ../build_linux.sh
 after_success:
 branches:
