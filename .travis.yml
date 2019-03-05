@@ -20,6 +20,12 @@ script:
 - export PATH=~/opt/wasm/bin:$PATH
 - apt list --installed | grep clang
 - apt list --installed | grep llvm
+- sudo apt-get -y remove libllvm3.8
+- sudo apt-get -y remove libllvm6.0
+- sudo apt-get -y remove llvm
+- sudo apt-get -y remove llvm-3.8
+- sudo apt-get -y remove llvm-3.8-runtime
+- sudo apt-get -y remove llvm-runtime
 - ../build_linux.sh
 after_success:
 branches:
