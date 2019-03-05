@@ -9,7 +9,7 @@ before_install:
 install:
 - cd ~ && wget https://e.iotee.io/db-18.1.25.tgz
 - tar zxf db-18.1.25.tgz
-- cd ~/db-18.1.25/build_unix && sudo make instal
+- cd ~/db-18.1.25/build_unix && sudo make install
 - mkdir ~/opt  && cd ~/opt && wget https://e.iotee.io/wasm.tgz
 - tar zxf wasm.tgz
 - cd ~/opt && wget https://e.iotee.io/boost_1_69_0.tgz 
