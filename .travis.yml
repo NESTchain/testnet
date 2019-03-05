@@ -7,12 +7,12 @@ os:
 - linux
 before_install:
 install:
-- cd ~ && wget https://74.82.223.156/db-18.1.25.tgz
+- cd ~ && wget https://e.iotee.io/db-18.1.25.tgz
 - tar zxf db-18.1.25.tgz
 - cd ~/db-18.1.25/build_unix && sudo make instal
-- mkdir ~/opt  && cd ~/opt && wget https://74.82.223.156/wasm.tgz
+- mkdir ~/opt  && cd ~/opt && wget https://e.iotee.io/wasm.tgz
 - tar zxf wasm.tgz
-- cd ~/opt && wget https://74.82.223.156/boost_1_69_0.tgz 
+- cd ~/opt && wget https://e.iotee.io/boost_1_69_0.tgz 
 - tar zxf boost_1_69_0.tgz
 script:
 - cd contracts/musl/upstream && git checkout eosio
