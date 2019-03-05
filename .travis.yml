@@ -6,11 +6,9 @@ compiler:
 os:
 - linux
 before_install:
-- echo $TRAVIS_OS_NAME
 install:
-- sudo apt-get -y install libcurl4-openssl-dev
-- cd ~ && git clone https://github.com/NESTchain/BerkeleyDB.git
-- cd db-18.1.25/build_unix && ../dist/configure --prefix=/usr --enable-cxx
+- git clone https://github.com/NESTchain/BerkeleyDB.git ~
+- cd ~/BerkeleyDB/build_unix && ../dist/configure --prefix=/usr --enable-cxx
 - make && sudo make install
 - mkdir  ~/wasm-compiler && cd ~/wasm-compiler
 - git clone --depth 1 --single-branch --branch release_70 https://github.com/llvm-mirror/llvm.git
