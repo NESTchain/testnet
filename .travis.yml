@@ -15,8 +15,8 @@ install:
 - cd ~/opt && wget https://e.iotee.io/boost_1_69_0.tgz 
 - tar zxf boost_1_69_0.tgz
 script:
-- cd contracts/musl/upstream && git checkout eosio
-- cd ../../.. && mkdir -p build &&  cd build
+- cd $TRAVIS_BUILD_DIR/contracts/musl/upstream && git checkout eosio
+- cd $TRAVIS_BUILD_DIR && mkdir -p build && cd build
 - cmake -DWASM_ROOT=~/opt/wasm -DCMAKE_CXX_COMPILER=~/opt/wasm/bin/clang++ -DCMAKE_C_COMPILER=~/opt/wasm/bin/clang -DOPENSSL_ROOT_DIR=/usr/include/openssl -DOPENSSL_INCLUDE_DIR=/usr/include/openssl -DBOOST_ROOT=~/opt/boost -DCMAKE_BUILD_TYPE=Release ..
 - make -j2
 after_success:
