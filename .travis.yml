@@ -4,25 +4,12 @@ dist: xenial
 compiler:
 - clang
 os:
-- linux
+- osx
 before_install:
-- apt list --installed | grep llvm
-- sudo apt-get -y purge --auto-remove libllvm3.8
-- sudo apt-get -y purge --auto-remove libllvm6.0
-- sudo apt-get -y purge --auto-remove llvm
 install:
-- cd ~ && wget https://e.iotee.io/db-18.1.25.tgz
-- tar zxf db-18.1.25.tgz
-- cd ~/db-18.1.25/build_unix && sudo make install
-- mkdir ~/opt  && cd ~/opt && wget https://e.iotee.io/wasm.tgz
-- tar zxf wasm.tgz
-- cd ~/opt && wget https://e.iotee.io/boost_1_69_0.tgz 
-- tar zxf boost_1_69_0.tgz
+- ./install_dep_travis.sh
 script:
-- cd $TRAVIS_BUILD_DIR/contracts/musl/upstream && git checkout eosio
-- cd $TRAVIS_BUILD_DIR && mkdir -p build && cd build
-- export PATH=~/opt/wasm/bin:$PATH
-- ../build_linux.sh
+- ./build_travis.sh
 after_success:
 branches:
 only:
