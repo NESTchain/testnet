@@ -4,6 +4,7 @@ dist: xenial
 compiler:
 - clang
 os:
+- linux
 - osx
 before_install:
 install:
