@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 cd $TRAVIS_BUILD_DIR/contracts/musl/upstream && git checkout eosio
 cd $TRAVIS_BUILD_DIR && mkdir -p build && cd build
