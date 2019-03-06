@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
 	cd ~ && wget https://e.iotee.io/db-18.1.25.tgz
