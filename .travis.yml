@@ -11,8 +11,8 @@ install:
 - ./install_dep_travis.sh
 script:
 - ./build_travis.sh
-- cd $TRAVIS_BUILD_DIR/build && make -j4 secp256k1
-- cd $TRAVIS_BUILD_DIR/build && make -j4 editline
+- cd $TRAVIS_BUILD_DIR/build && make -j4 project_secp256k1
+- cd $TRAVIS_BUILD_DIR/build && make -j4 project_editline
 - cd $TRAVIS_BUILD_DIR/build && make -j4 fc
 - cd $TRAVIS_BUILD_DIR/build && make -j4 graphene_db
 - cd $TRAVIS_BUILD_DIR/build && make -j4 graphene_net
