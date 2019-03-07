@@ -11,6 +11,29 @@ install:
 - ./install_dep_travis.sh
 script:
 - ./build_travis.sh
+- cd $TRAVIS_BUILD_DIR/build && make -j4 secp256k1
+- cd $TRAVIS_BUILD_DIR/build && make -j4 editline
+- cd $TRAVIS_BUILD_DIR/build && make -j4 fc
+- cd $TRAVIS_BUILD_DIR/build && make -j4 graphene_db
+- cd $TRAVIS_BUILD_DIR/build && make -j4 graphene_net
+- cd $TRAVIS_BUILD_DIR/build && make -j4 softfloat
+- cd $TRAVIS_BUILD_DIR/build && make -j4 builtins
+- cd $TRAVIS_BUILD_DIR/build && make -j4 emscripten-optimizer
+- cd $TRAVIS_BUILD_DIR/build && make -j4 graphene_chain
+- cd $TRAVIS_BUILD_DIR/build && make -j4 graphene_grouped_orders
+- cd $TRAVIS_BUILD_DIR/build && make -j4 graphene_account_history
+- cd $TRAVIS_BUILD_DIR/build && make -j4 graphene_debug_witness
+- cd $TRAVIS_BUILD_DIR/build && make -j4 graphene_app
+- cd $TRAVIS_BUILD_DIR/build && make -j4 Platform
+- cd $TRAVIS_BUILD_DIR/build && make -j4 Logging
+- cd $TRAVIS_BUILD_DIR/build && make -j4 IR
+- cd $TRAVIS_BUILD_DIR/build && make -j4 Runtime
+- cd $TRAVIS_BUILD_DIR/build && make -j4 wabt
+- cd $TRAVIS_BUILD_DIR/build && make -j4 witness_node
+- cd $TRAVIS_BUILD_DIR/build && make -j4 cli_wallet
+- cd $TRAVIS_BUILD_DIR/build && make -j4 mini_wallet
+- cd $TRAVIS_BUILD_DIR/build && make -j4 abi_generator
+- cd $TRAVIS_BUILD_DIR/build && make -j4 gxc-abigen
 after_success:
 branches:
 only:
