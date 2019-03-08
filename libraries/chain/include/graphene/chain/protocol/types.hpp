@@ -245,7 +245,8 @@ namespace graphene { namespace chain {
        index_double_object_type,
        index_long_double_object_type,
 	   
-	   impl_htlc_object_type
+	   impl_htlc_object_type,
+      impl_watch_dog_object_type
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -297,6 +298,7 @@ namespace graphene { namespace chain {
    class key_value_object;
    
    class htlc_object;
+   class watch_dog_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -321,7 +323,8 @@ namespace graphene { namespace chain {
 
    typedef object_id< implementation_ids, impl_table_id_object_type, table_id_object>        table_id_object_id_type;
    typedef object_id< implementation_ids, impl_key_value_object_type, key_value_object>      key_value_object_id_type;
-   typedef object_id< implementation_ids, impl_htlc_object_type, htlc_object >                         htlc_id_type;
+   typedef object_id< implementation_ids, impl_htlc_object_type, htlc_object >               htlc_id_type;
+   typedef object_id< implementation_ids, impl_watch_dog_object_type, watch_dog_object>      watch_dog_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;
@@ -462,6 +465,7 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (index_long_double_object_type)
 
                  (impl_htlc_object_type)
+                 (impl_watch_dog_object_type)
 
                )
 
@@ -495,6 +499,7 @@ FC_REFLECT_TYPENAME( graphene::chain::fba_accumulator_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::table_id_object_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::key_value_object_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::htlc_id_type)
+FC_REFLECT_TYPENAME( graphene::chain::watch_dog_id_type )
 
 FC_REFLECT( graphene::chain::void_t, )
 FC_REFLECT(graphene::chain::vm_cpu_limit_t, (trx_cpu_limit)(block_cpu_limit))

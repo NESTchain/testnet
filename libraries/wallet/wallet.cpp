@@ -2610,6 +2610,62 @@ public:
 	   return sign_transaction(tx, true);
    } FC_CAPTURE_AND_RETHROW((depositor)(htlc_id)(timeout_threshold)) }
 
+   signed_transaction create_watch_dog(const string& watch_account, const string& inherit_account, const string& answer)
+   {
+	   FC_ASSERT(!self.is_locked());
+
+	   account_id_type watch_account_id   = get_account_id(watch_account);
+	   account_id_type inherit_account_id = get_account_id(inherit_account);
+	   fc::sha256 answer_hash = fc::sha256::hash(answer);
+
+	   create_watch_dog_operation op;
+	   op.watch_account   = watch_account_id;
+	   op.inherit_account = inherit_account_id;
+	   op.answer_hash     = answer_hash;
+
+	   signed_transaction tx;
+	   tx.operations.push_back(op);
+	   set_operation_fees(tx, get_global_properties().parameters.current_fees);
+	   tx.validate();
+
+	   return sign_transaction(tx, true);
+   }
+
+   signed_transaction answer_watch_dog(const string& account, const string& answer)
+   {
+	   FC_ASSERT(!self.is_locked());
+
+	   account_id_type account_id = get_account_id(account);
+
+	   watch_dog_object wd_obj = _remote_db->get_watch_dog_by_account(account);
+	   FC_ASSERT(wd_obj.state == watch_dog_object::question_sended, "you can not answer watch dog right now");
+
+	   answer_watch_dog_operation op;
+	   op.account = account_id;
+	   op.answer_hash = fc::sha256::hash(answer);
+
+	   signed_transaction tx;
+	   tx.operations.push_back(op);
+	   set_operation_fees(tx, get_global_properties().parameters.current_fees);
+	   tx.validate();
+
+	   return sign_transaction(tx, true);
+   }
+
+   watch_dog_object get_watch_dog_state(const string& account)
+   {
+	   FC_ASSERT(!self.is_locked());
+
+	   //account_id_type account_id = get_account_id(account);
+
+	   // find watch dog of this account
+	   // report different state
+
+	   watch_dog_object wd_obj = _remote_db->get_watch_dog_by_account(account);
+
+	   return wd_obj;
+   }
+
    void dbg_make_uia(string creator, string symbol)
    {
       asset_options opts;
@@ -4681,6 +4737,21 @@ signed_transaction wallet_api::htlc_redeem(const string& fee_paying_account, obj
 signed_transaction wallet_api::htlc_extend_expiry(const string& depositor, object_id_type htlc_id, fc::time_point_sec timeout_threshold)
 {
 	return my->htlc_extend_expiry(depositor, htlc_id, timeout_threshold);
+}
+
+signed_transaction wallet_api::create_watch_dog(const string& watch_account, const string& inherit_account, const string& answer)
+{
+	return my->create_watch_dog(watch_account, inherit_account, answer);
+}
+
+signed_transaction wallet_api::answer_watch_dog(const string& account, const string& answer)
+{
+	return my->answer_watch_dog(account, answer);
+}
+
+watch_dog_object wallet_api::get_watch_dog_state(const string& account)
+{
+	return my->get_watch_dog_state(account);
 }
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )

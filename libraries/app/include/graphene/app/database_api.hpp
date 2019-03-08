@@ -730,6 +730,8 @@ class database_api
 	  
 	  htlc_object get_htlc(htlc_id_type htlc_id);
 
+     watch_dog_object get_watch_dog_by_account(const std::string account_id_or_name);
+
    private:
       std::shared_ptr< database_api_impl > my;
 };
@@ -835,5 +837,8 @@ FC_API(graphene::app::database_api,
    
    // HTLC
    (get_htlc)
+
+   // watch dog
+   (get_watch_dog_by_account)
 
 )

@@ -153,6 +153,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 	  
 	  htlc_object get_htlc(htlc_id_type htlc_id);
 
+     watch_dog_object get_watch_dog_by_account(const std::string account_id_or_name);
+
    //private:
       static string price_to_string( const price& _price, const asset_object& _base, const asset_object& _quote );
 
@@ -1722,6 +1724,19 @@ htlc_object database_api::get_htlc(htlc_id_type htlc_id)
 htlc_object database_api_impl::get_htlc(htlc_id_type htlc_id)
 {
 	return _db.get_htlc(htlc_id);
+}
+
+watch_dog_object database_api_impl::get_watch_dog_by_account(const std::string account_id_or_name)
+{
+	const account_id_type account = get_account_from_string(account_id_or_name)->id;
+	auto wd = _db.get_watch_dog_by_account(account);
+	watch_dog_object obj = *wd;
+	return obj;
+}
+
+watch_dog_object database_api::get_watch_dog_by_account(const std::string account_id_or_name)
+{
+	return my->get_watch_dog_by_account(account_id_or_name);
 }
 
 //////////////////////////////////////////////////////////////////////

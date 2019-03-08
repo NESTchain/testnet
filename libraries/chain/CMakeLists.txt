@@ -60,7 +60,8 @@ add_library( graphene_chain
              protocol/confidential.cpp
              protocol/vote.cpp
              protocol/pio.cpp
-			 protocol/htlc.cpp
+	     protocol/htlc.cpp
+	     protocol/watch_dog.cpp
 
              genesis_state.cpp
              get_config.cpp
@@ -84,7 +85,8 @@ add_library( graphene_chain
              confidential_evaluator.cpp
              special_authority.cpp
              buyback.cpp
-			 htlc_evaluator.cpp
+	     htlc_evaluator.cpp
+	     watch_dog_evaluator.cpp
 
              apply_context.cpp
              transaction_context.cpp

@@ -33,6 +33,7 @@
 #include <graphene/chain/evaluator.hpp>
 #include <graphene/chain/wasm_interface.hpp>
 #include <graphene/chain/htlc_object.hpp>
+#include <graphene/chain/watch_dog_object.hpp>
 
 #include <graphene/db/object_database.hpp>
 #include <graphene/db/object.hpp>
@@ -289,6 +290,13 @@ namespace graphene { namespace chain {
 		 vector<htlc_id_type> get_expired_htlc() const;
 		 void refund_expired_htlc(htlc_id_type htlc_id);
 		 void refund_all_expired_htlc();
+
+       std::vector<watch_dog_id_type> get_watch_dog_id_list();
+		 std::vector<const watch_dog_object*> get_watch_dog_list();
+		 watch_dog_id_type get_watch_dog_id_by_account(account_id_type account_id);
+		 const watch_dog_object* get_watch_dog_by_account(account_id_type account_id);
+		 const watch_dog_object* get_watch_dog_by_id(watch_dog_id_type watch_dog_id);
+		 bool check_account_have_watch_dog(account_id_type account_id);
 		 
          //////////////////// db_init.cpp ////////////////////
 

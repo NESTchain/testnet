@@ -292,6 +292,36 @@ struct get_impacted_account_visitor
    {
 	   _impacted.insert(op.depositor);
    }
+
+   void operator()(const create_watch_dog_operation& op)
+   {
+	   _impacted.insert(op.watch_account);
+	   _impacted.insert(op.inherit_account);
+   }
+   void operator()(const prepare_watch_dog_operation& op)
+   {
+	   _impacted.insert(op.account);
+   }
+   void operator()(const remind_account_operation& op)
+   {
+	   _impacted.insert(op.account);
+   }
+   void operator()(const answer_watch_dog_operation& op)
+   {
+	   _impacted.insert(op.account);
+   }
+   void operator()(const start_account_recover_operation& op)
+   {
+	   _impacted.insert(op.account);
+   }
+   void operator()(const transfer_lost_asset_operation& op)
+   {
+	   _impacted.insert(op.account);
+   }
+   void operator()(const delete_watch_dog_operation& op)
+   {
+      _impacted.insert(op.account);
+   }
 };
 
 void graphene::chain::operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

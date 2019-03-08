@@ -177,4 +177,59 @@ void database::refund_all_expired_htlc()
 		refund_expired_htlc(htlc_id);
 }
 
+std::vector<watch_dog_id_type> database::get_watch_dog_id_list()
+{
+	std::vector<watch_dog_id_type> result;
+	auto& idx = get_index_type<watch_dog_index>().indices().get<by_id>();
+	std::for_each(idx.begin(), idx.end(), [&](const watch_dog_object& obj)
+	{
+		result.push_back(obj.id);
+	});
+	return result;
+}
+
+std::vector<const watch_dog_object*> database::get_watch_dog_list()
+{
+	std::vector<const watch_dog_object*> result;
+	auto& idx = get_index_type<watch_dog_index>().indices().get<by_id>();
+	std::for_each(idx.begin(), idx.end(), [&](const watch_dog_object& obj)
+	{
+		result.push_back(&obj);
+	});
+	return result;
+}
+
+watch_dog_id_type database::get_watch_dog_id_by_account(account_id_type account_id)
+{
+	auto& idx = get_index_type<watch_dog_index>().indices().get<by_account_id>();
+	auto iter = idx.find(account_id);
+	FC_ASSERT(iter != idx.end(), "Can not find watch dog object for account ${a}", ("a", account_id));
+	return iter->id;
+}
+
+const watch_dog_object* database::get_watch_dog_by_account(account_id_type account_id)
+{
+	auto& idx = get_index_type<watch_dog_index>().indices().get<by_account_id>();
+	auto iter = idx.find(account_id);
+	FC_ASSERT(iter != idx.end(), "Can not find watch dog object for account ${a}", ("a", account_id));
+	return &*iter;
+}
+
+const watch_dog_object* database::get_watch_dog_by_id(watch_dog_id_type watch_dog_id)
+{
+	auto& idx = get_index_type<watch_dog_index>().indices().get<by_id>();
+	auto iter = idx.find(watch_dog_id);
+	FC_ASSERT(iter != idx.end(), "Can not find watch dog object ${w}", ("w", watch_dog_id));
+	return &*iter;
+}
+
+bool database::check_account_have_watch_dog(account_id_type account_id)
+{
+	auto& idx = get_index_type<watch_dog_index>().indices().get<by_account_id>();
+	auto iter = idx.find(account_id);
+	if (iter != idx.end())
+		return true;
+	return false;
+}
+
 } }

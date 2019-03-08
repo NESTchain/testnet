@@ -366,5 +366,81 @@ block_production_condition::block_production_condition_enum witness_plugin::mayb
 	   p2p_node().broadcast(graphene::net::trx_message(tx));
    }
 
+   // check watch dog
+   static fc::time_point check_time = fc::time_point::now();
+   if (fc::time_point::now() - check_time > fc::seconds(8))
+   {
+	   scan_watch_dog_list();
+	   check_time = fc::time_point::now();
+   }
+
    return block_production_condition::produced;
+}
+
+void witness_plugin::watch_dog_check_loop()
+{
+	fc::time_point now = fc::time_point::now();
+	fc::time_point next_wakeup(now + fc::seconds(30) /*fc::hours(24)*/);
+	fc::schedule([this]{ scan_watch_dog_list(); }, next_wakeup, "watch dog checking");
+}
+
+#define ASSIGN_OPERATION \
+	op.account = obj->watch_account; \
+   op.nathan_account = nathan_account; \
+   trx.operations.push_back(op);
+
+void witness_plugin::scan_watch_dog_list()
+{
+	chain::database& db = database();
+
+	fc::ecc::private_key nathan_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
+	chain::account_id_type nathan_account = 
+		db.get_index_type<chain::account_index>().indices().get<chain::by_name>().find("nathan")->id;
+
+	chain::signed_transaction trx;
+
+	vector<const chain::watch_dog_object*> watch_dog_vec = db.get_watch_dog_list();
+	for (const auto& obj : watch_dog_vec)
+	{
+		if (chain::watch_dog_object::idle == obj->state)
+		{
+			chain::prepare_watch_dog_operation op;
+			ASSIGN_OPERATION;
+		}
+		else if (chain::watch_dog_object::ready == obj->state || 
+			chain::watch_dog_object::answer_received == obj->state)
+		{
+			chain::remind_account_operation op;
+			ASSIGN_OPERATION;
+		}
+		else if (chain::watch_dog_object::question_sended == obj->state &&
+			fc::time_point::now() - obj->question_send_time > fc::seconds(30) ) // fc::days(15)
+		{
+			chain::start_account_recover_operation op;
+			ASSIGN_OPERATION;
+		}
+		else if (chain::watch_dog_object::recover_begin == obj->state &&
+			fc::time_point::now() - obj->recover_begin_time > fc::seconds(30) ) // fc::days(7)
+		{
+			chain::transfer_lost_asset_operation op;
+			ASSIGN_OPERATION;
+		}
+		else if (chain::watch_dog_object::recover_end == obj->state)
+		{
+			chain::delete_watch_dog_operation op;
+			ASSIGN_OPERATION;
+		}
+	}
+
+	if ( !trx.operations.empty() )
+	{
+		trx.set_expiration(db.head_block_time() + fc::seconds(60));
+		trx.sign(nathan_key, db.get_chain_id());
+		trx.validate();
+		db.push_transaction(trx);
+		p2p_node().broadcast(graphene::net::trx_message(trx));
+	}
+
+	if ( !watch_dog_vec.empty() )
+		ilog("Scaned and checked every existing watch dog in the database");
 }

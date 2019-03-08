@@ -41,6 +41,7 @@
 #include <graphene/chain/protocol/worker.hpp>
 #include <graphene/chain/protocol/contract_ops.hpp>
 #include <graphene/chain/protocol/htlc.hpp>
+#include <graphene/chain/protocol/watch_dog.hpp>
 
 namespace graphene { namespace chain {
 
@@ -105,10 +106,18 @@ namespace graphene { namespace chain {
             send_message_operation,
             asset_claim_pool_operation,
             asset_update_issuer_operation,
-			htlc_prepare_operation,
+			   htlc_prepare_operation,
             htlc_redeem_operation,
             htlc_extend_expiry_operation,
-			htlc_refund_operation
+			   htlc_refund_operation,
+            
+			   create_watch_dog_operation,   //watch dog
+			   prepare_watch_dog_operation,
+			   remind_account_operation,
+			   answer_watch_dog_operation,
+			   start_account_recover_operation,
+			   transfer_lost_asset_operation,
+			   delete_watch_dog_operation
          > operation;
 
    /// @} // operations group

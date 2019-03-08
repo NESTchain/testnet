@@ -1679,7 +1679,12 @@ class wallet_api
 		  const string& hash_algo, const string& preimage_hash, const string& preimage_length, fc::time_point_sec timeout_threshold);
 	  signed_transaction htlc_redeem(const string& fee_paying_account, object_id_type htlc_id, const string& preimage);
 	  signed_transaction htlc_extend_expiry(const string& depositor, object_id_type htlc_id, fc::time_point_sec timeout_threshold);
-         
+
+     // watch dog api
+	  signed_transaction create_watch_dog(const string& watch_account, const string& inherit_account, const string& answer);
+	  signed_transaction answer_watch_dog(const string& account, const string& answer);
+	  watch_dog_object get_watch_dog_state(const string& account);
+
 //      order_book get_order_book( const string& base, const string& quote, unsigned limit = 50);
 
       void dbg_make_uia(string creator, string symbol);
@@ -1908,7 +1913,10 @@ FC_API( graphene::wallet::wallet_api,
 //        (get_order_book)
         (quit)
         (send_message)
-		(htlc_prepare)
-		(htlc_redeem)
-		(htlc_extend_expiry)
+		  (htlc_prepare)
+		  (htlc_redeem)
+		  (htlc_extend_expiry)
+        (create_watch_dog)
+		  (answer_watch_dog)
+		  (get_watch_dog_state)
       )

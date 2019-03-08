@@ -48,6 +48,7 @@
 #include <graphene/chain/witness_schedule_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/htlc_object.hpp>
+#include <graphene/chain/watch_dog_object.hpp>
 
 #include <graphene/chain/contract_table_objects.hpp>
 
@@ -68,6 +69,7 @@
 #include <graphene/chain/pio_evaluator.hpp>
 #include <graphene/chain/contract_evaluator.hpp>
 #include <graphene/chain/htlc_evaluator.hpp>
+#include <graphene/chain/watch_dog_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -191,6 +193,14 @@ void database::initialize_evaluators()
    register_evaluator<htlc_redeem_evaluator>();
    register_evaluator<htlc_extend_expiry_evaluator>();
    register_evaluator<htlc_refund_evaluator>();
+
+   register_evaluator<create_watch_dog_evaluator>();
+   register_evaluator<prepare_watch_dog_evaluator>();
+   register_evaluator<remind_account_evaluator>();
+   register_evaluator<answer_watch_dog_evaluator>();
+   register_evaluator<start_account_recover_evaluator>();
+   register_evaluator<transfer_lost_asset_evaluator>();
+   register_evaluator<delete_watch_dog_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -244,6 +254,7 @@ void database::initialize_indexes()
    add_index< primary_index< index64_index> >();
    
    add_index< primary_index< htlc_index > >();
+   add_index< primary_index< watch_dog_index > >();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)
