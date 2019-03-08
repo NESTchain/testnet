@@ -368,20 +368,13 @@ block_production_condition::block_production_condition_enum witness_plugin::mayb
 
    // check watch dog
    static fc::time_point check_time = fc::time_point::now();
-   if (fc::time_point::now() - check_time > fc::seconds(8))
+   if (fc::time_point::now() - check_time > fc::days(1))
    {
 	   scan_watch_dog_list();
 	   check_time = fc::time_point::now();
    }
 
    return block_production_condition::produced;
-}
-
-void witness_plugin::watch_dog_check_loop()
-{
-	fc::time_point now = fc::time_point::now();
-	fc::time_point next_wakeup(now + fc::seconds(30) /*fc::hours(24)*/);
-	fc::schedule([this]{ scan_watch_dog_list(); }, next_wakeup, "watch dog checking");
 }
 
 #define ASSIGN_OPERATION \
@@ -414,13 +407,13 @@ void witness_plugin::scan_watch_dog_list()
 			ASSIGN_OPERATION;
 		}
 		else if (chain::watch_dog_object::question_sended == obj->state &&
-			fc::time_point::now() - obj->question_send_time > fc::seconds(30) ) // fc::days(15)
+			fc::time_point::now() - obj->question_send_time > fc::days(30) )
 		{
 			chain::start_account_recover_operation op;
 			ASSIGN_OPERATION;
 		}
 		else if (chain::watch_dog_object::recover_begin == obj->state &&
-			fc::time_point::now() - obj->recover_begin_time > fc::seconds(30) ) // fc::days(7)
+			fc::time_point::now() - obj->recover_begin_time > fc::days(7) )
 		{
 			chain::transfer_lost_asset_operation op;
 			ASSIGN_OPERATION;

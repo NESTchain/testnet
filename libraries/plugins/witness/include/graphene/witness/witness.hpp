@@ -77,7 +77,6 @@ private:
    block_production_condition::block_production_condition_enum block_production_loop();
    block_production_condition::block_production_condition_enum maybe_produce_block( fc::limited_mutable_variant_object& capture );
 
-   void watch_dog_check_loop();
    void scan_watch_dog_list();
    
    boost::program_options::variables_map _options;
