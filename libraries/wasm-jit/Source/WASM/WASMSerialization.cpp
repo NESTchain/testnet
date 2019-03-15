@@ -381,7 +381,7 @@ namespace WASM
 		serializeConstant(stream,"expected user section (section ID 0)",(U8)SectionType::user);
 		ArrayOutputStream sectionStream;
 		serialize(sectionStream,userSection.name);
-		userSection.data.resize( sectionStream.capacity() ? sectionStream.capacity() : 1 );
+        //userSection.data.resize( sectionStream.capacity() ? sectionStream.capacity() : 1 );
 		serializeBytes(sectionStream,userSection.data.data(),userSection.data.size());
 		std::vector<U8> sectionBytes = sectionStream.getBytes();
 		serialize(stream,sectionBytes);
