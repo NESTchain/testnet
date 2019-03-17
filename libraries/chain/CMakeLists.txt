@@ -96,7 +96,6 @@ add_library( graphene_chain
              wasm_injection.cpp
 
              webassembly/wavm.cpp
-             webassembly/binaryen.cpp
              webassembly/wabt.cpp
 	     
              pio_evaluator.cpp
@@ -120,13 +119,12 @@ add_library( graphene_chain
            )
 
 add_dependencies( graphene_chain build_hardfork_hpp)
-target_link_libraries( graphene_chain fc graphene_db Logging IR WAST WASM Runtime wasm
-    asmjs passes ast emscripten-optimizer support softfloat builtins wabt)
+target_link_libraries( graphene_chain fc graphene_db Logging IR WAST WASM Runtime
+    softfloat builtins wabt)
 
 target_include_directories( graphene_chain
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
            "${CMAKE_CURRENT_SOURCE_DIR}/../wasm-jit/Include"
-           "${CMAKE_CURRENT_SOURCE_DIR}/../../externals/binaryen/src"
            "${CMAKE_CURRENT_BINARY_DIR}/include"
            "${CMAKE_SOURCE_DIR}/libraries/wabt"
            "${CMAKE_BINARY_DIR}/libraries/wabt" )

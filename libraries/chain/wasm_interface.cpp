@@ -1737,8 +1737,6 @@ std::istream& operator>>(std::istream& in, wasm_interface::vm_type& runtime) {
    in >> s;
    if (s == "wavm")
       runtime = graphene::chain::wasm_interface::vm_type::wavm;
-   else if (s == "binaryen")
-      runtime = graphene::chain::wasm_interface::vm_type::binaryen;
    else if (s == "wabt")
       runtime = graphene::chain::wasm_interface::vm_type::wabt;
    else

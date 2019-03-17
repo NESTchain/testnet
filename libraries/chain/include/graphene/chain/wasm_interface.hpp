@@ -51,7 +51,6 @@ namespace graphene { namespace chain {
       public:
          enum class vm_type {
             wavm,
-            binaryen,
             wabt
          };
 
@@ -75,4 +74,4 @@ namespace graphene{ namespace chain {
    std::istream& operator>>(std::istream& in, wasm_interface::vm_type& runtime);
 }}
 
-FC_REFLECT_ENUM( graphene::chain::wasm_interface::vm_type, (wavm)(binaryen)(wabt) )
+FC_REFLECT_ENUM( graphene::chain::wasm_interface::vm_type, (wavm)(wabt) )
