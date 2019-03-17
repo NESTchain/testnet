@@ -197,7 +197,7 @@ add_subdirectory( tests )
 add_subdirectory( tools )
 
 
-install_directory_permissions(DIRECTORY ${CMAKE_INSTALL_FULL_SYSCONFDIR}/gxc)
+install_directory_permissions(DIRECTORY ${CMAKE_INSTALL_FULL_SYSCONFDIR}/nvm)
 
 
 if (ENABLE_INSTALLER)

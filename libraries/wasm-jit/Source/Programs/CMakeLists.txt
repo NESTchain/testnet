@@ -1,7 +1,7 @@
-add_executable(gxc-wast2wasm Assemble.cpp CLI.h)
-target_link_libraries(gxc-wast2wasm Logging IR WAST WASM)
-set_target_properties(gxc-wast2wasm PROPERTIES FOLDER Programs)
-INSTALL(TARGETS gxc-wast2wasm DESTINATION ${CMAKE_INSTALL_BINDIR})
+add_executable(nvm-wast2wasm Assemble.cpp CLI.h)
+target_link_libraries(nvm-wast2wasm Logging IR WAST WASM)
+set_target_properties(nvm-wast2wasm PROPERTIES FOLDER Programs)
+INSTALL(TARGETS nvm-wast2wasm DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_executable(Disassemble Disassemble.cpp CLI.h)
 target_link_libraries(Disassemble Logging IR WAST WASM)

@@ -15,6 +15,9 @@
 
     You should have received a copy of the GNU General Public License
     along with gxb-core.  If not, see <http://www.gnu.org/licenses/>.
+
+
+    Copyright (c) 2018- μNEST Foundation, and contributors.
  */
 
 #include <fc/smart_ref_impl.hpp>
