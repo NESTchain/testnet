@@ -20,7 +20,10 @@ include_directories(${WAVM_INCLUDE_DIR}/Runtime)
 add_library(Runtime STATIC ${Sources} ${PublicHeaders})
 
 # Find an installed build of LLVM
-find_package(LLVM 7.1.0 REQUIRED CONFIG)
+find_package(LLVM REQUIRED CONFIG)
+if (${LLVM_PACKAGE_VERSION} VERSION_LESS "7.0")
+    error("LLVM version must be >= 7.0")
+endif()
 
 # Include the LLVM headers
 include_directories(${LLVM_INCLUDE_DIRS})

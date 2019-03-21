@@ -1,6 +1,10 @@
 cmake_minimum_required( VERSION 2.8.12 )
 set(SOURCES main.cpp)
-find_package(LLVM 7.1.0 REQUIRED CONFIG)
+
+find_package(LLVM REQUIRED CONFIG)
+if (${LLVM_PACKAGE_VERSION} VERSION_LESS "7.0")
+    error("LLVM version must be >= 7.0")
+endif()
 
 link_directories(${LLVM_LIBRARY_DIR})
 

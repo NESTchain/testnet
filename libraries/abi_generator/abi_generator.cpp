@@ -190,7 +190,11 @@ void abi_generator::handle_decl(const Decl* decl) { try {
 
   // Only process declarations that has the `abi_context` folder as parent.
   SourceManager& source_manager = ast_context->getSourceManager();
+#if __clang_major__ >= 8
+  auto file_name = source_manager.getFilename(decl->getBeginLoc());
+#else
   auto file_name = source_manager.getFilename(decl->getLocStart());
+#endif
   if ( !abi_context.empty() && !file_name.startswith(abi_context) ) {
     return;
   }
@@ -424,7 +428,11 @@ bool abi_generator::is_one_filed_no_base(const string& type_name) {
 string abi_generator::decl_to_string(clang::Decl* d) {
     //ASTContext& ctx = d->getASTContext();
     const auto& sm = ast_context->getSourceManager();
+#if __clang_major__ >= 8
+    clang::SourceLocation b(d->getBeginLoc()), _e(d->getEndLoc());
+#else
     clang::SourceLocation b(d->getLocStart()), _e(d->getLocEnd());
+#endif
     clang::SourceLocation e(clang::Lexer::getLocForEndOfToken(_e, 0, sm, compiler_instance->getLangOpts()));
     return string(sm.getCharacterData(b),
         sm.getCharacterData(e)-sm.getCharacterData(b));
