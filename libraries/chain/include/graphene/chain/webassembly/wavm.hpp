@@ -24,7 +24,7 @@ class wavm_runtime : public graphene::chain::wasm_runtime_interface {
          runtime_guard();
          ~runtime_guard();
       };
-
+      void immediately_exit_currently_running_module() override;
    private:
       std::shared_ptr<runtime_guard> _runtime_guard;
 };
@@ -35,6 +35,119 @@ struct running_instance_context {
    apply_context*  apply_ctx;
 };
 extern running_instance_context the_running_instance_context;
+
+template<typename T>
+struct wasm_to_value_type;
+
+template<>
+struct wasm_to_value_type<F32> {
+   static constexpr auto value = ValueType::f32;
+};
+
+template<>
+struct wasm_to_value_type<F64> {
+   static constexpr auto value = ValueType::f64;
+};
+template<>
+struct wasm_to_value_type<I32> {
+   static constexpr auto value = ValueType::i32;
+};
+template<>
+struct wasm_to_value_type<I64> {
+   static constexpr auto value = ValueType::i64;
+};
+
+template<typename T>
+constexpr auto wasm_to_value_type_v = wasm_to_value_type<T>::value;
+
+template<typename T>
+struct wasm_to_rvalue_type;
+template<>
+struct wasm_to_rvalue_type<F32> {
+   static constexpr auto value = ResultType::f32;
+};
+template<>
+struct wasm_to_rvalue_type<F64> {
+   static constexpr auto value = ResultType::f64;
+};
+template<>
+struct wasm_to_rvalue_type<I32> {
+   static constexpr auto value = ResultType::i32;
+};
+template<>
+struct wasm_to_rvalue_type<I64> {
+   static constexpr auto value = ResultType::i64;
+};
+template<>
+struct wasm_to_rvalue_type<void> {
+   static constexpr auto value = ResultType::none;
+};
+template<>
+struct wasm_to_rvalue_type<const name&> {
+   static constexpr auto value = ResultType::i64;
+};
+template<>
+struct wasm_to_rvalue_type<name> {
+   static constexpr auto value = ResultType::i64;
+};
+
+template<>
+struct wasm_to_rvalue_type<char*> {
+   static constexpr auto value = ResultType::i32;
+};
+
+template<>
+struct wasm_to_rvalue_type<fc::time_point_sec> {
+   static constexpr auto value = ResultType::i32;
+};
+
+
+template<typename T>
+constexpr auto wasm_to_rvalue_type_v = wasm_to_rvalue_type<T>::value;
+
+template<typename T>
+struct is_reference_from_value {
+   static constexpr bool value = false;
+};
+
+template<>
+struct is_reference_from_value<name> {
+   static constexpr bool value = true;
+};
+
+template<>
+struct is_reference_from_value<fc::time_point_sec> {
+   static constexpr bool value = true;
+};
+
+template<typename T>
+constexpr bool is_reference_from_value_v = is_reference_from_value<T>::value;
+
+
+
+struct void_type {
+};
+
+/**
+ * Forward declaration of provider for FunctionType given a desired C ABI signature
+ */
+template<typename>
+struct wasm_function_type_provider;
+
+/**
+ * specialization to destructure return and arguments
+ */
+template<typename Ret, typename ...Args>
+struct wasm_function_type_provider<Ret(Args...)> {
+   static const FunctionType *type() {
+      return FunctionType::get(wasm_to_rvalue_type_v<Ret>, {wasm_to_value_type_v<Args> ...});
+   }
+};
+
+#define __INTRINSIC_NAME(LABEL, SUFFIX) LABEL##SUFFIX
+#define _INTRINSIC_NAME(LABEL, SUFFIX) __INTRINSIC_NAME(LABEL,SUFFIX)
+
+#ifdef EOSIO_WAVM_RUNTIME_ENABLED
 
 /**
  * class to represent an in-wasm-memory array
@@ -47,14 +160,14 @@ template<typename T>
 inline array_ptr<T> array_ptr_impl (running_instance_context& ctx, U32 ptr, size_t length)
 {
    MemoryInstance* mem = ctx.memory;
-   if (!mem) 
+   if (!mem)
       Runtime::causeException(Exception::Cause::accessViolation);
 
    size_t mem_total = IR::numBytesPerPage * Runtime::getMemoryNumPages(mem);
    if (ptr >= mem_total || length > (mem_total - ptr) / sizeof(T))
       Runtime::causeException(Exception::Cause::accessViolation);
-   
-//   T* ret_ptr = (T*)(getMemoryBaseAddress(mem) + ptr);
+
+   T* ret_ptr = (T*)(getMemoryBaseAddress(mem) + ptr);
 
    return array_ptr<T>((T*)(getMemoryBaseAddress(mem) + ptr));
 }
@@ -178,114 +291,6 @@ inline auto convert_wasm_to_native(native_to_wasm_t<T> val) {
    return T(val);
 }
 
-template<typename T>
-struct wasm_to_value_type;
-
-template<>
-struct wasm_to_value_type<F32> {
-   static constexpr auto value = ValueType::f32;
-};
-
-template<>
-struct wasm_to_value_type<F64> {
-   static constexpr auto value = ValueType::f64;
-};
-template<>
-struct wasm_to_value_type<I32> {
-   static constexpr auto value = ValueType::i32;
-};
-template<>
-struct wasm_to_value_type<I64> {
-   static constexpr auto value = ValueType::i64;
-};
-
-template<typename T>
-constexpr auto wasm_to_value_type_v = wasm_to_value_type<T>::value;
-
-template<typename T>
-struct wasm_to_rvalue_type;
-template<>
-struct wasm_to_rvalue_type<F32> {
-   static constexpr auto value = ResultType::f32;
-};
-template<>
-struct wasm_to_rvalue_type<F64> {
-   static constexpr auto value = ResultType::f64;
-};
-template<>
-struct wasm_to_rvalue_type<I32> {
-   static constexpr auto value = ResultType::i32;
-};
-template<>
-struct wasm_to_rvalue_type<I64> {
-   static constexpr auto value = ResultType::i64;
-};
-template<>
-struct wasm_to_rvalue_type<void> {
-   static constexpr auto value = ResultType::none;
-};
-template<>
-struct wasm_to_rvalue_type<const name&> {
-   static constexpr auto value = ResultType::i64;
-};
-template<>
-struct wasm_to_rvalue_type<name> {
-   static constexpr auto value = ResultType::i64;
-};
-
-template<>
-struct wasm_to_rvalue_type<char*> {
-   static constexpr auto value = ResultType::i32;
-};
-
-template<>
-struct wasm_to_rvalue_type<fc::time_point_sec> {
-   static constexpr auto value = ResultType::i32;
-};
-
-
-template<typename T>
-constexpr auto wasm_to_rvalue_type_v = wasm_to_rvalue_type<T>::value;
-
-template<typename T>
-struct is_reference_from_value {
-   static constexpr bool value = false;
-};
-
-template<>
-struct is_reference_from_value<name> {
-   static constexpr bool value = true;
-};
-
-template<>
-struct is_reference_from_value<fc::time_point_sec> {
-   static constexpr bool value = true;
-};
-
-template<typename T>
-constexpr bool is_reference_from_value_v = is_reference_from_value<T>::value;
-
-
-
-struct void_type {
-};
-
-/**
- * Forward declaration of provider for FunctionType given a desired C ABI signature
- */
-template<typename>
-struct wasm_function_type_provider;
-
-/**
- * specialization to destructure return and arguments
- */
-template<typename Ret, typename ...Args>
-struct wasm_function_type_provider<Ret(Args...)> {
-   static const FunctionType *type() {
-      return FunctionType::get(wasm_to_rvalue_type_v<Ret>, {wasm_to_value_type_v<Args> ...});
-   }
-};
-
 /**
  * Forward declaration of the invoker type which transcribes arguments to/from a native method
  * and injects the appropriate checks
@@ -308,7 +313,12 @@ struct intrinsic_invoker_impl<Ret, std::tuple<>, std::tuple<Translated...>> {
 
    template<next_method_type Method>
    static native_to_wasm_t<Ret> invoke(Translated... translated) {
-      return convert_native_to_wasm(the_running_instance_context, Method(the_running_instance_context, translated...));
+      try {
+         return convert_native_to_wasm(the_running_instance_context, Method(the_running_instance_context, translated...));
+      }
+      catch(...) {
+         Platform::immediately_exit(std::current_exception());
+      }
    }
 
    template<next_method_type Method>
@@ -327,7 +337,12 @@ struct intrinsic_invoker_impl<void_type, std::tuple<>, std::tuple<Translated...>
 
    template<next_method_type Method>
    static void invoke(Translated... translated) {
-      Method(the_running_instance_context, translated...);
+      try {
+         Method(the_running_instance_context, translated...);
+      }
+      catch(...) {
+         Platform::immediately_exit(std::current_exception());
+      }
    }
 
    template<next_method_type Method>
@@ -686,21 +701,22 @@ struct intrinsic_function_invoker_wrapper<WasmSig, Ret (Cls::*)(Params...) const
    using type = intrinsic_function_invoker<WasmSig, Ret, Ret (Cls::*)(Params...) const volatile, Cls, Params...>;
 };
 
-#define _ADD_PAREN_1(...) ((__VA_ARGS__)) _ADD_PAREN_2
-#define _ADD_PAREN_2(...) ((__VA_ARGS__)) _ADD_PAREN_1
-#define _ADD_PAREN_1_END
-#define _ADD_PAREN_2_END
-#define _WRAPPED_SEQ(SEQ) BOOST_PP_CAT(_ADD_PAREN_1 SEQ, _END)
-
-#define __INTRINSIC_NAME(LABEL, SUFFIX) LABEL##SUFFIX
-#define _INTRINSIC_NAME(LABEL, SUFFIX) __INTRINSIC_NAME(LABEL,SUFFIX)
-
 #define _REGISTER_WAVM_INTRINSIC(CLS, MOD, METHOD, WASM_SIG, NAME, SIG)\
    static Intrinsics::Function _INTRINSIC_NAME(__intrinsic_fn, __COUNTER__) (\
       MOD "." NAME,\
       graphene::chain::webassembly::wavm::wasm_function_type_provider<WASM_SIG>::type(),\
       (void *)graphene::chain::webassembly::wavm::intrinsic_function_invoker_wrapper<WASM_SIG, SIG>::type::fn<&CLS::METHOD>()\
-   );\
+   );
 
+#else
+
+#define _REGISTER_WAVM_INTRINSIC(CLS, MOD, METHOD, WASM_SIG, NAME, SIG)\
+   static Intrinsics::Function _INTRINSIC_NAME(__intrinsic_fn, __COUNTER__) (\
+      MOD "." NAME,\
+      graphene::chain::webassembly::wavm::wasm_function_type_provider<WASM_SIG>::type(),\
+      nullptr\
+   );
+
+#endif
 
 } } } }// graphene::chain::webassembly::wavm

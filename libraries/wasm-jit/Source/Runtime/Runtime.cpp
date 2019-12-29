@@ -10,7 +10,7 @@ namespace Runtime
 {
 	void init()
 	{
-		//LLVMJIT::init();
+		LLVMJIT::init();
 		initWAVMIntrinsics();
 	}
 	
@@ -24,7 +24,7 @@ namespace Runtime
 		for(auto frame : callStack.stackFrames)
 		{
 			std::string frameDescription;
-			if(false	//LLVMJIT::describeInstructionPointer(frame.ip,frameDescription)
+			if(	LLVMJIT::describeInstructionPointer(frame.ip,frameDescription)
 			||	Platform::describeInstructionPointer(frame.ip,frameDescription))
 			{
 				frameDescriptions.push_back(frameDescription);
@@ -38,20 +38,6 @@ namespace Runtime
 	{
 		auto callStack = Platform::captureCallStack();
 		throw Exception {cause,describeCallStack(callStack)};
-	}
-
-	bool isA(ObjectInstance* object,const ObjectType& type)
-	{
-		if(type.kind != object->kind) { return false; }
-
-		switch(type.kind)
-		{
-		case ObjectKind::function: return asFunctionType(type) == asFunction(object)->type;
-		case ObjectKind::global: return asGlobalType(type) == asGlobal(object)->type;
-		case ObjectKind::table: return isSubset(asTableType(type),asTable(object)->type);
-		case ObjectKind::memory: return isSubset(asMemoryType(type),asMemory(object)->type);
-		default: Errors::unreachable();
-		}
 	}
 
 	[[noreturn]] void handleHardwareTrap(Platform::HardwareTrapType trapType,Platform::CallStack&& trapCallStack,Uptr trapOperand)
@@ -105,7 +91,7 @@ namespace Runtime
 		}
 		
 		// Get the invoke thunk for this function type.
-		//LLVMJIT::InvokeFunctionPointer invokeFunctionPointer = LLVMJIT::getInvokeThunk(functionType);
+		LLVMJIT::InvokeFunctionPointer invokeFunctionPointer = LLVMJIT::getInvokeThunk(functionType);
 
 		// Catch platform-specific runtime exceptions and turn them into Runtime::Values.
 		Result result;
@@ -116,7 +102,7 @@ namespace Runtime
 			[&]
 			{
 				// Call the invoke thunk.
-				//(*invokeFunctionPointer)(function->nativeFunction,thunkMemory);
+				(*invokeFunctionPointer)(function->nativeFunction,thunkMemory);
 
 				// Read the return value out of the thunk memory block.
 				if(functionType->ret != ResultType::none)

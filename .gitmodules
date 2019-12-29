@@ -23,3 +23,6 @@
 [submodule "contracts/libc++/upstream"]
 	path = contracts/libc++/upstream
 	url = git://github.com/NESTchain/libcxx.git
+[submodule "libraries/eos-vm"]
+	path = libraries/eos-vm
+	url = https://github.com/NESTchain/eos-vm.git

@@ -34,6 +34,7 @@ class wavm_instantiated_module : public wasm_instantiated_module_interface {
 	                       Value(uint64_t(context.act.contract_id)),
                                Value(uint64_t(context.act.method_name))};
 
+         call("apply", args, context);
       }
 
    private:
@@ -124,6 +125,14 @@ std::unique_ptr<wasm_instantiated_module_interface> wavm_runtime::instantiate_mo
    FC_ASSERT(instance != nullptr, "Fail to Instantiate WAVM Module");
 
    return std::make_unique<wavm_instantiated_module>(instance, std::move(module), initial_memory);
+}
+
+void wavm_runtime::immediately_exit_currently_running_module() {
+#ifdef _WIN32
+   throw wasm_exit();
+#else
+   Platform::immediately_exit(nullptr);
+#endif
 }
 
 }}}}

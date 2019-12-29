@@ -1,3 +1,7 @@
+set( CMAKE_CXX_STANDARD 17 )
+set( CMAKE_CXX_EXTENSIONS ON )
+set( CXX_STANDARD_REQUIRED ON)
+
 
 add_custom_target( build_hardfork_hpp
                    COMMAND ${CMAKE_BINARY_DIR}/programs/build_helpers/cat-parts "${CMAKE_CURRENT_SOURCE_DIR}/hardfork.d" "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain/hardfork.hpp" )
@@ -125,6 +129,7 @@ target_link_libraries( graphene_chain fc graphene_db Logging IR WAST WASM Runtim
 target_include_directories( graphene_chain
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
            "${CMAKE_CURRENT_SOURCE_DIR}/../wasm-jit/Include"
+           "${CMAKE_SOURCE_DIR}/libraries/eos-vm/include"
            "${CMAKE_CURRENT_BINARY_DIR}/include"
            "${CMAKE_SOURCE_DIR}/libraries/wabt"
            "${CMAKE_BINARY_DIR}/libraries/wabt" )

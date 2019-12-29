@@ -1,5 +1,8 @@
 #pragma once
 #include <graphene/chain/protocol/types.hpp>
+#if defined(EOSIO_EOS_VM_RUNTIME_ENABLED) || defined(EOSIO_EOS_VM_JIT_RUNTIME_ENABLED)
+#include <eosio/vm/allocator.hpp>
+#endif
 #include "Runtime/Linker.h"
 #include "Runtime/Runtime.h"
 
@@ -51,7 +54,9 @@ namespace graphene { namespace chain {
       public:
          enum class vm_type {
             wavm,
-            wabt
+            wabt,
+            eos_vm,
+            eos_vm_jit,
          };
 
          wasm_interface(vm_type vm);
@@ -74,4 +79,4 @@ namespace graphene{ namespace chain {
    std::istream& operator>>(std::istream& in, wasm_interface::vm_type& runtime);
 }}
 
-FC_REFLECT_ENUM( graphene::chain::wasm_interface::vm_type, (wavm)(wabt) )
+FC_REFLECT_ENUM( graphene::chain::wasm_interface::vm_type, (wavm)(wabt)(eos_vm)(eos_vm_jit) )

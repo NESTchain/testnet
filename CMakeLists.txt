@@ -146,7 +146,7 @@ else( WIN32 ) # Apple AND Linux
     else( APPLE )
         # Linux Specific Options Here
         message( STATUS "Configuring BitShares on Linux" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++14 -Wall -fPIC -DBOOST_ASIO_HAS_STD_CHRONO" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wall -fPIC -DBOOST_ASIO_HAS_STD_CHRONO -DEOSIO_WAVM_RUNTIME_ENABLED" )
         if(USE_PROFILER)
             set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg" )
         endif( USE_PROFILER )

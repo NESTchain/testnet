@@ -23,7 +23,7 @@ namespace graphene { namespace chain {
          return T(ctx);
       }
    };
-   
+
    template<>
    struct class_from_wasm<transaction_context> {
       /**
@@ -68,13 +68,12 @@ namespace graphene { namespace chain {
          return value;
       }
 
-      template<typename U>
-      operator U *() const {
-         return static_cast<U *>(value);
+      operator T *() const {
+         return value;
       }
 
       T *value;
-   }; 
+   };
 
    /**
     * class to represent an in-wasm-memory char array that must be null terminated
@@ -90,9 +89,8 @@ namespace graphene { namespace chain {
          return value;
       }
 
-      template<typename U>
-      operator U *() const {
-         return static_cast<U *>(value);
+      operator char *() const {
+         return value;
       }
 
       char *value;

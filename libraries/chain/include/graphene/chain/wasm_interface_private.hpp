@@ -3,6 +3,7 @@
 #include <graphene/chain/wasm_interface.hpp>
 #include <graphene/chain/webassembly/wavm.hpp>
 #include <graphene/chain/webassembly/wabt.hpp>
+#include <graphene/chain/webassembly/eos-vm.hpp>
 #include <graphene/chain/webassembly/runtime_interface.hpp>
 #include <graphene/chain/wasm_injection.hpp>
 #include <fc/scoped_exit.hpp>
@@ -13,6 +14,10 @@
 #include "WAST/WAST.h"
 #include "IR/Validate.h"
 
+#if defined(EOSIO_EOS_VM_RUNTIME_ENABLED) || defined(EOSIO_EOS_VM_JIT_RUNTIME_ENABLED)
+#include <eosio/vm/allocator.hpp>
+#endif
+
 using namespace fc;
 using namespace graphene::chain::webassembly;
 using namespace IR;
@@ -22,12 +27,21 @@ namespace graphene { namespace chain {
 
    struct wasm_interface_impl {
       wasm_interface_impl(wasm_interface::vm_type vm) {
+#ifdef EOSIO_WAVM_RUNTIME_ENABLED
          if(vm == wasm_interface::vm_type::wavm)
             runtime_interface = std::make_unique<webassembly::wavm::wavm_runtime>();
-         else if(vm == wasm_interface::vm_type::wabt)
+#endif
+         if(vm == wasm_interface::vm_type::wabt)
             runtime_interface = std::make_unique<webassembly::wabt_runtime::wabt_runtime>();
-         else
-            FC_THROW("wasm_interface_impl fall through");
+#ifdef EOSIO_EOS_VM_RUNTIME_ENABLED
+         if(vm == wasm_interface::vm_type::eos_vm)
+            runtime_interface = std::make_unique<webassembly::eos_vm_runtime::eos_vm_runtime<eosio::vm::interpreter>>();
+#endif
+#ifdef EOSIO_EOS_VM_JIT_RUNTIME_ENABLED
+         if(vm == wasm_interface::vm_type::eos_vm_jit)
+            runtime_interface = std::make_unique<webassembly::eos_vm_runtime::eos_vm_runtime<eosio::vm::jit>>();
+#endif
+		FC_THROW("wasm_interface_impl fall through");
       }
 
       std::vector<uint8_t> parse_initial_memory(const Module& module) {
@@ -91,9 +105,17 @@ namespace graphene { namespace chain {
       map<digest_type, std::unique_ptr<wasm_instantiated_module_interface>> instantiation_cache;
    };
 
+#define _ADD_PAREN_1(...) ((__VA_ARGS__)) _ADD_PAREN_2
+#define _ADD_PAREN_2(...) ((__VA_ARGS__)) _ADD_PAREN_1
+#define _ADD_PAREN_1_END
+#define _ADD_PAREN_2_END
+#define _WRAPPED_SEQ(SEQ) BOOST_PP_CAT(_ADD_PAREN_1 SEQ, _END)
+
 #define _REGISTER_INTRINSIC_EXPLICIT(CLS, MOD, METHOD, WASM_SIG, NAME, SIG)\
-   _REGISTER_WAVM_INTRINSIC(CLS, MOD, METHOD, WASM_SIG, NAME, SIG)\
-   _REGISTER_WABT_INTRINSIC(CLS, MOD, METHOD, WASM_SIG, NAME, SIG)
+   _REGISTER_WAVM_INTRINSIC(CLS, MOD, METHOD, WASM_SIG, NAME, SIG)         \
+   _REGISTER_WABT_INTRINSIC(CLS, MOD, METHOD, WASM_SIG, NAME, SIG)         \
+   _REGISTER_EOS_VM_INTRINSIC(CLS, MOD, METHOD, WASM_SIG, NAME, SIG)       
+
 
 #define _REGISTER_INTRINSIC4(CLS, MOD, METHOD, WASM_SIG, NAME, SIG)\
    _REGISTER_INTRINSIC_EXPLICIT(CLS, MOD, METHOD, WASM_SIG, NAME, SIG )

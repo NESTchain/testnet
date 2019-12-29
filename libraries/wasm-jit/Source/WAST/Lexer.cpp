@@ -279,10 +279,8 @@ namespace WAST
 					nextToken->type = t_unrecognized;
 					++nextToken;
 
-                    // Advance until a recovery point or the end of the string.
-                    //const char* stringEnd = string + stringLength;
-		            int char_index = 0;
-                    while(char_index++ < stringLength && !isRecoveryPointChar(*nextChar)) { ++nextChar; }
+					// Advance until a recovery point.
+					while(!isRecoveryPointChar(*nextChar)) { ++nextChar; }
 				}
 				else
 				{
