@@ -36,24 +36,15 @@ sudo ln -sfT /opt/cmake/bin/cmake /usr/local/bin/cmake
 
 Close current terminal and reopen a new terminal, or CMake may report error "could not find CMAKE_ROOT".
 
-### Install LLVM 7.0.1+ with WASM feature
+## Install GCC 9
+
+Follow the guide to install GCC 9:
+
+https://linuxize.com/post/how-to-install-gcc-compiler-on-ubuntu-18-04/
+
+### Install LLVM 8.0 with WASM feature
 
 Install it to ~/opt/wasm.
-
-```
-mkdir  ~/wasm-compiler && cd ~/wasm-compiler
-git clone --depth 1 --single-branch --branch release_70 https://github.com/llvm-mirror/llvm.git
-cd llvm/tools
-git clone --depth 1 --single-branch --branch release_70 https://github.com/llvm-mirror/clang.git
-cd .. && mkdir -p build && cd build
-cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm \
--DLLVM_ENABLE_RTTI=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang \
--DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly \
--DCMAKE_BUILD_TYPE=Release ..
-make -j4 install
-```
-
-If you want to use LLVM 8.0, please use the following commands instead.
 
 ```
 mkdir  ~/wasm-compiler && cd ~/wasm-compiler

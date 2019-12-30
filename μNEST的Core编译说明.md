@@ -37,24 +37,14 @@ sudo ln -sfT /opt/cmake/bin/cmake /usr/local/bin/cmake
 
 装完后，需要关掉并重新打开Ubuntu终端窗口，否则CMake可能会报错“could not find CMAKE_ROOT”。
 
-### 从源码编译安装带WASM组件的LLVM 7.0.1+
+## 安装GCC 9
+
+GCC 6+即可。推荐安装GCC 9。安装方法参考：
+https://linuxize.com/post/how-to-install-gcc-compiler-on-ubuntu-18-04/
+
+### 从源码编译安装带WASM组件的LLVM 8.0+
 
 安装到~/opt/wasm。此处要编译其WASM组件，并打开RTTI。LLVM官方预编译的版本没有我们需要的这两个特性。
-
-```
-mkdir  ~/wasm-compiler && cd ~/wasm-compiler
-git clone --depth 1 --single-branch --branch release_70 https://github.com/llvm-mirror/llvm.git
-cd llvm/tools
-git clone --depth 1 --single-branch --branch release_70 https://github.com/llvm-mirror/clang.git
-cd .. && mkdir -p build && cd build
-cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DLLVM_ENABLE_RTTI=ON \
--DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang \
--DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly \
--DCMAKE_BUILD_TYPE=Release ..
-make -j4 install
-```
-
-如果要使用LLVM 8.0，请执行下面的命令。LLVM 8和LLVM 7的差别在于WebAssembly这个target是正式的target还是实验性质的target。
 
 ```
 mkdir  ~/wasm-compiler && cd ~/wasm-compiler
